@@ -2,6 +2,8 @@ package com.sos.joc.servlet;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.Arrays;
+import java.util.Optional;
 
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
@@ -14,65 +16,58 @@ public class HostOriginFilter implements Filter {
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        HttpServletRequest req = (HttpServletRequest) request;
-        String originHeader = req.getHeader("Origin");
-        String hostHeader = req.getHeader("Host");
-        String forwardedHeader = req.getHeader("Forwarded");
-        if(forwardedHeader == null) {
-            forwardedHeader = req.getHeader("X-Forwarded-Host");
-        }
-        URI originUri = null;
-        URI hostUri = null;
-        URI forwardedUri = null;
-        String host = "";
-        Integer port = -1;
-        if(originHeader != null && !originHeader.isEmpty()) {
-            originUri = URI.create(originHeader);
-        }
-        if(hostHeader != null && !hostHeader.isEmpty()) {
-            hostUri = URI.create(hostHeader);
-        }
-        if(forwardedHeader != null && !forwardedHeader.isEmpty()) {
-            forwardedUri = URI.create(forwardedHeader);
-        }
-        if(hostUri != null) {
-            if(hostUri.getHost() != null) {
-                host = hostUri.getHost();
-                port = hostUri.getPort();
-            } else {
-                // if Host Header is not an Uri hostUri.getHost() is null, use scheme && schemeSpecificPart instead
-                if(hostUri.getScheme() != null) {
-                    host = hostUri.getScheme();
-                    if(hostUri.getSchemeSpecificPart() != null && !hostUri.getSchemeSpecificPart().isEmpty()) {
-                        try {
-                            port = Integer.parseInt(hostUri.getSchemeSpecificPart());
-                        } catch (NumberFormatException e) {}
+
+        try {
+            HttpServletRequest req = (HttpServletRequest) request;
+            
+            Optional<String> hostHeader = Optional.ofNullable(req.getHeader("Host")).filter(s -> !s.isBlank());
+            
+            if (hostHeader.isPresent()) {
+                
+                Optional<String> originHeader = Optional.ofNullable(req.getHeader("Origin")).filter(s -> !s.isBlank());
+                Optional<String> forwardedHeader = Optional.ofNullable(req.getHeader("Forwarded")).filter(s -> !s.isBlank());
+
+                Optional<String> hostHost = hostHeader.map(s -> s.replace('_', '-')).map(URI::create).map(this::resolveHostname);
+                Optional<String> originHost = originHeader.map(s -> s.replace('_', '-')).map(URI::create).map(this::resolveHostname);
+                Optional<String> forwardedHost = forwardedHeader.flatMap(this::extractForwardedHostname).map(s -> s.replace('_', '-')).map(URI::create)
+                        .map(this::resolveHostname);
+                if (forwardedHost.isEmpty()) {
+                    forwardedHeader = Optional.ofNullable(req.getHeader("X-Forwarded-Host")).filter(s -> !s.isBlank());
+                    forwardedHost = forwardedHeader.map(s -> s.replace('_', '-')).map(URI::create).map(this::resolveHostname);
+                }
+                // Validate that if Origin is present, it targets your trusted host environment
+                if (forwardedHost.isPresent()) {
+                    if (!forwardedHost.equals(hostHost)) {
+                        System.out.println("Warning: Request rejected because mismatch occurred comparing Host Header: " + hostHeader.orElse("")
+                                + " against Forwarded Header: " + forwardedHeader.orElse("") + ".");
+                        return;
                     }
                 } else {
-                    if(hostUri.getSchemeSpecificPart() != null) {
-                        host = hostUri.getSchemeSpecificPart();
+                    if (originHost.isPresent() && !originHost.equals(hostHost)) {
+                        System.out.println("Warning: Request rejected because mismatch occurred comparing Host Header: " + hostHeader.orElse("")
+                                + " against Origin Header: " + originHeader.orElse("") + ".");
+                        return;
                     }
                 }
             }
-        }
-        // Validate that if Origin is present, it targets your trusted host environment
-        if(forwardedUri != null) {
-            if(forwardedUri != null && host != null && !forwardedUri.getHost().equals(host)) {
-                System.out.println("Warning: Request rejected because mismatch occurred comparing Host Header: " + hostHeader + " against Forwarded Header: "
-                        + forwardedHeader + ".");
-                return;
-            }
-        } else {
-            if(originUri != null && host != null && !originUri.getHost().equals(host)) {
-                System.out.println("Warning: Request rejected because mismatch occurred comparing Host Header: " + hostHeader + " against Origin Header: "
-                        + originHeader + ".");
-                return;
-            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         chain.doFilter(request, response);
     }
-    
-    private void resolveHostname() {
-        
+
+    private Optional<String> extractForwardedHostname(String forwarded) {
+        return Arrays.asList(forwarded.split(";")).stream().filter(part -> part.startsWith("host=")).findAny().map(host -> host.substring(5)
+                .replaceAll("\"", ""));
+    }
+
+    private String resolveHostname(URI uri) {
+        if (uri.getHost() != null) {
+            return uri.getHost();
+        } else if (uri.getScheme() != null) {
+            return uri.getScheme();
+        } else {
+            return uri.getSchemeSpecificPart();
+        }
     }
 }
