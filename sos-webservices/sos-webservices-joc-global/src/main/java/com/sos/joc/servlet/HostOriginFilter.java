@@ -26,13 +26,13 @@ public class HostOriginFilter implements Filter {
         URI forwardedUri = null;
         String host = "";
         Integer port = -1;
-        if(originHeader != null) {
+        if(originHeader != null && !originHeader.isEmpty()) {
             originUri = URI.create(originHeader);
         }
-        if(hostHeader != null) {
+        if(hostHeader != null && !hostHeader.isEmpty()) {
             hostUri = URI.create(hostHeader);
         }
-        if(forwardedHeader != null) {
+        if(forwardedHeader != null && !forwardedHeader.isEmpty()) {
             forwardedUri = URI.create(forwardedHeader);
         }
         if(hostUri != null) {
@@ -70,5 +70,9 @@ public class HostOriginFilter implements Filter {
             }
         }
         chain.doFilter(request, response);
+    }
+    
+    private void resolveHostname() {
+        
     }
 }
