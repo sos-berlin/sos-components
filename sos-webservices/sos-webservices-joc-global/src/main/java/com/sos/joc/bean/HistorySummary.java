@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
@@ -36,6 +37,8 @@ public class HistorySummary implements HistorySummaryMBean, IJocMBean {
     private AtomicBoolean hasOrderStepEvent = new AtomicBoolean(false);
     private static final Logger LOGGER = LoggerFactory.getLogger(HistorySummaryMBean.class);
     private Predicate<String> isMainOrder = oId -> oId == null || !oId.contains("|");
+    private ScheduledExecutorService orderThreadPool = null;
+    private ScheduledExecutorService taskThreadPool = null;
     
     public HistorySummary(String controllerId) {
         this.controllerId = controllerId;
@@ -50,7 +53,10 @@ public class HistorySummary implements HistorySummaryMBean, IJocMBean {
     public void update(HistoryOrderTerminated evt) {
         if (controllerId.equals(evt.getControllerId()) && isMainOrder.test(evt.getOrderId())) {
             if (!hasOrderEvent.getAndSet(true)) {
-                Executors.newScheduledThreadPool(1).schedule(() -> {
+                if (orderThreadPool == null) {
+                    orderThreadPool = Executors.newSingleThreadScheduledExecutor();
+                }
+                orderThreadPool.schedule(() -> {
                     setOrderSummary();
                     hasOrderEvent.set(false);
                 }, 5, TimeUnit.SECONDS);
@@ -62,7 +68,10 @@ public class HistorySummary implements HistorySummaryMBean, IJocMBean {
     public void update(HistoryOrderTaskTerminated evt) {
         if (controllerId.equals(evt.getControllerId())) {
             if (!hasOrderStepEvent.getAndSet(true)) {
-                Executors.newScheduledThreadPool(1).schedule(() -> {
+                if (taskThreadPool == null) {
+                    taskThreadPool = Executors.newSingleThreadScheduledExecutor();
+                }
+                taskThreadPool.schedule(() -> {
                     setOrderStepsSummary();
                     hasOrderStepEvent.set(false);
                 }, 5, TimeUnit.SECONDS);

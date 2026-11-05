@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -59,6 +60,7 @@ public class DailyPlanSummary implements DailyPlanSummaryMBean, IJocMBean {
             .plusSeconds(DBItemDailyPlanWithHistory.DAILY_PLAN_LATE_TOLERANCE));
     private final static Comparator<DBItemDailyPlanWithHistory> comparator = Comparator.comparing(DBItemDailyPlanWithHistory::getPlannedStart);
     private final static Supplier<TreeSet<DBItemDailyPlanWithHistory>> supplier = () -> new TreeSet<>(comparator);
+    private ScheduledExecutorService threadPool = null;
 
     private DailyPlanSummary(String controllerId) {
         this.controllerId = controllerId;
@@ -74,7 +76,10 @@ public class DailyPlanSummary implements DailyPlanSummaryMBean, IJocMBean {
 
     public void update() {
         if (!hasOrderEvent.getAndSet(true)) {
-            Executors.newScheduledThreadPool(1).schedule(() -> {
+            if (threadPool == null) {
+                threadPool = Executors.newSingleThreadScheduledExecutor();
+            }
+            threadPool.schedule(() -> {
                 setDailyPlanSummary();
                 hasOrderEvent.set(false);
             }, 5, TimeUnit.SECONDS);
@@ -96,7 +101,10 @@ public class DailyPlanSummary implements DailyPlanSummaryMBean, IJocMBean {
                 ZoneId zoneId = getZoneId();
                 if (LocalDate.now(zoneId).atStartOfDay().format(DateTimeFormatter.ISO_LOCAL_DATE).equals(evt.getDailyPlanDate())) {
                     if (!hasOrderEvent.getAndSet(true)) {
-                        Executors.newScheduledThreadPool(1).schedule(() -> {
+                        if (threadPool == null) {
+                            threadPool = Executors.newSingleThreadScheduledExecutor();
+                        }
+                        threadPool.schedule(() -> {
                             setDailyPlanSummary(zoneId);
                             hasOrderEvent.set(false);
                         }, 5, TimeUnit.SECONDS);
