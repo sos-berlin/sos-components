@@ -14,6 +14,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
@@ -185,6 +186,7 @@ public class EventService {
     private static final EnumSet<NotificationType> notificationFailureTypes = EnumSet.of(NotificationType.ERROR, NotificationType.WARNING);
     private static Predicate<ClusterNodeLostEventNotConfirmedProblem> isFailOver = e -> (e instanceof ClusterFailoverNotConfirmedProblem);
     private AtomicBoolean hasOrderEvent = new AtomicBoolean(false);
+    private ScheduledExecutorService threadPool = null;
 
     public EventService(String controllerId) {
         this.controllerId = controllerId;
@@ -842,7 +844,10 @@ public class EventService {
     
     private void hasOrderEvent() {
         if (!hasOrderEvent.getAndSet(true)) {
-            Executors.newScheduledThreadPool(1).schedule(() -> {
+            if (threadPool == null) {
+                threadPool = Executors.newSingleThreadScheduledExecutor();
+            }
+            threadPool.schedule(() -> {
                 EventBus.getInstance().post(new com.sos.joc.event.bean.order.OrderEvent(controllerId));
                 hasOrderEvent.set(false);
             }, 5, TimeUnit.SECONDS);
