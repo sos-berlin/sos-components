@@ -11,7 +11,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.NonUniqueResultException;
@@ -1100,6 +1099,10 @@ public class SOSHibernateSession implements Serializable, AutoCloseable {
             throw new SOSHibernateInvalidSessionException("currentSession is NULL");
         }
         try {
+            if (getFactory().dbmsIsPostgres()) {
+                SOSHibernateSanitizer.sanitizeStringValues(item);
+            }
+
             if (isStatelessSession) {
                 StatelessSession session = ((StatelessSession) currentSession);
                 session.insert(item);
@@ -1227,6 +1230,10 @@ public class SOSHibernateSession implements Serializable, AutoCloseable {
             throw new SOSHibernateInvalidSessionException("currentSession is NULL");
         }
         try {
+            if (getFactory().dbmsIsPostgres()) {
+                SOSHibernateSanitizer.sanitizeStringValues(item);
+            }
+
             if (isStatelessSession) {
                 StatelessSession session = ((StatelessSession) currentSession);
                 session.update(item);

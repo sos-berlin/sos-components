@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +19,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.hibernate.helpers.dbitems.DBItemATest;
 import com.sos.commons.util.SOSClassList;
 import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
@@ -332,6 +334,35 @@ public class SOSHibernateTest {
 
     @Ignore
     @Test
+    public void testInsertNulByte() throws Exception {
+        SOSHibernateFactory factory = null;
+        SOSHibernateSession session = null;
+        try {
+            SOSClassList cl = new SOSClassList();
+            cl.add(DBItemATest.class);
+
+            factory = createFactory(cl);
+            session = factory.openStatelessSession();
+
+            session.beginTransaction();
+            DBItemATest i = new DBItemATest();
+            i.setName("hallo\u0000 test\u0000");
+            i.setCreated(Instant.now());
+            i.setModified(i.getCreated());
+
+            session.save(i);
+            session.commit();
+        } catch (Exception e) {
+            LOGGER.error(e.toString(), e);
+        } finally {
+            if (factory != null) {
+                factory.close(session);
+            }
+        }
+    }
+
+    @Ignore
+    @Test
     public void testBoolean() throws Exception {
         SOSHibernateFactory factory = null;
         SOSHibernateSession session = null;
@@ -375,7 +406,7 @@ public class SOSHibernateTest {
     }
 
     public static SOSHibernateFactory createFactory(SOSClassList mapping) throws Exception {
-        return createFactory(Paths.get("src/test/resources/hibernate.cfg.mysql.xml"), mapping);
+        return createFactory(Paths.get("src/test/resources/hibernate.cfg.pgsql.xml"), mapping);
     }
 
     public static SOSHibernateFactory createFactory(Path hibernateFile, SOSClassList mapping) throws Exception {
