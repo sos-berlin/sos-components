@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -291,7 +290,7 @@ public class SOSHibernateTest {
             DBItemInventoryTag t = new DBItemInventoryTag();
             t.setName(new Date().toString());
             t.setOrdering(Integer.valueOf(1));
-         
+
             session.beginTransaction();
             session.save(t);
 
@@ -346,8 +345,6 @@ public class SOSHibernateTest {
             session.beginTransaction();
             DBItemATest i = new DBItemATest();
             i.setName("hallo\u0000 test\u0000");
-            i.setCreated(Instant.now());
-            i.setModified(i.getCreated());
 
             session.save(i);
             session.commit();
