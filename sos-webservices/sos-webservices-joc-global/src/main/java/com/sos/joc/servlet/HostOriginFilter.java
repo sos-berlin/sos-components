@@ -20,11 +20,11 @@ public class HostOriginFilter implements Filter {
         try {
             HttpServletRequest req = (HttpServletRequest) request;
             
-            Optional<String> hostHeader = Optional.ofNullable(req.getHeader("Host")).filter(s -> !s.isBlank());
+            Optional<String> originHeader = Optional.ofNullable(req.getHeader("Origin")).filter(s -> !s.isBlank());
             
-            if (hostHeader.isPresent()) {
+            if (originHeader.isPresent()) {
                 
-                Optional<String> originHeader = Optional.ofNullable(req.getHeader("Origin")).filter(s -> !s.isBlank());
+                Optional<String> hostHeader = Optional.ofNullable(req.getHeader("Host")).filter(s -> !s.isBlank());
                 Optional<String> forwardedHeader = Optional.ofNullable(req.getHeader("Forwarded")).filter(s -> !s.isBlank());
 
                 Optional<String> hostHost = hostHeader.map(s -> s.replace('_', '-')).map(URI::create).map(this::resolveHostname);
@@ -36,17 +36,19 @@ public class HostOriginFilter implements Filter {
                     forwardedHost = forwardedHeader.map(s -> s.replace('_', '-')).map(URI::create).map(this::resolveHostname);
                 }
                 // Validate that if Origin is present, it targets your trusted host environment
-                if (forwardedHost.isPresent()) {
-                    if (!forwardedHost.equals(hostHost)) {
-                        System.out.println("Warning: Request rejected because mismatch occurred comparing Host Header: " + hostHeader.orElse("")
-                                + " against Forwarded Header: " + forwardedHeader.orElse("") + ".");
-                        return;
-                    }
-                } else {
-                    if (originHost.isPresent() && !originHost.equals(hostHost)) {
-                        System.out.println("Warning: Request rejected because mismatch occurred comparing Host Header: " + hostHeader.orElse("")
-                                + " against Origin Header: " + originHeader.orElse("") + ".");
-                        return;
+                if (originHost.isPresent()) {
+                    if (forwardedHost.isPresent()) {
+                        if (!originHost.equals(forwardedHost)) {
+                            System.out.println("Warning: Request rejected because mismatch occurred comparing Host Header: " + hostHeader.orElse("")
+                                    + " against Forwarded Header: " + forwardedHeader.orElse("") + ".");
+                            return;
+                        }
+                    } else {
+                        if (hostHost.isPresent() && !originHost.equals(hostHost)) {
+                            System.out.println("Warning: Request rejected because mismatch occurred comparing Host Header: " + hostHeader.orElse("")
+                                    + " against Origin Header: " + originHeader.orElse("") + ".");
+                            return;
+                        }
                     }
                 }
             }
