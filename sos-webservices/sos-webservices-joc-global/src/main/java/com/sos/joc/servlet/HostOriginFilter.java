@@ -39,7 +39,7 @@ public class HostOriginFilter implements Filter {
                 if (originHost.isPresent()) {
                     if (forwardedHost.isPresent()) {
                         if (!originHost.equals(forwardedHost)) {
-                            System.out.println("Warning: Request rejected because mismatch occurred comparing Host Header: " + hostHeader.orElse("")
+                            System.out.println("Warning: Request rejected because mismatch occurred comparing Origin Header: " + originHeader.orElse("")
                                     + " against Forwarded Header: " + forwardedHeader.orElse("") + ".");
                             return;
                         }
