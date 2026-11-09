@@ -45,7 +45,7 @@ public class FolderPermissionEvaluator {
                     p -> JOCResourceImpl.canAdd(WorkflowPaths.getPath(p), permittedFolders)).distinct().collect(Collectors.toList());
 
             filter.setWorkflowNames(permittedWorkflowNames);
-            hasPermission = permittedWorkflowNames.isEmpty();
+            hasPermission = !permittedWorkflowNames.isEmpty();
         }
 
         if (scheduleFolders != null && !scheduleFolders.isEmpty()) {
