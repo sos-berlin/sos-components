@@ -55,8 +55,8 @@ public class TreeResourceImpl extends JOCResourceImpl implements ITreeResource {
                 return jocDefaultResponse;
             }
             
-            AuthFolders jocPermittedFolders = new AuthFolders(Optional.empty(), Optional.empty());
-            AuthFolders controllerPermittedFolders = new AuthFolders(Optional.empty(), Optional.empty());
+            AuthFolders jocPermittedFolders = new AuthFolders(Optional.of(Collections.emptySet()), Optional.empty());
+            AuthFolders controllerPermittedFolders = new AuthFolders(Optional.of(Collections.emptySet()), Optional.empty());
             if (treeForInventory || treeForInventoryTrash) {
                 // special: tree in Inventory (trash)
                 //jocPermittedFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getView());
