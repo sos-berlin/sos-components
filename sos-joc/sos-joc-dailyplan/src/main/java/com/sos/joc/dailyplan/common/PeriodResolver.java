@@ -78,8 +78,13 @@ public class PeriodResolver {
             return startTimes;
         }
 
-        ZoneId periodZone = ZoneId.of(settings.getTimeZone());
-        ZonedDateTime periodStartZoned = ZonedDateTime.of(LocalDate.parse(dailyPlanDate), LocalTime.parse(settings.getPeriodBegin()), periodZone);
+        // see https://change.sos-berlin.com/browse/JOC-1647 Maintainer Note
+        // - The time zone defined within the Settings->dailyplan should impact the start of the Daily Plan service only.
+        // - The frequency calculation is based on a single day, which is the DailyPlan date.
+        // - The period calculation relies on the time zone specified by the schedule.
+        // do not use - ZoneId periodZone = ZoneId.of(settings.getTimeZone());
+        ZoneId scheduleZone = ZoneId.of(scheduleTimeZone);
+        ZonedDateTime periodStartZoned = ZonedDateTime.of(LocalDate.parse(dailyPlanDate), LocalTime.parse(settings.getPeriodBegin()), scheduleZone);
         ZonedDateTime periodEndZoned = periodStartZoned.plusDays(1);
         Instant periodStartUTC = periodStartZoned.toInstant();
         Instant periodEndUTC = periodEndZoned.toInstant();
@@ -87,11 +92,9 @@ public class PeriodResolver {
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug(String.format(
                     "[getStartTimes][dailyPlanDate=%s][frequencyResolverDate=%s][scheduleTimeZone=%s][includeLate=%s]period_begin=%s(%s) DailyPlanPeriod start=%s, end=%s",
-                    dailyPlanDate, frequencyResolverDate, scheduleTimeZone, includeLate, settings.getPeriodBegin(), settings.getTimeZone(), format(
+                    dailyPlanDate, frequencyResolverDate, scheduleTimeZone, includeLate, settings.getPeriodBegin(), scheduleTimeZone, format(
                             periodStartZoned, periodStartUTC), format(periodEndZoned, periodEndUTC)));
         }
-
-        ZoneId scheduleZone = ZoneId.of(scheduleTimeZone);
 
         for (Entry<String, Period> periodEntry : periods.entrySet()) {
             LocalDateTime startLocal = LocalDateTime.parse(frequencyResolverDate + " " + periodEntry.getKey(), DATE_TIME_FORMATTER);
@@ -154,8 +157,10 @@ public class PeriodResolver {
                     msg = " > DailyPlanPeriod end(" + format(periodEndUTC) + ")";
                 }
             }
-            LOGGER.debug(String.format("      [isInDailyPlanPeriod=%s][%s]start=%s%s", isInDailyPlanPeriod, isInDailyPlanPeriod ? "add" : "skip",
-                    format(startZoned, startUTC), msg));
+            LOGGER.debug(String.format(
+                    "      [isInDailyPlanPeriod=%s][%s][start=%s%s][DailyPlanPeriod start=%s, end=%s][configured period_begin=%s in dailyplan tz=%s, DailyPlanPeriod calculated in schedule tz=%s]",
+                    isInDailyPlanPeriod, isInDailyPlanPeriod ? "add" : "skip", format(startLocal, startZoned, startUTC), msg, format(periodStartUTC),
+                    format(periodEndUTC), settings.getPeriodBegin(), settings.getTimeZone(), scheduleZone));
         }
 
         frequencyResolverDates.add(frequencyResolverDate);
@@ -187,9 +192,9 @@ public class PeriodResolver {
                         }
                     }
                     LOGGER.debug(String.format(
-                            "      [isInDailyPlanPeriod=%s][%s][start=%s%s]start time redefined (+1 day) and rechecked because period_begin=%s(%s %s)",
+                            "      [isInDailyPlanPeriod=%s][%s][start time redefined (+1 day) and rechecked][start=%s%s][DailyPlanPeriod start=%s, end=%s][configured period_begin=%s in dailyplan tz=%s, DailyPlanPeriod calculated in schedule tz=%s]",
                             isInDailyPlanPeriod, isInDailyPlanPeriod ? "add" : "skip", format(startLocal, startZoned, startUTC), msg, format(
-                                    periodStartUTC), settings.getPeriodBegin(), settings.getTimeZone()));
+                                    periodStartUTC), format(periodEndUTC), settings.getPeriodBegin(), settings.getTimeZone(), scheduleZone));
                 }
             }
         }
