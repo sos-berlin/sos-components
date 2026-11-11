@@ -243,8 +243,12 @@ public class ApiExecutor implements AutoCloseable {
                     }
                 }
                 setResponseHeaders(result.response());
-                return new ApiResponse(code, HttpUtils.getReasonPhrase(code), result.response().body(), client.getResponseHeader(result.response(),
-                        ACCESS_TOKEN_HEADER).orElse(null), null);
+                Optional<String> accessToken = client.getResponseHeader(result.response(), ACCESS_TOKEN_HEADER);
+                if(accessToken.isPresent() && !accessToken.get().isEmpty()) {
+                    return new ApiResponse(code, HttpUtils.getReasonPhrase(code), result.response().body(), accessToken.get(), null);
+                } else {
+                    throw new SOSConnectionRefusedException("no access token provided by login api.");
+                }
             } catch (ConnectException | SOSConnectionRefusedException e) {
                 latestError = String.format("connection to URI %1$s failed, trying next Uri.", loginUri.toString());
                 if (isDebugEnabled) {
