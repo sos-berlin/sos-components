@@ -67,7 +67,19 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     @JsonSubTypes.Type(value = com.sos.joc.model.inventory.folder.FolderEdit.class, name = "FOLDER"),
     @JsonSubTypes.Type(value = com.sos.joc.model.inventory.descriptor.DeploymentDescriptorEdit.class, name = "DEPLOYMENTDESCRIPTOR"),
     @JsonSubTypes.Type(value = com.sos.joc.model.inventory.folder.DescriptorFolderEdit.class, name = "DESCRIPTORFOLDER"),
-    @JsonSubTypes.Type(value = com.sos.joc.model.inventory.report.ReportEdit.class, name = "REPORT")})
+    @JsonSubTypes.Type(value = com.sos.joc.model.inventory.report.ReportEdit.class, name = "REPORT"),
+    @JsonSubTypes.Type(value = com.sos.joc.model.inventory.filetransfer.CredentialStoreFragmentEdit.class, name = "FT_FRAGMENT_CREDENTIAL_STORE"),
+    @JsonSubTypes.Type(value = com.sos.joc.model.inventory.filetransfer.DecryptionFragmentEdit.class, name = "FT_FRAGMENT_DECRYPTION"),
+    @JsonSubTypes.Type(value = com.sos.joc.model.inventory.filetransfer.ProxyHttpFragmentEdit.class, name = "FT_FRAGMENT_PROXY_HTTP"),
+    @JsonSubTypes.Type(value = com.sos.joc.model.inventory.filetransfer.ProxySocksFragmentEdit.class, name = "FT_FRAGMENT_PROXY_SOCKS"),
+    @JsonSubTypes.Type(value = com.sos.joc.model.inventory.filetransfer.AzureBlobStorageFragmentEdit.class, name = "FT_FRAGMENT_AZURE_BLOB_STORAGE"),
+    @JsonSubTypes.Type(value = com.sos.joc.model.inventory.filetransfer.FtpFragmentEdit.class, name = "FT_FRAGMENT_FTP"),
+    @JsonSubTypes.Type(value = com.sos.joc.model.inventory.filetransfer.HttpFragmentEdit.class, name = "FT_FRAGMENT_HTTP"),
+    @JsonSubTypes.Type(value = com.sos.joc.model.inventory.filetransfer.JumpFragmentEdit.class, name = "FT_FRAGMENT_JUMP"),
+    @JsonSubTypes.Type(value = com.sos.joc.model.inventory.filetransfer.SftpFragmentEdit.class, name = "FT_FRAGMENT_SFTP"),
+    @JsonSubTypes.Type(value = com.sos.joc.model.inventory.filetransfer.SmbFragmentEdit.class, name = "FT_FRAGMENT_SMB"),
+    @JsonSubTypes.Type(value = com.sos.joc.model.inventory.filetransfer.WebdavFragmentEdit.class, name = "FT_FRAGMENT_WEBDAV"),
+    @JsonSubTypes.Type(value = com.sos.joc.model.inventory.filetransfer.ProfileEdit.class, name = "FT_PROFILE")})
 public class ConfigurationObject {
 
     /**

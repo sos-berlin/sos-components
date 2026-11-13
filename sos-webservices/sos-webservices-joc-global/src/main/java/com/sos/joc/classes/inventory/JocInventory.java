@@ -46,6 +46,18 @@ import com.sos.inventory.model.common.IInventoryObject;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.descriptor.DeploymentDescriptor;
 import com.sos.inventory.model.fileordersource.FileOrderSource;
+import com.sos.inventory.model.filetransfer.fragments.cs.CredentialStoreFragment;
+import com.sos.inventory.model.filetransfer.fragments.decryption.DecryptionFragment;
+import com.sos.inventory.model.filetransfer.fragments.protocol.AzureBlobStorageFragment;
+import com.sos.inventory.model.filetransfer.fragments.protocol.FtpFragment;
+import com.sos.inventory.model.filetransfer.fragments.protocol.HttpFragment;
+import com.sos.inventory.model.filetransfer.fragments.protocol.JumpFragment;
+import com.sos.inventory.model.filetransfer.fragments.protocol.SftpFragment;
+import com.sos.inventory.model.filetransfer.fragments.protocol.SmbFragment;
+import com.sos.inventory.model.filetransfer.fragments.protocol.WebdavFragment;
+import com.sos.inventory.model.filetransfer.fragments.proxy.ProxyHttpFragment;
+import com.sos.inventory.model.filetransfer.fragments.proxy.ProxySocksFragment;
+import com.sos.inventory.model.filetransfer.profile.Profile;
 import com.sos.inventory.model.instruction.InstructionType;
 import com.sos.inventory.model.job.ExecutableScript;
 import com.sos.inventory.model.job.ExecutableType;
@@ -137,6 +149,19 @@ public class JocInventory {
             put(ConfigurationType.FOLDER, "classpath:/raml/api/schemas/inventory/folder-schema.json");
             put(ConfigurationType.DEPLOYMENTDESCRIPTOR, "classpath:/raml/inventory/schemas/deploymentDescriptor/deploymentDescriptor-schema.json");
             put(ConfigurationType.DESCRIPTORFOLDER, "classpath:/raml/api/schemas/inventory/folder-schema.json");
+            
+            put(ConfigurationType.FT_FRAGMENT_CREDENTIAL_STORE, "classpath:/raml/inventory/schemas/filetransfer/fragments/cs/credentialStoreFragment-schema-schema.json");
+            put(ConfigurationType.FT_FRAGMENT_DECRYPTION, "classpath:/raml/inventory/schemas/filetransfer/fragments/decryption/decryptionFragment-schema.json");
+            put(ConfigurationType.FT_FRAGMENT_PROXY_HTTP, "classpath:/raml/inventory/schemas/filetransfer/fragments/proxy/proxyHttpFragment-schema.json");
+            put(ConfigurationType.FT_FRAGMENT_PROXY_SOCKS, "classpath:/raml/inventory/schemas/filetransfer/fragments/proxy/proxySocksFragment.json");
+            put(ConfigurationType.FT_FRAGMENT_AZURE_BLOB_STORAGE, "classpath:/raml/inventory/schemas/filetransfer/fragments/protocol/azureBlobStorageFragment-schema.json");
+            put(ConfigurationType.FT_FRAGMENT_FTP, "classpath:/raml/inventory/schemas/filetransfer/fragments/protocol/ftpFragment-schema.json");
+            put(ConfigurationType.FT_FRAGMENT_HTTP, "classpath:/raml/inventory/schemas/filetransfer/fragments/protocol/httpFragment-schema.json");
+            put(ConfigurationType.FT_FRAGMENT_JUMP, "classpath:/raml/inventory/schemas/filetransfer/fragments/protocol/jumpFragment-schema.json");
+            put(ConfigurationType.FT_FRAGMENT_SFTP, "classpath:/raml/inventory/schemas/filetransfer/fragments/protocol/sftpFragment-schema.json");
+            put(ConfigurationType.FT_FRAGMENT_SMB, "classpath:/raml/inventory/schemas/filetransfer/fragments/protocol/smbFragment-schema.json");
+            put(ConfigurationType.FT_FRAGMENT_WEBDAV, "classpath:/raml/inventory/schemas/filetransfer/fragments/protocol/webdavFragment-schema.json");
+            put(ConfigurationType.FT_PROFILE, "classpath:/raml/inventory/schemas/filetransfer/profile/profile-schema.json");
         }
     });
 
@@ -195,6 +220,20 @@ public class JocInventory {
             put(ConfigurationType.FOLDER, Folder.class);
             put(ConfigurationType.DEPLOYMENTDESCRIPTOR, DeploymentDescriptor.class);
             put(ConfigurationType.DESCRIPTORFOLDER, Folder.class);
+            
+            put(ConfigurationType.FT_FRAGMENT_CREDENTIAL_STORE, CredentialStoreFragment.class);
+            put(ConfigurationType.FT_FRAGMENT_DECRYPTION, DecryptionFragment.class);
+            put(ConfigurationType.FT_FRAGMENT_PROXY_HTTP, ProxyHttpFragment.class);
+            put(ConfigurationType.FT_FRAGMENT_PROXY_SOCKS, ProxySocksFragment.class);
+            put(ConfigurationType.FT_FRAGMENT_AZURE_BLOB_STORAGE, AzureBlobStorageFragment.class);
+            put(ConfigurationType.FT_FRAGMENT_FTP, FtpFragment.class);
+            put(ConfigurationType.FT_FRAGMENT_HTTP, HttpFragment.class);
+            put(ConfigurationType.FT_FRAGMENT_JUMP, JumpFragment.class);
+            put(ConfigurationType.FT_FRAGMENT_SFTP, SftpFragment.class);
+            put(ConfigurationType.FT_FRAGMENT_SMB, SmbFragment.class);
+            put(ConfigurationType.FT_FRAGMENT_WEBDAV, WebdavFragment.class);
+            put(ConfigurationType.FT_PROFILE, Profile.class);
+            
         }
     });
 

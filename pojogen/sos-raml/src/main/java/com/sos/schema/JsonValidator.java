@@ -35,10 +35,12 @@ public class JsonValidator {
     private static final List<NonValidationKeyword> NON_VALIDATION_KEYS = Arrays.asList(new NonValidationKeyword("javaType"),
             new NonValidationKeyword("javaInterfaces"), new NonValidationKeyword("javaEnumNames"), new NonValidationKeyword("extends"),
             new NonValidationKeyword("additionalProperties"), new NonValidationKeyword("propertyOrder"), new NonValidationKeyword("alias"),
-            new NonValidationKeyword("schemaVersion"));
+            new NonValidationKeyword("schemaVersion"), new NonValidationKeyword("$defs"), new NonValidationKeyword("_comment"),
+            new NonValidationKeyword("x-ui-options"));
     private static final List<NonValidationKeyword> NON_VALIDATION_KEYS_STRICT = Arrays.asList(new NonValidationKeyword("javaType"),
             new NonValidationKeyword("javaInterfaces"), new NonValidationKeyword("javaEnumNames"), new NonValidationKeyword("extends"),
-            new NonValidationKeyword("propertyOrder"), new NonValidationKeyword("alias"), new NonValidationKeyword("schemaVersion"));
+            new NonValidationKeyword("propertyOrder"), new NonValidationKeyword("alias"), new NonValidationKeyword("schemaVersion"),
+            new NonValidationKeyword("$defs"), new NonValidationKeyword("_comment"), new NonValidationKeyword("x-ui-options"));
     private static final JsonSchemaFactory FACTORY_V4 = JsonSchemaFactory.builder(JsonSchemaFactory.getInstance(JSONDRAFT)).addMetaSchema(
             JsonMetaSchema.builder(JsonMetaSchema.getV4().getUri(), JsonMetaSchema.getV4()).addKeywords(NON_VALIDATION_KEYS).build()).build();
     private static final JsonSchemaFactory FACTORY_V4_STRICT = JsonSchemaFactory.builder(JsonSchemaFactory.getInstance(JSONDRAFT)).addMetaSchema(
@@ -223,7 +225,7 @@ public class JsonValidator {
             put("com.sos.joc.model.tag.rename.RequestFilter", "tag/rename/request-filter-schema.json");
             put("com.sos.joc.model.tag.tagging.RequestModifyFilter", "tag/tagging/request-modify-filter-schema.json");
             put("com.sos.joc.model.inventory.common.RequestTag", "inventory/common/request-tag-schema.json");
-            
+
             put("com.sos.joc.model.note.common.NoteIdentifier", "note/common/identifier-schema.json");
             put("com.sos.joc.model.note.common.ModifyRequest", "note/common/request-modify-schema.json");
             put("com.sos.joc.model.note.AddPost", "note/addPost-schema.json");
@@ -399,7 +401,7 @@ public class JsonValidator {
 
             put("com.sos.joc.model.security.locker.LockerFilter", "security/locker/lockerFilter-schema.json");
             put("com.sos.joc.model.security.locker.Locker", "security/locker/locker-schema.json");
-            
+
             put("com.sos.joc.model.security.oidc.GetTokenRequest", "security/oidc/get-token-request-schema.json");
 
             // Profiles
@@ -436,14 +438,14 @@ public class JsonValidator {
             put("FourEyesRequestEdit", "security/fourEyes/four-eyes-request-edit-schema.json");
             put("ApprovalsFilter", "security/fourEyes/approvals-filter-schema.json");
             put("com.sos.joc.model.security.foureyes.EmailSettings", "security/fourEyes/email-settings-schema.json");
-            
-            //log
+
+            // log
             put("com.sos.joc.model.log.ControllerLogRequest", "logManagement/controller-log-request-schema.json");
             put("com.sos.joc.model.log.AgentLogRequest", "logManagement/agent-log-request-schema.json");
             put("com.sos.joc.model.log.KeyedLogRequest", "logManagement/next-prev-log-request-schema.json");
             put("com.sos.joc.model.log.NextLogRequest", "logManagement/next-log-request-schema.json");
             put("com.sos.joc.model.log.JOCLogRequest", "logManagement/joc-log-request-schema.json");
-            
+
             // TODO complete the map
         }
     });

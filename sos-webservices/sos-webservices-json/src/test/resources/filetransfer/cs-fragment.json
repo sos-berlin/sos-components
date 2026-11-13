@@ -1,0 +1,16 @@
+{
+	"jobschedulerId": "",
+	"configuration": {
+		"version": "1.7.2",
+		"file": "my_file",
+		"authentication": {
+			"keyFile": {
+				"file": "key_file"
+			}
+		}
+	},
+	"path": "/cs_fragment",
+	"id": 1,
+	"valid": false,
+	"objectType": "FT_FRAGMENT_CREDENTIAL_STORE"
+}

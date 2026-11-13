@@ -1,0 +1,24 @@
+{
+	"jobschedulerId": "",
+	"configuration": {
+		"version": "1.7.2",
+		"operation": "GETLIST",
+		"source": {
+			"fragmentRef": {
+				"type": "SFTP",
+				"ref": "my sftp ref"
+			},
+			"sourceFileOptions": {
+				"selection": {
+					"fileSpec": {
+						"fileSpec": ".*"
+					}
+				}
+			}
+		}
+	},
+	"path": "/profile",
+	"id": 1,
+	"valid": false,
+	"objectType": "FT_PROFILE"
+}

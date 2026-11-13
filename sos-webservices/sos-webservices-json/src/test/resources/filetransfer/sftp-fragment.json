@@ -1,0 +1,19 @@
+{
+	"jobschedulerId": "",
+	"configuration": {
+		"version": "1.7.2",
+		"connection": {
+			"hostname": "sftp_host"
+		},
+		"authentication": {
+			"account": "my_user",
+			"publicKey": {
+				"file": "pk.file"
+			}
+		}
+	},
+	"path": "/sftp_fragment",
+	"id": 1,
+	"valid": false,
+	"objectType": "FT_FRAGMENT_SFTP"
+}
