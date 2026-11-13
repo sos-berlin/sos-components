@@ -25,7 +25,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "listParameters",
     "facet",
     "list",
-    "message"
+    "message",
+    "display"
 })
 public class Parameter {
 
@@ -50,11 +51,11 @@ public class Parameter {
     /**
      * list parameters
      * <p>
-     * parameters only for parameter type 'List'
+     * parameters only for parameter type 'List' or 'Map'
      * 
      */
     @JsonProperty("listParameters")
-    @JsonPropertyDescription("parameters only for parameter type 'List'")
+    @JsonPropertyDescription("parameters only for parameter type 'List' or 'Map'")
     private ListParameters listParameters;
     /**
      * a regular expression to check the value of the parameter
@@ -77,6 +78,13 @@ public class Parameter {
     @JsonProperty("message")
     @JsonPropertyDescription("a message if the value doesn't match the facet")
     private String message;
+    /**
+     * displays this parameters in 'add order' dialog etc. even it has a default value
+     * 
+     */
+    @JsonProperty("display")
+    @JsonPropertyDescription("displays this parameters in 'add order' dialog etc. even it has a default value")
+    private Boolean display = false;
 
     /**
      * No args constructor for use in serialization
@@ -84,10 +92,15 @@ public class Parameter {
      */
     public Parameter() {
     }
+    
+    public Parameter(ParameterType type) {
+        this.type = type;
+    }
 
     /**
      * 
      * @param _default
+     * @param display
      * @param type
      * @param _final
      * @param list
@@ -95,7 +108,7 @@ public class Parameter {
      * @param facet
      * @param listParameters
      */
-    public Parameter(ParameterType type, Object _default, String _final, ListParameters listParameters, String facet, List<String> list, String message) {
+    public Parameter(ParameterType type, Object _default, String _final, ListParameters listParameters, String facet, List<String> list, String message, Boolean display) {
         super();
         this.type = type;
         this._default = _default;
@@ -104,6 +117,7 @@ public class Parameter {
         this.facet = facet;
         this.list = list;
         this.message = message;
+        this.display = display;
     }
 
     /**
@@ -161,7 +175,7 @@ public class Parameter {
     /**
      * list parameters
      * <p>
-     * parameters only for parameter type 'List'
+     * parameters only for parameter type 'List' or 'Map'
      * 
      */
     @JsonProperty("listParameters")
@@ -172,7 +186,7 @@ public class Parameter {
     /**
      * list parameters
      * <p>
-     * parameters only for parameter type 'List'
+     * parameters only for parameter type 'List' or 'Map'
      * 
      */
     @JsonProperty("listParameters")
@@ -234,14 +248,32 @@ public class Parameter {
         this.message = message;
     }
 
+    /**
+     * displays this parameters in 'add order' dialog etc. even it has a default value
+     * 
+     */
+    @JsonProperty("display")
+    public Boolean getDisplay() {
+        return (display != Boolean.TRUE) ? null : display;
+    }
+
+    /**
+     * displays this parameters in 'add order' dialog etc. even it has a default value
+     * 
+     */
+    @JsonProperty("display")
+    public void setDisplay(Boolean display) {
+        this.display = display;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("type", type).append("_default", _default).append("_final", _final).append("listParameters", listParameters).append("facet", facet).append("list", list).append("message", message).toString();
+        return new ToStringBuilder(this).append("type", type).append("_default", _default).append("_final", _final).append("listParameters", listParameters).append("facet", facet).append("list", list).append("message", message).append("display", display).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(_default).append(type).append(_final).append(list).append(message).append(facet).append(listParameters).toHashCode();
+        return new HashCodeBuilder().append(_default).append(display).append(type).append(_final).append(list).append(message).append(facet).append(listParameters).toHashCode();
     }
 
     @Override
@@ -253,7 +285,7 @@ public class Parameter {
             return false;
         }
         Parameter rhs = ((Parameter) other);
-        return new EqualsBuilder().append(_default, rhs._default).append(type, rhs.type).append(_final, rhs._final).append(list, rhs.list).append(message, rhs.message).append(facet, rhs.facet).append(listParameters, rhs.listParameters).isEquals();
+        return new EqualsBuilder().append(_default, rhs._default).append(display, rhs.display).append(type, rhs.type).append(_final, rhs._final).append(list, rhs.list).append(message, rhs.message).append(facet, rhs.facet).append(listParameters, rhs.listParameters).isEquals();
     }
 
 }
