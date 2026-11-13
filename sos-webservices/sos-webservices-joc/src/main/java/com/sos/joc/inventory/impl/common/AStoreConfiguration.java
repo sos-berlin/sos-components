@@ -246,7 +246,7 @@ public abstract class AStoreConfiguration extends JOCResourceImpl {
                     r.setParameters(new Parameters());
                 }
                 if (r.getParameters().getAdditionalProperties().get("file") == null) {
-                    r.getParameters().setAdditionalProperty("file", new Parameter(ParameterType.String, null, null, null, null, null, null));
+                    r.getParameters().setAdditionalProperty("file", new Parameter(ParameterType.String));
                 }
             }
             updateInvalidFileOrderSourcesIfBecomeValid(foss, dbLayer);
