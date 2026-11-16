@@ -11,7 +11,7 @@ public class ReleaseDeploySemaphore extends Semaphore {
     private String initialCaller;
 
     public ReleaseDeploySemaphore(int permits, String initialCaller) {
-        super(permits);
+        super(permits, true);
         if(this.initialCaller == null) {
             this.initialCaller = initialCaller;
         }
