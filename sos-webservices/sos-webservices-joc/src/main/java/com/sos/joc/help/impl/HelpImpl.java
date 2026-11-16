@@ -39,7 +39,7 @@ public class HelpImpl extends JOCResourceImpl implements IHelpResource {
             }
 
             checkRequiredParameter("path", path);
-            final InputStream stream = getInputStream(resource);
+            final InputStream stream = getInputStream(resource, API_CALL);
             
             StreamingOutput helpFileStream = new StreamingOutput() {
 
@@ -75,11 +75,11 @@ public class HelpImpl extends JOCResourceImpl implements IHelpResource {
         }
     }
     
-    private InputStream getInputStream(String resource) throws JocObjectNotExistException {
+    public static InputStream getInputStream(String resource, String apiCall) throws JocObjectNotExistException {
         InputStream stream = JOCResourceImpl.class.getResourceAsStream(resource);
         if (stream == null) {
             // try once more in english as fallback
-            stream = JOCResourceImpl.class.getResourceAsStream(resource.replaceFirst(Pattern.quote(API_CALL) + "/[^/]+/", API_CALL + "/en/"));
+            stream = JOCResourceImpl.class.getResourceAsStream(resource.replaceFirst(Pattern.quote(apiCall) + "/[^/]+/", apiCall + "/en/"));
         }
         if (stream == null) {
             throw new JocObjectNotExistException(resource);
@@ -87,7 +87,7 @@ public class HelpImpl extends JOCResourceImpl implements IHelpResource {
         return stream;
     }
     
-    private static String getExtension(String path) {
+    public static String getExtension(String path) {
         String filename = Paths.get(path).getFileName().toString();
         String extension = "";
         if (filename.contains(".")) {
@@ -97,7 +97,7 @@ public class HelpImpl extends JOCResourceImpl implements IHelpResource {
         return extension;
     }
     
-    private static String getMediaType(String path) {
+    public static String getMediaType(String path) {
         String type = getExtension(path);
         switch (type) {
         case "xml":
