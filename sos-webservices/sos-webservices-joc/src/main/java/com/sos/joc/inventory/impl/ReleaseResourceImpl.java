@@ -142,9 +142,10 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
          * - recreate orders 
          */
 
-        while(!PublishSemaphore.tryAcquire(in.getTransactionId(), SEMAPHORE_ID)) {
-            TimeUnit.MILLISECONDS.sleep(50);
-        }
+//        while(!PublishSemaphore.tryAcquire(in.getTransactionId(), SEMAPHORE_ID)) {
+//            TimeUnit.MILLISECONDS.sleep(50);
+//        }
+        PublishSemaphore.acquire(in.getTransactionId(), SEMAPHORE_ID);
         LOGGER.debug("RELEASE: acquire semaphore from release with transactionId " + in.getTransactionId());
 
         try {
@@ -283,9 +284,10 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
             } catch (InterruptedException e) {
             }
         }
-        while(!PublishSemaphore.tryAcquire(transactionId, SEMAPHORE_ID)) {
-            TimeUnit.MILLISECONDS.sleep(50);
-        }
+//        while(!PublishSemaphore.tryAcquire(transactionId, SEMAPHORE_ID)) {
+//            TimeUnit.MILLISECONDS.sleep(50);
+//        }
+        PublishSemaphore.acquire(transactionId, SEMAPHORE_ID);
         LOGGER.debug("RELEASE: reacquired semaphore with transactionId " + transactionId);
     }
 

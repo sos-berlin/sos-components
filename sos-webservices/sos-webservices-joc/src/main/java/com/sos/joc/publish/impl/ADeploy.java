@@ -98,9 +98,10 @@ public abstract class ADeploy extends JOCResourceImpl {
                 TimeUnit.MILLISECONDS.sleep(100);
             }
             // TODO timeout needed
-            while(!PublishSemaphore.tryAcquire(deployFilter.getTransactionId(), SEMAPHORE_ID)) {
-                TimeUnit.MILLISECONDS.sleep(50);
-            }
+//            while(!PublishSemaphore.tryAcquire(deployFilter.getTransactionId(), SEMAPHORE_ID)) {
+//                TimeUnit.MILLISECONDS.sleep(50);
+//            }
+            PublishSemaphore.acquire(deployFilter.getTransactionId(), SEMAPHORE_ID);
             LOGGER.debug("DEPLOY: acquire semaphore with transactionId " + deployFilter.getTransactionId());
             
             Set<String> allowedControllerIds = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> 

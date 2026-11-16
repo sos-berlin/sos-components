@@ -31,6 +31,10 @@ public class PublishSemaphore {
         return getInstance()._tryAcquire(transactionId, initialCaller);
     }
     
+    public static void acquire(String transactionId, String initialCaller) throws InterruptedException {
+        getInstance()._acquire(transactionId, initialCaller);
+    }
+    
     public static int getQueueLength(String accessToken) {
         return getInstance()._getQueueLength(accessToken);
     }
@@ -46,6 +50,16 @@ public class PublishSemaphore {
     
     public static int availablePermits(String transactionId) {
         return getInstance()._availablePermits(transactionId);
+    }
+    
+    private void _acquire(String transactionId, String initialCaller) throws InterruptedException {
+        // only one semaphore allowed in map
+        if(semaphores.keySet().size() == 0) {
+            semaphores.putIfAbsent(transactionId, new ReleaseDeploySemaphore(1, initialCaller));
+        }
+        if(semaphores.get(transactionId) != null) {
+            semaphores.get(transactionId).acquire();
+        }
     }
     
     private boolean _tryAcquire(String transactionId, String initialCaller) throws InterruptedException {
