@@ -15,10 +15,8 @@ import java.util.stream.Collectors;
 import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Node;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.xml.SOSXML;
 import com.sos.joc.Globals;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.documentation.DBItemDocumentation;
@@ -27,7 +25,7 @@ import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
 
 public class JitlDocumentation {
 
-    private static final String DOCUS = "/sos-jitl-jobdoc.zip";
+//    private static final String DOCUS = "/sos-jitl-jobdoc.zip";
     private static final String NOTIFICATION = "/notification.xml";
     private static final String NOTIFICATION_XSD = "Notification_configuration_v1.0.xsd";
     private static final String MAINFOLDER = "/sos";
@@ -42,24 +40,45 @@ public class JitlDocumentation {
             connection = Globals.createSosHibernateStatelessConnection(JitlDocumentation.class.getSimpleName());
             // updateVersion(connection);
             updateNotification(connection);
-            stream = JitlDocumentation.class.getClassLoader().getResourceAsStream(DOCUS);
-            if (stream != null) {
-                try {
-                    DocumentationDBLayer dbLayer = new DocumentationDBLayer(connection);
-                    if (updateIsNecessary(dbLayer)) {
-                        DocumentationHelper.readZipFileContent(stream, MAINFOLDER, dbLayer);
-                        LOGGER.info("JITL-Job documentations are inserted/updated.");
-                    } else {
-                        LOGGER.info("JITL-Job documentations are already up to date.");
-                    }
-                } catch (Exception e) {
-                    LOGGER.warn("Error while insert/update JITL-Job documentations: ", e);
+//            stream = JitlDocumentation.class.getClassLoader().getResourceAsStream(DOCUS);
+//            if (stream != null) {
+//                try {
+//                    DocumentationDBLayer dbLayer = new DocumentationDBLayer(connection);
+//                    if (updateIsNecessary(dbLayer)) {
+//                        DocumentationHelper.readZipFileContent(stream, MAINFOLDER, dbLayer);
+//                        LOGGER.info("JITL-Job documentations are inserted/updated.");
+//                    } else {
+//                        LOGGER.info("JITL-Job documentations are already up to date.");
+//                    }
+//                } catch (Exception e) {
+//                    LOGGER.warn("Error while insert/update JITL-Job documentations: ", e);
+//                }
+//            } else {
+//                LOGGER.warn(String.format("Error while reading resource %1$s from classpath: not found", DOCUS));
+//            }
+            URL url = JitlDocumentation.class.getClassLoader().getResource("/jitl-jobdoc/default-markdown.css");
+            if (url != null) {
+                Path p = Paths.get(url.toURI());
+                if (Files.exists(p)) {
+                    try {
+                        DBItemDocumentation documentation = new DBItemDocumentation();
+                        documentation.setFolder(MAINFOLDER + "/css");
+                        documentation.setName("default-markdown.css");
+                        documentation.setContent(Files.readString(p));
+                        documentation.setDocRef(null);
+                        documentation.setPath(documentation.getFolder() + "/" + documentation.getName());
+                        documentation.setIsRef(false);
+                        documentation.setHasImage(false);
+                        documentation.setType("css");
+                        DocumentationHelper.saveOrUpdate(documentation, new DocumentationDBLayer(connection), null);
+                        Files.deleteIfExists(p);
+                  } catch (Exception e) {
+                      LOGGER.warn("Error while insert/update default-markdown.css: ", e);
+                  }
                 }
-            } else {
-                LOGGER.warn(String.format("Error while reading resource %1$s from classpath: not found", DOCUS));
             }
         } catch (Exception e) {
-            LOGGER.warn(String.format("Error while reading resource %1$s from classpath: ", DOCUS), e);
+            LOGGER.warn(String.format("Error while reading resource %1$s from classpath: ", "/jitl-jobdoc/default-markdown.css"), e);
         } finally {
             Globals.disconnect(connection);
             try {
@@ -138,34 +157,34 @@ public class JitlDocumentation {
         }
     }
 
-    private static boolean updateIsNecessary(DocumentationDBLayer dbLayer) {
-        boolean update = true;
-        try {
-            DBItemDocumentation xsltItem = dbLayer.getDocumentation(XSLT);
-            if (xsltItem != null) {
-                String xsltContent = xsltItem.getContent();
-                if (xsltContent != null) {
-                    Node versionNode = SOSXML.newXPath().selectNode(SOSXML.parse(xsltContent), "//variable[@name='version']/@select");
-                    if (versionNode != null && versionNode.getNodeValue() != null) {
-                        String version = versionNode.getNodeValue();
-                        if (version != null) {
-                            version = version.replaceAll("'", "");
-                            LOGGER.info("JITL-Job documentation version in database: " + version);
-                            int compare = Globals.curVersionCompareWith(version);
-                            if (compare < 0) {
-                                update = false;
-                            } else if (compare == 0 && !version.contains("-SNAPSHOT")) {
-                                update = false;
-                            }
-                        }
-                    } else {
-                        LOGGER.info("Couldn't determine JITL-Job documentation version.");
-                    }
-                }
-            }
-        } catch (Exception e) {
-            //
-        }
-        return update;
-    }
+//    private static boolean updateIsNecessary(DocumentationDBLayer dbLayer) {
+//        boolean update = true;
+//        try {
+//            DBItemDocumentation xsltItem = dbLayer.getDocumentation(XSLT);
+//            if (xsltItem != null) {
+//                String xsltContent = xsltItem.getContent();
+//                if (xsltContent != null) {
+//                    Node versionNode = SOSXML.newXPath().selectNode(SOSXML.parse(xsltContent), "//variable[@name='version']/@select");
+//                    if (versionNode != null && versionNode.getNodeValue() != null) {
+//                        String version = versionNode.getNodeValue();
+//                        if (version != null) {
+//                            version = version.replaceAll("'", "");
+//                            LOGGER.info("JITL-Job documentation version in database: " + version);
+//                            int compare = Globals.curVersionCompareWith(version);
+//                            if (compare < 0) {
+//                                update = false;
+//                            } else if (compare == 0 && !version.contains("-SNAPSHOT")) {
+//                                update = false;
+//                            }
+//                        }
+//                    } else {
+//                        LOGGER.info("Couldn't determine JITL-Job documentation version.");
+//                    }
+//                }
+//            }
+//        } catch (Exception e) {
+//            //
+//        }
+//        return update;
+//    }
 }
