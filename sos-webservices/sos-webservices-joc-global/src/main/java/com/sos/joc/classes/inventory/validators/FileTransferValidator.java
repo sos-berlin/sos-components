@@ -209,27 +209,4 @@ public class FileTransferValidator {
             throw new JocConfigurationException("The assigned " + propertyName + " name  does not exist: " + name);
         }
     }
-
-    @SuppressWarnings("unused")
-    private static String getDisplayName(ConfigurationType type) {
-        if (type == null) {
-            return "";
-        }
-        return switch (type) {
-        case FT_FRAGMENT_CREDENTIAL_STORE -> "Credential Store Fragment";
-        case FT_FRAGMENT_DECRYPTION -> "Decryption Fragment";
-        case FT_FRAGMENT_MAIL -> "Mail Fragment";
-        case FT_FRAGMENT_HTTP_PROXY -> "HTTP Proxy Fragment";
-        case FT_FRAGMENT_SOCKS_PROXY -> "SOCKS Proxy Fragment";
-        case FT_FRAGMENT_AZURE_BLOB_STORAGE -> "Azure Blob Storage Fragment";
-        case FT_FRAGMENT_FTP -> "FTP Fragment";
-        case FT_FRAGMENT_HTTP -> "HTTP Fragment";
-        case FT_FRAGMENT_JUMP -> "Jump Fragment";
-        case FT_FRAGMENT_SFTP -> "SFTP Fragment";
-        case FT_FRAGMENT_SMB -> "SMB Fragment";
-        case FT_FRAGMENT_WEBDAV -> "WebDAV Fragment";
-        case FT_PROFILE -> "Profile";
-        default -> type.name();
-        };
-    }
 }

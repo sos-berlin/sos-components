@@ -95,14 +95,4 @@ public enum ConfigurationType {
         }
     }
 
-    public static boolean isFileTransfer(ConfigurationType type) {
-        if (type == null) {
-            return false;
-        }
-        return switch (type) {
-        case FT_FRAGMENT_CREDENTIAL_STORE, FT_FRAGMENT_DECRYPTION, FT_FRAGMENT_HTTP_PROXY, FT_FRAGMENT_SOCKS_PROXY, FT_FRAGMENT_AZURE_BLOB_STORAGE, FT_FRAGMENT_FTP, FT_FRAGMENT_HTTP, FT_FRAGMENT_JUMP, FT_FRAGMENT_SFTP, FT_FRAGMENT_SMB, FT_FRAGMENT_WEBDAV, FT_PROFILE -> true;
-        default -> false;
-        };
-    }
-
 }
