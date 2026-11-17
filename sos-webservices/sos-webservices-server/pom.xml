@@ -65,6 +65,31 @@
 					<mainClass>com.sos.joc2.Main</mainClass>
 				</configuration>
 			</plugin>
+			<plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>unpack-jitl-job-docu</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                          <goal>unpack</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/classes</outputDirectory>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>com.sos-berlin</groupId>
+                                    <artifactId>sos-jitl-jobdoc</artifactId>
+                                    <version>${sos.components.version}</version>
+                                    <classifier>md</classifier>
+                                </artifactItem>
+                            </artifactItems>
+                            <excludes>*META-INF*,META-INF/**</excludes>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
 		</plugins>
 	</build>
 	<dependencies>
