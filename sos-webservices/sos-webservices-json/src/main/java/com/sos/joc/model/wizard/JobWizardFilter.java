@@ -17,7 +17,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "assignReference"
+    "assignReference",
+    "language"
 })
 public class JobWizardFilter {
 
@@ -30,6 +31,8 @@ public class JobWizardFilter {
      */
     @JsonProperty("assignReference")
     private String assignReference;
+    @JsonProperty("language")
+    private String language = "en";
 
     /**
      * string without < and >
@@ -54,15 +57,25 @@ public class JobWizardFilter {
     public void setAssignReference(String assignReference) {
         this.assignReference = assignReference;
     }
+    
+    @JsonProperty("language")
+    public String getLanguage() {
+        return language;
+    }
+
+    @JsonProperty("language")
+    public void setLanguage(String language) {
+        this.language = language;
+    }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("assignReference", assignReference).toString();
+        return new ToStringBuilder(this).append("assignReference", assignReference).append("language", language).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(assignReference).toHashCode();
+        return new HashCodeBuilder().append(assignReference).append(language).toHashCode();
     }
 
     @Override
@@ -74,7 +87,7 @@ public class JobWizardFilter {
             return false;
         }
         JobWizardFilter rhs = ((JobWizardFilter) other);
-        return new EqualsBuilder().append(assignReference, rhs.assignReference).isEquals();
+        return new EqualsBuilder().append(assignReference, rhs.assignReference).append(language, rhs.language).isEquals();
     }
 
 }

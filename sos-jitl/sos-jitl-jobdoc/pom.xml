@@ -36,7 +36,7 @@
                             <goal>unpack</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>${project.basedir}/src/main</outputDirectory>
+                            <outputDirectory>${workspace.dir}</outputDirectory>
                             <artifactItems>
                                 <artifactItem>
                                     <groupId>com.sos-berlin</groupId>
@@ -51,6 +51,7 @@
                     </execution>
                 </executions>
             </plugin>
+            <!--
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-antrun-plugin</artifactId>
@@ -69,7 +70,32 @@
                     </execution>
                 </executions>
             </plugin>
-
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>package-setup</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/main/assembly/markdown.xml</descriptor>
+                            </descriptors>
+                            <archive>
+                                <manifest>
+                                    <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+                                </manifest>
+                            </archive>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- no longer necessary; json and markdown is used instead -->
+            <!--
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>xml-maven-plugin</artifactId>
@@ -138,7 +164,6 @@
 				</executions>
 			</plugin>
 
-
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-assembly-plugin</artifactId>
@@ -162,8 +187,10 @@
 					</execution>
 				</executions>
 			</plugin>
+			-->
 			
-			
+			<!-- need only once to put manually the pojos to jitl-jobs/src/main/java/com/sos/jitl/jobs/sap/common/bean if schemas are changed -->
+			<!--
 			<plugin>
 				<groupId>org.jsonschema2pojo</groupId>
 				<artifactId>jsonschema2pojo-maven-plugin</artifactId>
@@ -228,6 +255,7 @@
 					</execution>
 				</executions>
 			</plugin>
+			-->
 
 
 		</plugins>

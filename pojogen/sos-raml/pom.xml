@@ -24,6 +24,7 @@
 					<include>raml/controller/schemas/**</include>
 					<include>raml/inventory/schemas/**</include>
 					<include>raml/sign/schemas/**</include>
+					<include>raml/jitl/schemas/**</include>
 				</includes>
 			</resource>
 		</resources>
@@ -35,6 +36,7 @@
             <fileset>
               <directory>${project.basedir}/src/main/resources</directory>
               <excludes>
+                <exclude>**/jitl/**</exclude>
                 <exclude>**/sign/**</exclude>
               </excludes>
               <followSymlinks>false</followSymlinks>
@@ -387,6 +389,29 @@
 							<goal>generate</goal>
 						</goals>
 					</execution>
+					<execution>
+                        <id>generate-jitl-model</id>
+                        <phase>generate-sources</phase>
+                        <configuration>
+                            <sourceDirectory>${basedir}/src/main/resources/raml/jitl/schemas</sourceDirectory>
+                            <targetPackage>com.sos.jitl.model</targetPackage>
+                            <removeOldOutput>false</removeOldOutput>
+                            <customAnnotator>com.sos.annotator.SOSAnnotator</customAnnotator>
+                            <annotationStyle>jackson2</annotationStyle>
+                            <propertyWordDelimiters>- </propertyWordDelimiters>
+                            <includeAdditionalProperties>true</includeAdditionalProperties>
+                            <initializeCollections>false</initializeCollections>
+                            <!-- constructorsRequiredPropertiesOnly>true</constructorsRequiredPropertiesOnly -->
+                            <includeConstructors>true</includeConstructors>
+                            <inclusionLevel>NON_NULL</inclusionLevel>
+                            <outputDirectory>${project.build.directory}/java-gen</outputDirectory>
+                            <addCompileSourceRoot>false</addCompileSourceRoot>
+                            <useCommonsLang3>true</useCommonsLang3>
+                        </configuration>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                    </execution>
 					<!-- execution>
 						<id>generate-history-model</id>
 						<phase>generate-sources</phase>

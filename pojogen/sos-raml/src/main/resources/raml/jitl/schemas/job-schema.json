@@ -1,0 +1,40 @@
+{
+  "title": "job",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.jitl.model.Job",
+  "type": "object",
+  "required": [
+    "name"
+  ],
+  "properties": {
+    "name": {
+		"type": "string",
+  		"minLength": 1
+	},
+	"category": {
+		"type": "string"
+	},
+	"language": {
+		"type": "string",
+  		"default": "Java"
+	},
+	"class": {
+	    "type": "string"
+	},
+    "arguments": {
+        "type": "array",
+        "uniqueItems": true,
+        "items": {
+            "$ref": "param-schema.json"
+        }
+    },
+    "returnVariables": {
+        "type": "array",
+        "uniqueItems": true,
+        "items": {
+            "$ref": "param-schema.json"
+        }
+    }
+  },
+  "additionalProperties": false
+}
