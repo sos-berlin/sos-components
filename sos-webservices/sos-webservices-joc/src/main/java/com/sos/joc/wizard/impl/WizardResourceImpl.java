@@ -3,7 +3,12 @@ package com.sos.joc.wizard.impl;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.io.UncheckedIOException;
 import java.math.BigDecimal;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -56,9 +61,8 @@ import com.sos.joc.model.wizard.Param;
 import com.sos.joc.wizard.resource.IWizardResource;
 import com.sos.schema.JsonValidator;
 
-import jakarta.ws.rs.Path;
 
-@Path("inventory/wizard")
+@jakarta.ws.rs.Path("inventory/wizard")
 public class WizardResourceImpl extends JOCResourceImpl implements IWizardResource {
 
     private static final String API_CALL_JOBS = "./wizard/jobs";
@@ -68,51 +72,88 @@ public class WizardResourceImpl extends JOCResourceImpl implements IWizardResour
     
 
     @Override
-    public JOCDefaultResponse postJobs(final String accessToken) {
+    public JOCDefaultResponse postJobs(final String accessToken, byte[] filterBytes) {
         SOSHibernateSession sosHibernateSession = null;
         try {
-            initLogging(API_CALL_JOBS, "{}".getBytes(), accessToken, CategoryType.INVENTORY);
+            filterBytes = initLogging(API_CALL_JOBS, filterBytes, accessToken, CategoryType.INVENTORY);
+            JobWizardFilter body = Globals.objectMapper.readValue(filterBytes, JobWizardFilter.class);
+            
             JOCDefaultResponse jocDefaultResponse = initPermissions(getJocPermissions().map(p -> p.getInventory().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_JOBS);
-            DocumentationDBLayer docDbLayer = new DocumentationDBLayer(sosHibernateSession);
-            List<DBItemDocumentation> jitlDocs = docDbLayer.getDocumentations(Collections.singleton("xml"), JitlDocumentation.FOLDER, false,
-                    true);
+            
+            URL url = this.getClass().getResource("/jitl-jobdoc/");
             Jobs jobs = new Jobs();
-            if (jitlDocs != null) {
-
-                final XPath xpath = newXPath();
-                final JocError jocError = getJocError();
-                jobs.setJobs(jitlDocs.stream().map(jitlDoc -> {
-                    try {
-                        Document doc = xmlToDoc(jitlDoc.getContent());
-                        Element jobElem = (Element) xpath.compile("//jobdoc:job").evaluate(doc, XPathConstants.NODE);
-                        Element scriptElem = (Element) xpath.compile("//jobdoc:script").evaluate(doc, XPathConstants.NODE);
-
+            if (url != null) {
+                Path p = Paths.get(url.toURI());
+                if (Files.isDirectory(p)) {
+                    String language = body.getLanguage();
+                    jobs.setJobs(Files.list(p).filter(f -> f.getFileName().toString().endsWith(".json")).map(f -> {
+                        String filename = f.getFileName().toString();
+                        String basename = filename.replaceFirst("\\.json$", "");
+                        String mdFilename = basename + ".md";
                         Job job = new Job();
-                        job.setDocPath(jitlDoc.getPath());
-                        job.setDocName(jitlDoc.getName());
-                        job.setAssignReference(jitlDoc.getDocRef());
-                        if (jobElem != null) {
-                            job.setTitle(jobElem.getAttribute("title"));
+                        try {
+                            com.sos.jitl.model.Job jitlJob = Globals.objectMapper.readValue(Files.readAllBytes(f), com.sos.jitl.model.Job.class);
+                            job.setDocPath("sos/jitl-jobs/" + mdFilename);
+                            job.setDocName(mdFilename);
+                            job.setAssignReference(basename);
+                            job.setJavaClass(jitlJob.getClass_());
+                            job.setTitle(readSummaryTag(p, basename, language));
+                            job.setParams(null);
+                            job.setHasRequiredArguments(null);
+                            return job;
+                        } catch (IOException e) {
+                            if (getJocError() != null && !getJocError().getMetaInfo().isEmpty()) {
+                                LOGGER.info(getJocError().printMetaInfo());
+                                getJocError().clearMetaInfo();
+                            }
+                            LOGGER.error(String.format("[%s] %s", filename, e.toString()));
+                            return null;
                         }
-                        if (scriptElem != null) {
-                            job.setJavaClass(scriptElem.getAttribute("java_class"));
-                        }
-                        return job;
-                    } catch (Throwable e) {
-                        if (jocError != null && !jocError.getMetaInfo().isEmpty()) {
-                            LOGGER.info(jocError.printMetaInfo());
-                            jocError.clearMetaInfo();
-                        }
-                        LOGGER.error(String.format("[%s] %s", jitlDoc.getPath(), e.toString()));
-                        return null;
-                    }
-                }).filter(Objects::nonNull).sorted(Comparator.comparing(job -> job.getAssignReference().toLowerCase())).collect(Collectors.toList()));
+                    }).filter(Objects::nonNull).sorted(Comparator.comparing(job -> job.getAssignReference().toLowerCase())).collect(Collectors
+                            .toList()));
+                }
             }
+            
+
+//            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_JOBS);
+//            DocumentationDBLayer docDbLayer = new DocumentationDBLayer(sosHibernateSession);
+//            List<DBItemDocumentation> jitlDocs = docDbLayer.getDocumentations(Collections.singleton("xml"), JitlDocumentation.FOLDER, false,
+//                    true);
+//            Jobs jobs = new Jobs();
+//            if (jitlDocs != null) {
+//
+//                final XPath xpath = newXPath();
+//                final JocError jocError = getJocError();
+//                jobs.setJobs(jitlDocs.stream().map(jitlDoc -> {
+//                    try {
+//                        Document doc = xmlToDoc(jitlDoc.getContent());
+//                        Element jobElem = (Element) xpath.compile("//jobdoc:job").evaluate(doc, XPathConstants.NODE);
+//                        Element scriptElem = (Element) xpath.compile("//jobdoc:script").evaluate(doc, XPathConstants.NODE);
+//
+//                        Job job = new Job();
+//                        job.setDocPath(jitlDoc.getPath());
+//                        job.setDocName(jitlDoc.getName());
+//                        job.setAssignReference(jitlDoc.getDocRef());
+//                        if (jobElem != null) {
+//                            job.setTitle(jobElem.getAttribute("title"));
+//                        }
+//                        if (scriptElem != null) {
+//                            job.setJavaClass(scriptElem.getAttribute("java_class"));
+//                        }
+//                        return job;
+//                    } catch (Throwable e) {
+//                        if (jocError != null && !jocError.getMetaInfo().isEmpty()) {
+//                            LOGGER.info(jocError.printMetaInfo());
+//                            jocError.clearMetaInfo();
+//                        }
+//                        LOGGER.error(String.format("[%s] %s", jitlDoc.getPath(), e.toString()));
+//                        return null;
+//                    }
+//                }).filter(Objects::nonNull).sorted(Comparator.comparing(job -> job.getAssignReference().toLowerCase())).collect(Collectors.toList()));
+//            }
             jobs.setDeliveryDate(Date.from(Instant.now()));
 
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(jobs));
@@ -331,6 +372,44 @@ public class WizardResourceImpl extends JOCResourceImpl implements IWizardResour
             }
         }
         return _default;
+    }
+    
+    private static List<String> getLines(Path jitlFolder, String jobname, String language) {
+        Path jobMd = jitlFolder.resolve(language).resolve(jobname + ".md");
+        if (Files.exists(jobMd)) {
+                try {
+                    return Files.readAllLines(jobMd);
+                } catch (IOException e) {
+                    if (!"en".equals(language)) {
+                        return getLines(jitlFolder, jobname, "en");
+                    } else {
+                        throw new UncheckedIOException(e);
+                    }
+                }
+        } else if (!"en".equals(language)) {
+            return getLines(jitlFolder, jobname, "en");
+        }
+        return Collections.emptyList();
+    }
+    
+    private static String readSummaryTag(Path jitlFolder, String jobname, String language) {
+        List<String> lines = getLines(jitlFolder, jobname, language);
+        boolean summaryBeginFound = false;
+        List<String> result = new ArrayList<>();
+        for (String line : lines) {
+            if (summaryBeginFound) {
+                if ("</summary>".equals(line.trim())) {
+                    break;
+                }
+                if (!line.isBlank()) {
+                    result.add(line.trim());
+                }
+            }
+            if (line.trim().matches("<summary[^>]*>")) {
+                summaryBeginFound = true; 
+            }
+        }
+        return result.stream().collect(Collectors.joining("\n"));
     }
 
 }

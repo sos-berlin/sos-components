@@ -1,0 +1,30 @@
+{
+  "title": "job param",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.jitl.model.Param",
+  "type": "object",
+  "required": [
+    "name"
+  ],
+  "properties": {
+    "name": {
+		"type": "string",
+  		"minLength": 1
+	},
+	"required": {
+		"type": "boolean",
+		"default": false
+	},
+	"dataType": {
+		"javaType": "com.sos.joc.model.configuration.globals.GlobalSettingsSectionValueType",
+		"type": "string",
+  		"default": "STRING"
+	},
+	"defaultValue": {
+	    "javaType": "java.lang.Object", 
+	    "type": "object",
+	    "additionalProperties": false
+	}
+  },
+  "additionalProperties": false
+}
