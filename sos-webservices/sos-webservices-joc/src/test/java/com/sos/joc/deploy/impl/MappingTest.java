@@ -44,7 +44,6 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.inventory.Validator;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
-import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.model.agent.transfer.AgentExportFilter;
 import com.sos.joc.model.agent.transfer.AgentImportFilter;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -581,7 +580,7 @@ public class MappingTest {
     }
 
     @Test
-    public void test37DeploymentDescriptorExample() throws JsonProcessingException {
+    public void test37DeploymentDescriptorExample() throws Exception {
         // DeploymentDescriptor descriptor = DeploymentTestUtils.createDeploymentDescriptorSchemaExample();
         // LOGGER.info("DeploymentDescriptor");
         // String json = Globals.prettyPrintObjectMapper.writeValueAsString(descriptor);
@@ -592,7 +591,7 @@ public class MappingTest {
         try {
             Validator.validate(ConfigurationType.DEPLOYMENTDESCRIPTOR, test.getBytes());
             valid = true;
-        } catch (SOSJsonSchemaException | JocConfigurationException | SOSHibernateException | IOException e) {
+        } catch (Exception e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }

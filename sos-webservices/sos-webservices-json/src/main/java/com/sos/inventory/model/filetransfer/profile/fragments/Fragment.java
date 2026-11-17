@@ -39,11 +39,10 @@ public class Fragment {
     /**
      * FTP Protocol Fragment Reference
      * <p>
-     * allOf is present for validator and documentation only. jsonschema2pojo uses 'extends' for code generation. allOf ensures the validator applies the base required fields.
+     * 
      * 
      */
     @JsonProperty("ftp")
-    @JsonPropertyDescription("allOf is present for validator and documentation only. jsonschema2pojo uses 'extends' for code generation. allOf ensures the validator applies the base required fields.")
     private FtpFragmentRef ftp;
     /**
      * HTTP Protocol Fragment Reference
@@ -144,7 +143,7 @@ public class Fragment {
     /**
      * FTP Protocol Fragment Reference
      * <p>
-     * allOf is present for validator and documentation only. jsonschema2pojo uses 'extends' for code generation. allOf ensures the validator applies the base required fields.
+     * 
      * 
      */
     @JsonProperty("ftp")
@@ -155,7 +154,7 @@ public class Fragment {
     /**
      * FTP Protocol Fragment Reference
      * <p>
-     * allOf is present for validator and documentation only. jsonschema2pojo uses 'extends' for code generation. allOf ensures the validator applies the base required fields.
+     * 
      * 
      */
     @JsonProperty("ftp")

@@ -29,6 +29,7 @@ public class Target {
      * Fragment Reference
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("fragment")
@@ -75,6 +76,7 @@ public class Target {
      * Fragment Reference
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("fragment")
@@ -86,6 +88,7 @@ public class Target {
      * Fragment Reference
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("fragment")

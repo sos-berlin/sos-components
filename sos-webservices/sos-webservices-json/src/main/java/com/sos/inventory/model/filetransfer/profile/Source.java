@@ -28,6 +28,7 @@ public class Source {
      * Fragment Reference
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("fragment")
@@ -64,6 +65,7 @@ public class Source {
      * Fragment Reference
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("fragment")
@@ -75,6 +77,7 @@ public class Source {
      * Fragment Reference
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("fragment")
