@@ -234,7 +234,9 @@ public class Validator {
     public static void revalidate(ConfigurationType type, byte[] configBytes, IConfigurationObject config,
             Map<ConfigurationType, Set<String>> invObjNames, Map<String, String> workflowJsonsByName, Set<String> visibleAgentNames)
             throws Exception {
+
         JsonValidator.validate(configBytes, URI.create(JocInventory.SCHEMA_LOCATION.get(type)), true);
+
         switch (type) {
         case WORKFLOW:
             WorkflowValidator.revalidate(configBytes, config, invObjNames, workflowJsonsByName, visibleAgentNames);
@@ -261,32 +263,21 @@ public class Validator {
         case REPORT:
             ReportValidator.revalidate(config);
             break;
-
+        // FileTransfer
         case FT_FRAGMENT_AZURE_BLOB_STORAGE:
-            break;
         case FT_FRAGMENT_CREDENTIAL_STORE:
-            break;
         case FT_FRAGMENT_DECRYPTION:
-            break;
         case FT_FRAGMENT_FTP:
-            break;
         case FT_FRAGMENT_HTTP:
-            break;
         case FT_FRAGMENT_HTTP_PROXY:
-            break;
         case FT_FRAGMENT_JUMP:
-            break;
         case FT_FRAGMENT_MAIL:
-            break;
         case FT_FRAGMENT_SFTP:
-            break;
         case FT_FRAGMENT_SMB:
-            break;
         case FT_FRAGMENT_SOCKS_PROXY:
-            break;
         case FT_FRAGMENT_WEBDAV:
-            break;
         case FT_PROFILE:
+            // Nothing to do for FileTransfer types - validated by schema.
             break;
 
         case FOLDER:
