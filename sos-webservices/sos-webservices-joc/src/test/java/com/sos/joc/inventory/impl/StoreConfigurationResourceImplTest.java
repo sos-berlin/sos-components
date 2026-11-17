@@ -5,10 +5,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.inventory.model.filetransfer.common.FragmentRefTypeForProtocolFragment;
 import com.sos.inventory.model.filetransfer.fragments.protocol.SftpFragment;
 import com.sos.inventory.model.filetransfer.fragments.protocol.common.BasicConnection;
-import com.sos.inventory.model.filetransfer.fragments.protocol.refs.SftpAlternativeFragmentRef;
 import com.sos.inventory.model.filetransfer.fragments.protocol.sftp.SftpAuthPublicKey;
 import com.sos.inventory.model.filetransfer.fragments.protocol.sftp.SftpAuthentication;
 import com.sos.joc.UnitTestSimpleWSImplHelper;
@@ -77,10 +75,7 @@ public class StoreConfigurationResourceImplTest {
         sa.setPublicKey(pk);
         f.setAuthentication(sa);
 
-        SftpAlternativeFragmentRef af = new SftpAlternativeFragmentRef();
-        af.setType(FragmentRefTypeForProtocolFragment.SFTP);
-        af.setRef("my alternative fragment");
-        f.setAlternativeRef(af);
+        f.setAlternativeSftpFragmentName("my alternative fragment");
 
         ConfigurationObject in = new ConfigurationObject();
         in.setPath("/b");

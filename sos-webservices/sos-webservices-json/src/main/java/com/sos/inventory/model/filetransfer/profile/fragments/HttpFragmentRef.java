@@ -1,11 +1,11 @@
 
-package com.sos.inventory.model.filetransfer.profile.refs;
+package com.sos.inventory.model.filetransfer.profile.fragments;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.inventory.model.filetransfer.common.Processing;
+import com.sos.inventory.model.filetransfer.common.HttpHeaders;
 import com.sos.inventory.model.filetransfer.profile.common.Rename;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -13,28 +13,28 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 
 
 /**
- * FTP Protocol Fragment Reference
+ * HTTP Protocol Fragment Reference
  * <p>
- * allOf is present for validator only. jsonschema2pojo uses 'extends' for code generation. allOf ensures the validator applies the base required fields.
+ * allOf is present for and documentation validator only. jsonschema2pojo uses 'extends' for code generation. allOf ensures the validator applies the base required fields.
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
-    "processing",
+    "httpHeaders",
     "rename"
 })
-public class FtpFragmentRef
+public class HttpFragmentRef
     extends FragmentRefBase
 {
 
     /**
-     * SSH processing options.
+     * HTTP Headers
      * <p>
      * 
      * 
      */
-    @JsonProperty("processing")
-    private Processing processing;
+    @JsonProperty("httpHeaders")
+    private HttpHeaders httpHeaders;
     /**
      * Rename
      * <p>
@@ -49,41 +49,40 @@ public class FtpFragmentRef
      * No args constructor for use in serialization
      * 
      */
-    public FtpFragmentRef() {
+    public HttpFragmentRef() {
     }
 
     /**
      * 
-     * @param ref
      * @param rename
-     * @param processing
+     * @param httpHeaders
      */
-    public FtpFragmentRef(Processing processing, Rename rename, String ref) {
-        super(ref);
-        this.processing = processing;
+    public HttpFragmentRef(HttpHeaders httpHeaders, Rename rename) {
+        super();
+        this.httpHeaders = httpHeaders;
         this.rename = rename;
     }
 
     /**
-     * SSH processing options.
+     * HTTP Headers
      * <p>
      * 
      * 
      */
-    @JsonProperty("processing")
-    public Processing getProcessing() {
-        return processing;
+    @JsonProperty("httpHeaders")
+    public HttpHeaders getHttpHeaders() {
+        return httpHeaders;
     }
 
     /**
-     * SSH processing options.
+     * HTTP Headers
      * <p>
      * 
      * 
      */
-    @JsonProperty("processing")
-    public void setProcessing(Processing processing) {
-        this.processing = processing;
+    @JsonProperty("httpHeaders")
+    public void setHttpHeaders(HttpHeaders httpHeaders) {
+        this.httpHeaders = httpHeaders;
     }
 
     /**
@@ -110,12 +109,12 @@ public class FtpFragmentRef
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("processing", processing).append("rename", rename).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("httpHeaders", httpHeaders).append("rename", rename).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(processing).append(rename).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(rename).append(httpHeaders).toHashCode();
     }
 
     @Override
@@ -123,11 +122,11 @@ public class FtpFragmentRef
         if (other == this) {
             return true;
         }
-        if ((other instanceof FtpFragmentRef) == false) {
+        if ((other instanceof HttpFragmentRef) == false) {
             return false;
         }
-        FtpFragmentRef rhs = ((FtpFragmentRef) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(processing, rhs.processing).append(rename, rhs.rename).isEquals();
+        HttpFragmentRef rhs = ((HttpFragmentRef) other);
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(rename, rhs.rename).append(httpHeaders, rhs.httpHeaders).isEquals();
     }
 
 }

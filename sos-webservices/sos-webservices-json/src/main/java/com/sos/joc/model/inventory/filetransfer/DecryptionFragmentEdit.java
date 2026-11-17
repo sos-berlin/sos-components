@@ -29,17 +29,17 @@ public class DecryptionFragmentEdit
     /**
      * Decryption Fragment
      * <p>
-     * Decryption Fragment. allOf is present for validator only. jsonschema2pojo uses 'extends' for code generation. allOf ensures the validator applies the base required fields.
+     * Decryption Fragment.
      * 
      */
     @JsonProperty("configuration")
-    @JsonPropertyDescription("Decryption Fragment. allOf is present for validator only. jsonschema2pojo uses 'extends' for code generation. allOf ensures the validator applies the base required fields.")
+    @JsonPropertyDescription("Decryption Fragment.")
     private DecryptionFragment configuration;
 
     /**
      * Decryption Fragment
      * <p>
-     * Decryption Fragment. allOf is present for validator only. jsonschema2pojo uses 'extends' for code generation. allOf ensures the validator applies the base required fields.
+     * Decryption Fragment.
      * 
      */
     @JsonProperty("configuration")
@@ -50,7 +50,7 @@ public class DecryptionFragmentEdit
     /**
      * Decryption Fragment
      * <p>
-     * Decryption Fragment. allOf is present for validator only. jsonschema2pojo uses 'extends' for code generation. allOf ensures the validator applies the base required fields.
+     * Decryption Fragment.
      * 
      */
     @JsonProperty("configuration")

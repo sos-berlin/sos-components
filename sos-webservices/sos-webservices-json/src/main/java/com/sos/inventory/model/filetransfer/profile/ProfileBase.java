@@ -22,7 +22,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
-    "alternativeRef",
+    "alternativeProfileName",
     "operation"
 })
 public class ProfileBase
@@ -35,8 +35,8 @@ public class ProfileBase
      * 
      * 
      */
-    @JsonProperty("alternativeRef")
-    private String alternativeRef;
+    @JsonProperty("alternativeProfileName")
+    private String alternativeProfileName;
     /**
      * 
      * (Required)
@@ -54,16 +54,16 @@ public class ProfileBase
 
     /**
      * 
+     * @param alternativeProfileName
      * @param path
-     * @param alternativeRef
      * @param documentationName
      * @param title
      * @param operation
      * @param version
      */
-    public ProfileBase(String alternativeRef, ProfileBase.Operation operation, String version, String path, String title, String documentationName) {
+    public ProfileBase(String alternativeProfileName, ProfileBase.Operation operation, String version, String path, String title, String documentationName) {
         super(version, path, title, documentationName);
-        this.alternativeRef = alternativeRef;
+        this.alternativeProfileName = alternativeProfileName;
         this.operation = operation;
     }
 
@@ -73,9 +73,9 @@ public class ProfileBase
      * 
      * 
      */
-    @JsonProperty("alternativeRef")
-    public String getAlternativeRef() {
-        return alternativeRef;
+    @JsonProperty("alternativeProfileName")
+    public String getAlternativeProfileName() {
+        return alternativeProfileName;
     }
 
     /**
@@ -84,9 +84,9 @@ public class ProfileBase
      * 
      * 
      */
-    @JsonProperty("alternativeRef")
-    public void setAlternativeRef(String alternativeRef) {
-        this.alternativeRef = alternativeRef;
+    @JsonProperty("alternativeProfileName")
+    public void setAlternativeProfileName(String alternativeProfileName) {
+        this.alternativeProfileName = alternativeProfileName;
     }
 
     /**
@@ -111,12 +111,12 @@ public class ProfileBase
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("alternativeRef", alternativeRef).append("operation", operation).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("alternativeProfileName", alternativeProfileName).append("operation", operation).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(operation).append(alternativeRef).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(alternativeProfileName).append(operation).toHashCode();
     }
 
     @Override
@@ -128,7 +128,7 @@ public class ProfileBase
             return false;
         }
         ProfileBase rhs = ((ProfileBase) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(operation, rhs.operation).append(alternativeRef, rhs.alternativeRef).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(alternativeProfileName, rhs.alternativeProfileName).append(operation, rhs.operation).isEquals();
     }
 
     public enum Operation {

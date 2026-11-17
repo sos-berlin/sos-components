@@ -6,8 +6,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.inventory.model.filetransfer.fragments.protocol.common.BasicConnection;
-import com.sos.inventory.model.filetransfer.fragments.protocol.refs.ProxyFragmentRefAny;
-import com.sos.inventory.model.filetransfer.fragments.protocol.refs.SftpAlternativeFragmentRef;
 import com.sos.inventory.model.filetransfer.fragments.protocol.sftp.SftpAuthentication;
 import com.sos.inventory.model.filetransfer.fragments.protocol.sftp.SftpKeepAlive;
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -23,9 +21,10 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
-    "jumpRef",
-    "proxyRef",
-    "alternativeRef",
+    "jumpFragmentName",
+    "httpProxyFragmentName",
+    "socksProxyFragmentName",
+    "alternativeSftpFragmentName",
     "connection",
     "authentication",
     "socketTimeout",
@@ -44,25 +43,32 @@ public class SftpFragment
      * 
      * 
      */
-    @JsonProperty("jumpRef")
-    private String jumpRef;
+    @JsonProperty("jumpFragmentName")
+    private String jumpFragmentName;
     /**
-     * HTTP Proxy Reference
-     * <p>
-     * Reference to an HTTP or SOCKS proxy fragment.
-     * 
-     */
-    @JsonProperty("proxyRef")
-    @JsonPropertyDescription("Reference to an HTTP or SOCKS proxy fragment.")
-    private ProxyFragmentRefAny proxyRef;
-    /**
-     * SFTP Alternative Fragment Reference
+     * string without < and >
      * <p>
      * 
      * 
      */
-    @JsonProperty("alternativeRef")
-    private SftpAlternativeFragmentRef alternativeRef;
+    @JsonProperty("httpProxyFragmentName")
+    private String httpProxyFragmentName;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("socksProxyFragmentName")
+    private String socksProxyFragmentName;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("alternativeSftpFragmentName")
+    private String alternativeSftpFragmentName;
     /**
      * 
      * (Required)
@@ -130,28 +136,24 @@ public class SftpFragment
 
     /**
      * 
-     * @param proxyRef
-     * @param alternativeRef
+     * @param jumpFragmentName
+     * @param alternativeSftpFragmentName
      * @param keepAlive
      * @param disableAutoDetectShell
-     * @param jumpRef
-     * @param strictHostkeyChecking
-     * @param title
-     * @param decryptionRef
-     * @param version
-     * @param path
      * @param configurationFile
      * @param socketTimeout
-     * @param credentialStoreRef
+     * @param httpProxyFragmentName
      * @param connection
-     * @param documentationName
+     * @param strictHostkeyChecking
+     * @param socksProxyFragmentName
      * @param authentication
      */
-    public SftpFragment(String jumpRef, ProxyFragmentRefAny proxyRef, SftpAlternativeFragmentRef alternativeRef, BasicConnection connection, SftpAuthentication authentication, String socketTimeout, SftpKeepAlive keepAlive, String strictHostkeyChecking, String disableAutoDetectShell, String configurationFile, String credentialStoreRef, String decryptionRef, String version, String path, String title, String documentationName) {
-        super(credentialStoreRef, decryptionRef, version, path, title, documentationName);
-        this.jumpRef = jumpRef;
-        this.proxyRef = proxyRef;
-        this.alternativeRef = alternativeRef;
+    public SftpFragment(String jumpFragmentName, String httpProxyFragmentName, String socksProxyFragmentName, String alternativeSftpFragmentName, BasicConnection connection, SftpAuthentication authentication, String socketTimeout, SftpKeepAlive keepAlive, String strictHostkeyChecking, String disableAutoDetectShell, String configurationFile) {
+        super();
+        this.jumpFragmentName = jumpFragmentName;
+        this.httpProxyFragmentName = httpProxyFragmentName;
+        this.socksProxyFragmentName = socksProxyFragmentName;
+        this.alternativeSftpFragmentName = alternativeSftpFragmentName;
         this.connection = connection;
         this.authentication = authentication;
         this.socketTimeout = socketTimeout;
@@ -167,9 +169,9 @@ public class SftpFragment
      * 
      * 
      */
-    @JsonProperty("jumpRef")
-    public String getJumpRef() {
-        return jumpRef;
+    @JsonProperty("jumpFragmentName")
+    public String getJumpFragmentName() {
+        return jumpFragmentName;
     }
 
     /**
@@ -178,53 +180,75 @@ public class SftpFragment
      * 
      * 
      */
-    @JsonProperty("jumpRef")
-    public void setJumpRef(String jumpRef) {
-        this.jumpRef = jumpRef;
+    @JsonProperty("jumpFragmentName")
+    public void setJumpFragmentName(String jumpFragmentName) {
+        this.jumpFragmentName = jumpFragmentName;
     }
 
     /**
-     * HTTP Proxy Reference
-     * <p>
-     * Reference to an HTTP or SOCKS proxy fragment.
-     * 
-     */
-    @JsonProperty("proxyRef")
-    public ProxyFragmentRefAny getProxyRef() {
-        return proxyRef;
-    }
-
-    /**
-     * HTTP Proxy Reference
-     * <p>
-     * Reference to an HTTP or SOCKS proxy fragment.
-     * 
-     */
-    @JsonProperty("proxyRef")
-    public void setProxyRef(ProxyFragmentRefAny proxyRef) {
-        this.proxyRef = proxyRef;
-    }
-
-    /**
-     * SFTP Alternative Fragment Reference
+     * string without < and >
      * <p>
      * 
      * 
      */
-    @JsonProperty("alternativeRef")
-    public SftpAlternativeFragmentRef getAlternativeRef() {
-        return alternativeRef;
+    @JsonProperty("httpProxyFragmentName")
+    public String getHttpProxyFragmentName() {
+        return httpProxyFragmentName;
     }
 
     /**
-     * SFTP Alternative Fragment Reference
+     * string without < and >
      * <p>
      * 
      * 
      */
-    @JsonProperty("alternativeRef")
-    public void setAlternativeRef(SftpAlternativeFragmentRef alternativeRef) {
-        this.alternativeRef = alternativeRef;
+    @JsonProperty("httpProxyFragmentName")
+    public void setHttpProxyFragmentName(String httpProxyFragmentName) {
+        this.httpProxyFragmentName = httpProxyFragmentName;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("socksProxyFragmentName")
+    public String getSocksProxyFragmentName() {
+        return socksProxyFragmentName;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("socksProxyFragmentName")
+    public void setSocksProxyFragmentName(String socksProxyFragmentName) {
+        this.socksProxyFragmentName = socksProxyFragmentName;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("alternativeSftpFragmentName")
+    public String getAlternativeSftpFragmentName() {
+        return alternativeSftpFragmentName;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("alternativeSftpFragmentName")
+    public void setAlternativeSftpFragmentName(String alternativeSftpFragmentName) {
+        this.alternativeSftpFragmentName = alternativeSftpFragmentName;
     }
 
     /**
@@ -383,12 +407,12 @@ public class SftpFragment
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("jumpRef", jumpRef).append("proxyRef", proxyRef).append("alternativeRef", alternativeRef).append("connection", connection).append("authentication", authentication).append("socketTimeout", socketTimeout).append("keepAlive", keepAlive).append("strictHostkeyChecking", strictHostkeyChecking).append("disableAutoDetectShell", disableAutoDetectShell).append("configurationFile", configurationFile).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("jumpFragmentName", jumpFragmentName).append("httpProxyFragmentName", httpProxyFragmentName).append("socksProxyFragmentName", socksProxyFragmentName).append("alternativeSftpFragmentName", alternativeSftpFragmentName).append("connection", connection).append("authentication", authentication).append("socketTimeout", socketTimeout).append("keepAlive", keepAlive).append("strictHostkeyChecking", strictHostkeyChecking).append("disableAutoDetectShell", disableAutoDetectShell).append("configurationFile", configurationFile).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(proxyRef).append(alternativeRef).append(keepAlive).append(disableAutoDetectShell).append(configurationFile).append(socketTimeout).append(jumpRef).append(connection).append(strictHostkeyChecking).append(authentication).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(jumpFragmentName).append(alternativeSftpFragmentName).append(keepAlive).append(disableAutoDetectShell).append(configurationFile).append(socketTimeout).append(httpProxyFragmentName).append(connection).append(strictHostkeyChecking).append(socksProxyFragmentName).append(authentication).toHashCode();
     }
 
     @Override
@@ -400,7 +424,7 @@ public class SftpFragment
             return false;
         }
         SftpFragment rhs = ((SftpFragment) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(proxyRef, rhs.proxyRef).append(alternativeRef, rhs.alternativeRef).append(keepAlive, rhs.keepAlive).append(disableAutoDetectShell, rhs.disableAutoDetectShell).append(configurationFile, rhs.configurationFile).append(socketTimeout, rhs.socketTimeout).append(jumpRef, rhs.jumpRef).append(connection, rhs.connection).append(strictHostkeyChecking, rhs.strictHostkeyChecking).append(authentication, rhs.authentication).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(jumpFragmentName, rhs.jumpFragmentName).append(alternativeSftpFragmentName, rhs.alternativeSftpFragmentName).append(keepAlive, rhs.keepAlive).append(disableAutoDetectShell, rhs.disableAutoDetectShell).append(configurationFile, rhs.configurationFile).append(socketTimeout, rhs.socketTimeout).append(httpProxyFragmentName, rhs.httpProxyFragmentName).append(connection, rhs.connection).append(strictHostkeyChecking, rhs.strictHostkeyChecking).append(socksProxyFragmentName, rhs.socksProxyFragmentName).append(authentication, rhs.authentication).isEquals();
     }
 
 }

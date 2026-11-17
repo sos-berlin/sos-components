@@ -1,16 +1,15 @@
 
-package com.sos.inventory.model.filetransfer.fragments.protocol.refs;
+package com.sos.inventory.model.filetransfer.fragments.proxy;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.inventory.model.filetransfer.common.FragmentRefTypeForProtocolFragment;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 
 /**
- * WebDAV Alternative Fragment Reference
+ * HTTP Proxy Fragment
  * <p>
  * 
  * 
@@ -19,26 +18,10 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonPropertyOrder({
 
 })
-public class WebdavAlternativeFragmentRef
-    extends AAlternativeFragmentRef
+public class HttpProxyFragment
+    extends AProxyFragment
 {
 
-
-    /**
-     * No args constructor for use in serialization
-     * 
-     */
-    public WebdavAlternativeFragmentRef() {
-    }
-
-    /**
-     * 
-     * @param ref
-     * @param type
-     */
-    public WebdavAlternativeFragmentRef(FragmentRefTypeForProtocolFragment type, String ref) {
-        super(type, ref);
-    }
 
     @Override
     public String toString() {
@@ -55,10 +38,10 @@ public class WebdavAlternativeFragmentRef
         if (other == this) {
             return true;
         }
-        if ((other instanceof WebdavAlternativeFragmentRef) == false) {
+        if ((other instanceof HttpProxyFragment) == false) {
             return false;
         }
-        WebdavAlternativeFragmentRef rhs = ((WebdavAlternativeFragmentRef) other);
+        HttpProxyFragment rhs = ((HttpProxyFragment) other);
         return new EqualsBuilder().appendSuper(super.equals(other)).isEquals();
     }
 

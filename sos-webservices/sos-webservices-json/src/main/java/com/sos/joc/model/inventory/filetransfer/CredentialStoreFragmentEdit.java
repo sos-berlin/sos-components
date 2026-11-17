@@ -29,17 +29,17 @@ public class CredentialStoreFragmentEdit
     /**
      * Credential Store Fragment
      * <p>
-     * Credential Store Fragment. allOf is present for validator only. jsonschema2pojo uses 'extends' for code generation. allOf ensures the validator applies the base required fields.
+     * Credential Store Fragment.
      * 
      */
     @JsonProperty("configuration")
-    @JsonPropertyDescription("Credential Store Fragment. allOf is present for validator only. jsonschema2pojo uses 'extends' for code generation. allOf ensures the validator applies the base required fields.")
+    @JsonPropertyDescription("Credential Store Fragment.")
     private CredentialStoreFragment configuration;
 
     /**
      * Credential Store Fragment
      * <p>
-     * Credential Store Fragment. allOf is present for validator only. jsonschema2pojo uses 'extends' for code generation. allOf ensures the validator applies the base required fields.
+     * Credential Store Fragment.
      * 
      */
     @JsonProperty("configuration")
@@ -50,7 +50,7 @@ public class CredentialStoreFragmentEdit
     /**
      * Credential Store Fragment
      * <p>
-     * Credential Store Fragment. allOf is present for validator only. jsonschema2pojo uses 'extends' for code generation. allOf ensures the validator applies the base required fields.
+     * Credential Store Fragment.
      * 
      */
     @JsonProperty("configuration")

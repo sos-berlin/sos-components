@@ -3,7 +3,6 @@ package com.sos.joc.model.inventory.filetransfer;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.inventory.model.filetransfer.fragments.protocol.SmbFragment;
 import com.sos.joc.model.inventory.ConfigurationObject;
@@ -29,17 +28,16 @@ public class SmbFragmentEdit
     /**
      * SMB Fragment
      * <p>
-     * allOf is present for validator only. jsonschema2pojo uses 'extends' for code generation. allOf ensures the validator applies the base required fields.
+     * 
      * 
      */
     @JsonProperty("configuration")
-    @JsonPropertyDescription("allOf is present for validator only. jsonschema2pojo uses 'extends' for code generation. allOf ensures the validator applies the base required fields.")
     private SmbFragment configuration;
 
     /**
      * SMB Fragment
      * <p>
-     * allOf is present for validator only. jsonschema2pojo uses 'extends' for code generation. allOf ensures the validator applies the base required fields.
+     * 
      * 
      */
     @JsonProperty("configuration")
@@ -50,7 +48,7 @@ public class SmbFragmentEdit
     /**
      * SMB Fragment
      * <p>
-     * allOf is present for validator only. jsonschema2pojo uses 'extends' for code generation. allOf ensures the validator applies the base required fields.
+     * 
      * 
      */
     @JsonProperty("configuration")

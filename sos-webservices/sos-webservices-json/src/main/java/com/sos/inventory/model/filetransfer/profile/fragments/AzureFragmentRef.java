@@ -1,5 +1,5 @@
 
-package com.sos.inventory.model.filetransfer.profile.refs;
+package com.sos.inventory.model.filetransfer.profile.fragments;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -13,9 +13,9 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 
 
 /**
- * HTTP Protocol Fragment Reference
+ * Azure Protocol Fragment Reference
  * <p>
- * allOf is present for validator only. jsonschema2pojo uses 'extends' for code generation. allOf ensures the validator applies the base required fields.
+ * 
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -23,7 +23,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "httpHeaders",
     "rename"
 })
-public class HttpFragmentRef
+public class AzureFragmentRef
     extends FragmentRefBase
 {
 
@@ -49,17 +49,16 @@ public class HttpFragmentRef
      * No args constructor for use in serialization
      * 
      */
-    public HttpFragmentRef() {
+    public AzureFragmentRef() {
     }
 
     /**
      * 
-     * @param ref
      * @param rename
      * @param httpHeaders
      */
-    public HttpFragmentRef(HttpHeaders httpHeaders, Rename rename, String ref) {
-        super(ref);
+    public AzureFragmentRef(HttpHeaders httpHeaders, Rename rename) {
+        super();
         this.httpHeaders = httpHeaders;
         this.rename = rename;
     }
@@ -123,10 +122,10 @@ public class HttpFragmentRef
         if (other == this) {
             return true;
         }
-        if ((other instanceof HttpFragmentRef) == false) {
+        if ((other instanceof AzureFragmentRef) == false) {
             return false;
         }
-        HttpFragmentRef rhs = ((HttpFragmentRef) other);
+        AzureFragmentRef rhs = ((AzureFragmentRef) other);
         return new EqualsBuilder().appendSuper(super.equals(other)).append(rename, rhs.rename).append(httpHeaders, rhs.httpHeaders).isEquals();
     }
 

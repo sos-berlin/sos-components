@@ -26,7 +26,7 @@ public class AzureBlobStorageFragmentEdit
 {
 
     /**
-     * Azure - Connection and authentication settings for the Azure Blob Storage protocol fragments. allOf is present for validator only. jsonschema2pojo uses 'extends' for code generation. allOf ensures the validator applies the base required fields.
+     * Azure - Connection and authentication settings for the Azure Blob Storage protocol fragments.
      * <p>
      * 
      * 
@@ -35,7 +35,7 @@ public class AzureBlobStorageFragmentEdit
     private AzureBlobStorageFragment configuration;
 
     /**
-     * Azure - Connection and authentication settings for the Azure Blob Storage protocol fragments. allOf is present for validator only. jsonschema2pojo uses 'extends' for code generation. allOf ensures the validator applies the base required fields.
+     * Azure - Connection and authentication settings for the Azure Blob Storage protocol fragments.
      * <p>
      * 
      * 
@@ -46,7 +46,7 @@ public class AzureBlobStorageFragmentEdit
     }
 
     /**
-     * Azure - Connection and authentication settings for the Azure Blob Storage protocol fragments. allOf is present for validator only. jsonschema2pojo uses 'extends' for code generation. allOf ensures the validator applies the base required fields.
+     * Azure - Connection and authentication settings for the Azure Blob Storage protocol fragments.
      * <p>
      * 
      * 

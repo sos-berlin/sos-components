@@ -7,8 +7,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.inventory.model.filetransfer.fragments.protocol.azure.AzureBSAuthentication;
 import com.sos.inventory.model.filetransfer.fragments.protocol.common.UrlConnection;
-import com.sos.inventory.model.filetransfer.fragments.protocol.refs.AzureBlobStorageAlternativeFragmentRef;
-import com.sos.inventory.model.filetransfer.fragments.protocol.refs.ProxyFragmentRefHttpOnly;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -22,9 +20,9 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
-    "jumpRef",
-    "proxyRef",
-    "alternativeRef",
+    "jumpFragmentName",
+    "httpProxyFragmentName",
+    "alternativeAzureBlobStorageFragmentName",
     "connection",
     "authentication"
 })
@@ -38,25 +36,24 @@ public class AzureBlobStorageFragment
      * 
      * 
      */
-    @JsonProperty("jumpRef")
-    private String jumpRef;
+    @JsonProperty("jumpFragmentName")
+    private String jumpFragmentName;
     /**
-     * HTTP Proxy Reference
-     * <p>
-     * Reference to an HTTP proxy fragment.
-     * 
-     */
-    @JsonProperty("proxyRef")
-    @JsonPropertyDescription("Reference to an HTTP proxy fragment.")
-    private ProxyFragmentRefHttpOnly proxyRef;
-    /**
-     * Azure Blob Storage Alternative Fragment Reference
+     * string without < and >
      * <p>
      * 
      * 
      */
-    @JsonProperty("alternativeRef")
-    private AzureBlobStorageAlternativeFragmentRef alternativeRef;
+    @JsonProperty("httpProxyFragmentName")
+    private String httpProxyFragmentName;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("alternativeAzureBlobStorageFragmentName")
+    private String alternativeAzureBlobStorageFragmentName;
     /**
      * 
      * (Required)
@@ -82,23 +79,17 @@ public class AzureBlobStorageFragment
 
     /**
      * 
-     * @param path
-     * @param proxyRef
-     * @param alternativeRef
-     * @param credentialStoreRef
-     * @param jumpRef
+     * @param jumpFragmentName
+     * @param alternativeAzureBlobStorageFragmentName
+     * @param httpProxyFragmentName
      * @param connection
-     * @param documentationName
-     * @param title
-     * @param decryptionRef
-     * @param version
      * @param authentication
      */
-    public AzureBlobStorageFragment(String jumpRef, ProxyFragmentRefHttpOnly proxyRef, AzureBlobStorageAlternativeFragmentRef alternativeRef, UrlConnection connection, AzureBSAuthentication authentication, String credentialStoreRef, String decryptionRef, String version, String path, String title, String documentationName) {
-        super(credentialStoreRef, decryptionRef, version, path, title, documentationName);
-        this.jumpRef = jumpRef;
-        this.proxyRef = proxyRef;
-        this.alternativeRef = alternativeRef;
+    public AzureBlobStorageFragment(String jumpFragmentName, String httpProxyFragmentName, String alternativeAzureBlobStorageFragmentName, UrlConnection connection, AzureBSAuthentication authentication) {
+        super();
+        this.jumpFragmentName = jumpFragmentName;
+        this.httpProxyFragmentName = httpProxyFragmentName;
+        this.alternativeAzureBlobStorageFragmentName = alternativeAzureBlobStorageFragmentName;
         this.connection = connection;
         this.authentication = authentication;
     }
@@ -109,9 +100,9 @@ public class AzureBlobStorageFragment
      * 
      * 
      */
-    @JsonProperty("jumpRef")
-    public String getJumpRef() {
-        return jumpRef;
+    @JsonProperty("jumpFragmentName")
+    public String getJumpFragmentName() {
+        return jumpFragmentName;
     }
 
     /**
@@ -120,53 +111,53 @@ public class AzureBlobStorageFragment
      * 
      * 
      */
-    @JsonProperty("jumpRef")
-    public void setJumpRef(String jumpRef) {
-        this.jumpRef = jumpRef;
+    @JsonProperty("jumpFragmentName")
+    public void setJumpFragmentName(String jumpFragmentName) {
+        this.jumpFragmentName = jumpFragmentName;
     }
 
     /**
-     * HTTP Proxy Reference
-     * <p>
-     * Reference to an HTTP proxy fragment.
-     * 
-     */
-    @JsonProperty("proxyRef")
-    public ProxyFragmentRefHttpOnly getProxyRef() {
-        return proxyRef;
-    }
-
-    /**
-     * HTTP Proxy Reference
-     * <p>
-     * Reference to an HTTP proxy fragment.
-     * 
-     */
-    @JsonProperty("proxyRef")
-    public void setProxyRef(ProxyFragmentRefHttpOnly proxyRef) {
-        this.proxyRef = proxyRef;
-    }
-
-    /**
-     * Azure Blob Storage Alternative Fragment Reference
+     * string without < and >
      * <p>
      * 
      * 
      */
-    @JsonProperty("alternativeRef")
-    public AzureBlobStorageAlternativeFragmentRef getAlternativeRef() {
-        return alternativeRef;
+    @JsonProperty("httpProxyFragmentName")
+    public String getHttpProxyFragmentName() {
+        return httpProxyFragmentName;
     }
 
     /**
-     * Azure Blob Storage Alternative Fragment Reference
+     * string without < and >
      * <p>
      * 
      * 
      */
-    @JsonProperty("alternativeRef")
-    public void setAlternativeRef(AzureBlobStorageAlternativeFragmentRef alternativeRef) {
-        this.alternativeRef = alternativeRef;
+    @JsonProperty("httpProxyFragmentName")
+    public void setHttpProxyFragmentName(String httpProxyFragmentName) {
+        this.httpProxyFragmentName = httpProxyFragmentName;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("alternativeAzureBlobStorageFragmentName")
+    public String getAlternativeAzureBlobStorageFragmentName() {
+        return alternativeAzureBlobStorageFragmentName;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("alternativeAzureBlobStorageFragmentName")
+    public void setAlternativeAzureBlobStorageFragmentName(String alternativeAzureBlobStorageFragmentName) {
+        this.alternativeAzureBlobStorageFragmentName = alternativeAzureBlobStorageFragmentName;
     }
 
     /**
@@ -211,12 +202,12 @@ public class AzureBlobStorageFragment
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("jumpRef", jumpRef).append("proxyRef", proxyRef).append("alternativeRef", alternativeRef).append("connection", connection).append("authentication", authentication).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("jumpFragmentName", jumpFragmentName).append("httpProxyFragmentName", httpProxyFragmentName).append("alternativeAzureBlobStorageFragmentName", alternativeAzureBlobStorageFragmentName).append("connection", connection).append("authentication", authentication).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(jumpRef).append(proxyRef).append(connection).append(alternativeRef).append(authentication).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(jumpFragmentName).append(httpProxyFragmentName).append(connection).append(alternativeAzureBlobStorageFragmentName).append(authentication).toHashCode();
     }
 
     @Override
@@ -228,7 +219,7 @@ public class AzureBlobStorageFragment
             return false;
         }
         AzureBlobStorageFragment rhs = ((AzureBlobStorageFragment) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(jumpRef, rhs.jumpRef).append(proxyRef, rhs.proxyRef).append(connection, rhs.connection).append(alternativeRef, rhs.alternativeRef).append(authentication, rhs.authentication).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(jumpFragmentName, rhs.jumpFragmentName).append(httpProxyFragmentName, rhs.httpProxyFragmentName).append(connection, rhs.connection).append(alternativeAzureBlobStorageFragmentName, rhs.alternativeAzureBlobStorageFragmentName).append(authentication, rhs.authentication).isEquals();
     }
 
 }

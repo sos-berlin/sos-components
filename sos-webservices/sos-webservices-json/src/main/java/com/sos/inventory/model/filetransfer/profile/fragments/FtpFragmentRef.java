@@ -1,5 +1,5 @@
 
-package com.sos.inventory.model.filetransfer.profile.refs;
+package com.sos.inventory.model.filetransfer.profile.fragments;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -13,9 +13,9 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 
 
 /**
- * SMB Protocol Fragment Reference
+ * FTP Protocol Fragment Reference
  * <p>
- * allOf is present for validator only. jsonschema2pojo uses 'extends' for code generation. allOf ensures the validator applies the base required fields.
+ * allOf is present for validator and documentation only. jsonschema2pojo uses 'extends' for code generation. allOf ensures the validator applies the base required fields.
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -23,7 +23,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "processing",
     "rename"
 })
-public class SmbFragmentsRef
+public class FtpFragmentRef
     extends FragmentRefBase
 {
 
@@ -49,17 +49,16 @@ public class SmbFragmentsRef
      * No args constructor for use in serialization
      * 
      */
-    public SmbFragmentsRef() {
+    public FtpFragmentRef() {
     }
 
     /**
      * 
-     * @param ref
      * @param rename
      * @param processing
      */
-    public SmbFragmentsRef(Processing processing, Rename rename, String ref) {
-        super(ref);
+    public FtpFragmentRef(Processing processing, Rename rename) {
+        super();
         this.processing = processing;
         this.rename = rename;
     }
@@ -123,10 +122,10 @@ public class SmbFragmentsRef
         if (other == this) {
             return true;
         }
-        if ((other instanceof SmbFragmentsRef) == false) {
+        if ((other instanceof FtpFragmentRef) == false) {
             return false;
         }
-        SmbFragmentsRef rhs = ((SmbFragmentsRef) other);
+        FtpFragmentRef rhs = ((FtpFragmentRef) other);
         return new EqualsBuilder().appendSuper(super.equals(other)).append(processing, rhs.processing).append(rename, rhs.rename).isEquals();
     }
 

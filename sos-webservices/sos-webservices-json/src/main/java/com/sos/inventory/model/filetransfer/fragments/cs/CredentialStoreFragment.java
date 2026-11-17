@@ -62,16 +62,12 @@ public class CredentialStoreFragment
 
     /**
      * 
-     * @param path
      * @param file
-     * @param documentationName
      * @param entryPath
-     * @param title
-     * @param version
      * @param authentication
      */
-    public CredentialStoreFragment(String file, CredentialStoreAuthentication authentication, String entryPath, String version, String path, String title, String documentationName) {
-        super(version, path, title, documentationName);
+    public CredentialStoreFragment(String file, CredentialStoreAuthentication authentication, String entryPath) {
+        super();
         this.file = file;
         this.authentication = authentication;
         this.entryPath = entryPath;

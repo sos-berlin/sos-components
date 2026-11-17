@@ -26,7 +26,7 @@ public class FtpFragmentEdit
 {
 
     /**
-     * FTP - Connection and authentication settings for the FTP fragments. allOf is present for validator only. jsonschema2pojo uses 'extends' for code generation. allOf ensures the validator applies the base required fields.
+     * FTP - Connection and authentication settings for the FTP fragments.
      * <p>
      * 
      * 
@@ -35,7 +35,7 @@ public class FtpFragmentEdit
     private FtpFragment configuration;
 
     /**
-     * FTP - Connection and authentication settings for the FTP fragments. allOf is present for validator only. jsonschema2pojo uses 'extends' for code generation. allOf ensures the validator applies the base required fields.
+     * FTP - Connection and authentication settings for the FTP fragments.
      * <p>
      * 
      * 
@@ -46,7 +46,7 @@ public class FtpFragmentEdit
     }
 
     /**
-     * FTP - Connection and authentication settings for the FTP fragments. allOf is present for validator only. jsonschema2pojo uses 'extends' for code generation. allOf ensures the validator applies the base required fields.
+     * FTP - Connection and authentication settings for the FTP fragments.
      * <p>
      * 
      * 

@@ -52,15 +52,11 @@ public class DecryptionFragment
 
     /**
      * 
-     * @param path
      * @param encryptionKey
-     * @param documentationName
-     * @param title
-     * @param version
      * @param enciphermentPrivateKey
      */
-    public DecryptionFragment(String enciphermentPrivateKey, String encryptionKey, String version, String path, String title, String documentationName) {
-        super(version, path, title, documentationName);
+    public DecryptionFragment(String enciphermentPrivateKey, String encryptionKey) {
+        super();
         this.enciphermentPrivateKey = enciphermentPrivateKey;
         this.encryptionKey = encryptionKey;
     }

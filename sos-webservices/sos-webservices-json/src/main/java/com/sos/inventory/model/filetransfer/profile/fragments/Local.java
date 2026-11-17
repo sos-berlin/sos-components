@@ -1,5 +1,5 @@
 
-package com.sos.inventory.model.filetransfer.profile.refs;
+package com.sos.inventory.model.filetransfer.profile.fragments;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -13,13 +13,15 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 
 
 /**
- * Local source/target options. Only allowed when type is LOCAL.
+ * Local Protocol Fragment Reference
+ * <p>
+ * Local source/target options
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
-    "credentialStoreRef",
-    "decryptionRef",
+    "credentialStoreFragmentName",
+    "decryptionFragmentName",
     "processing",
     "rename"
 })
@@ -31,16 +33,16 @@ public class Local {
      * 
      * 
      */
-    @JsonProperty("credentialStoreRef")
-    private String credentialStoreRef;
+    @JsonProperty("credentialStoreFragmentName")
+    private String credentialStoreFragmentName;
     /**
      * Any non-empty string. May contain variable references such as ${VAR} that are resolved at runtime.
      * <p>
      * 
      * 
      */
-    @JsonProperty("decryptionRef")
-    private String decryptionRef;
+    @JsonProperty("decryptionFragmentName")
+    private String decryptionFragmentName;
     /**
      * SSH processing options.
      * <p>
@@ -69,14 +71,14 @@ public class Local {
     /**
      * 
      * @param rename
-     * @param credentialStoreRef
      * @param processing
-     * @param decryptionRef
+     * @param decryptionFragmentName
+     * @param credentialStoreFragmentName
      */
-    public Local(String credentialStoreRef, String decryptionRef, Processing processing, Rename rename) {
+    public Local(String credentialStoreFragmentName, String decryptionFragmentName, Processing processing, Rename rename) {
         super();
-        this.credentialStoreRef = credentialStoreRef;
-        this.decryptionRef = decryptionRef;
+        this.credentialStoreFragmentName = credentialStoreFragmentName;
+        this.decryptionFragmentName = decryptionFragmentName;
         this.processing = processing;
         this.rename = rename;
     }
@@ -87,9 +89,9 @@ public class Local {
      * 
      * 
      */
-    @JsonProperty("credentialStoreRef")
-    public String getCredentialStoreRef() {
-        return credentialStoreRef;
+    @JsonProperty("credentialStoreFragmentName")
+    public String getCredentialStoreFragmentName() {
+        return credentialStoreFragmentName;
     }
 
     /**
@@ -98,9 +100,9 @@ public class Local {
      * 
      * 
      */
-    @JsonProperty("credentialStoreRef")
-    public void setCredentialStoreRef(String credentialStoreRef) {
-        this.credentialStoreRef = credentialStoreRef;
+    @JsonProperty("credentialStoreFragmentName")
+    public void setCredentialStoreFragmentName(String credentialStoreFragmentName) {
+        this.credentialStoreFragmentName = credentialStoreFragmentName;
     }
 
     /**
@@ -109,9 +111,9 @@ public class Local {
      * 
      * 
      */
-    @JsonProperty("decryptionRef")
-    public String getDecryptionRef() {
-        return decryptionRef;
+    @JsonProperty("decryptionFragmentName")
+    public String getDecryptionFragmentName() {
+        return decryptionFragmentName;
     }
 
     /**
@@ -120,9 +122,9 @@ public class Local {
      * 
      * 
      */
-    @JsonProperty("decryptionRef")
-    public void setDecryptionRef(String decryptionRef) {
-        this.decryptionRef = decryptionRef;
+    @JsonProperty("decryptionFragmentName")
+    public void setDecryptionFragmentName(String decryptionFragmentName) {
+        this.decryptionFragmentName = decryptionFragmentName;
     }
 
     /**
@@ -171,12 +173,12 @@ public class Local {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("credentialStoreRef", credentialStoreRef).append("decryptionRef", decryptionRef).append("processing", processing).append("rename", rename).toString();
+        return new ToStringBuilder(this).append("credentialStoreFragmentName", credentialStoreFragmentName).append("decryptionFragmentName", decryptionFragmentName).append("processing", processing).append("rename", rename).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(credentialStoreRef).append(processing).append(decryptionRef).append(rename).toHashCode();
+        return new HashCodeBuilder().append(processing).append(rename).append(decryptionFragmentName).append(credentialStoreFragmentName).toHashCode();
     }
 
     @Override
@@ -188,7 +190,7 @@ public class Local {
             return false;
         }
         Local rhs = ((Local) other);
-        return new EqualsBuilder().append(credentialStoreRef, rhs.credentialStoreRef).append(processing, rhs.processing).append(decryptionRef, rhs.decryptionRef).append(rename, rhs.rename).isEquals();
+        return new EqualsBuilder().append(processing, rhs.processing).append(rename, rhs.rename).append(decryptionFragmentName, rhs.decryptionFragmentName).append(credentialStoreFragmentName, rhs.credentialStoreFragmentName).isEquals();
     }
 
 }

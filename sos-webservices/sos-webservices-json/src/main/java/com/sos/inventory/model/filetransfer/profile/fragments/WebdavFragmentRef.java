@@ -1,5 +1,5 @@
 
-package com.sos.inventory.model.filetransfer.profile.refs;
+package com.sos.inventory.model.filetransfer.profile.fragments;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -15,7 +15,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 /**
  * WebDAV Protocol Fragment Reference
  * <p>
- * allOf is present for validator only. jsonschema2pojo uses 'extends' for code generation. allOf ensures the validator applies the base required fields.
+ * allOf is present for and documentation validator only. jsonschema2pojo uses 'extends' for code generation. allOf ensures the validator applies the base required fields.
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -58,12 +58,11 @@ public class WebdavFragmentRef
     /**
      * 
      * @param postProcessing
-     * @param ref
      * @param rename
      * @param httpHeaders
      */
-    public WebdavFragmentRef(HttpHeaders httpHeaders, Rename rename, PostProcessing postProcessing, String ref) {
-        super(ref);
+    public WebdavFragmentRef(HttpHeaders httpHeaders, Rename rename, PostProcessing postProcessing) {
+        super();
         this.httpHeaders = httpHeaders;
         this.rename = rename;
         this.postProcessing = postProcessing;

@@ -3,9 +3,8 @@ package com.sos.inventory.model.filetransfer.profile;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.inventory.model.filetransfer.profile.refs.FragmentRef;
+import com.sos.inventory.model.filetransfer.profile.fragments.Fragment;
 import com.sos.inventory.model.filetransfer.profile.source.SourceFileOptions;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -20,7 +19,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
-    "fragmentRef",
+    "fragment",
     "sourceFileOptions"
 })
 public class Source {
@@ -28,13 +27,11 @@ public class Source {
     /**
      * Fragment Reference
      * <p>
-     * Reference to a local or protocol fragment, identified by type. For protocol types, 'ref' is required. For LOCAL, 'ref' is not needed and the 'local' block may carry local options.
-     * (Required)
+     * 
      * 
      */
-    @JsonProperty("fragmentRef")
-    @JsonPropertyDescription("Reference to a local or protocol fragment, identified by type. For protocol types, 'ref' is required. For LOCAL, 'ref' is not needed and the 'local' block may carry local options.")
-    private FragmentRef fragmentRef;
+    @JsonProperty("fragment")
+    private Fragment fragment;
     /**
      * Source File Options
      * <p>
@@ -55,36 +52,34 @@ public class Source {
     /**
      * 
      * @param sourceFileOptions
-     * @param fragmentRef
+     * @param fragment
      */
-    public Source(FragmentRef fragmentRef, SourceFileOptions sourceFileOptions) {
+    public Source(Fragment fragment, SourceFileOptions sourceFileOptions) {
         super();
-        this.fragmentRef = fragmentRef;
+        this.fragment = fragment;
         this.sourceFileOptions = sourceFileOptions;
     }
 
     /**
      * Fragment Reference
      * <p>
-     * Reference to a local or protocol fragment, identified by type. For protocol types, 'ref' is required. For LOCAL, 'ref' is not needed and the 'local' block may carry local options.
-     * (Required)
+     * 
      * 
      */
-    @JsonProperty("fragmentRef")
-    public FragmentRef getFragmentRef() {
-        return fragmentRef;
+    @JsonProperty("fragment")
+    public Fragment getFragment() {
+        return fragment;
     }
 
     /**
      * Fragment Reference
      * <p>
-     * Reference to a local or protocol fragment, identified by type. For protocol types, 'ref' is required. For LOCAL, 'ref' is not needed and the 'local' block may carry local options.
-     * (Required)
+     * 
      * 
      */
-    @JsonProperty("fragmentRef")
-    public void setFragmentRef(FragmentRef fragmentRef) {
-        this.fragmentRef = fragmentRef;
+    @JsonProperty("fragment")
+    public void setFragment(Fragment fragment) {
+        this.fragment = fragment;
     }
 
     /**
@@ -113,12 +108,12 @@ public class Source {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("fragmentRef", fragmentRef).append("sourceFileOptions", sourceFileOptions).toString();
+        return new ToStringBuilder(this).append("fragment", fragment).append("sourceFileOptions", sourceFileOptions).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(fragmentRef).append(sourceFileOptions).toHashCode();
+        return new HashCodeBuilder().append(sourceFileOptions).append(fragment).toHashCode();
     }
 
     @Override
@@ -130,7 +125,7 @@ public class Source {
             return false;
         }
         Source rhs = ((Source) other);
-        return new EqualsBuilder().append(fragmentRef, rhs.fragmentRef).append(sourceFileOptions, rhs.sourceFileOptions).isEquals();
+        return new EqualsBuilder().append(sourceFileOptions, rhs.sourceFileOptions).append(fragment, rhs.fragment).isEquals();
     }
 
 }

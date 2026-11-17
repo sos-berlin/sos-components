@@ -3,9 +3,8 @@ package com.sos.inventory.model.filetransfer.profile;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.inventory.model.filetransfer.profile.refs.FragmentRef;
+import com.sos.inventory.model.filetransfer.profile.fragments.Fragment;
 import com.sos.inventory.model.filetransfer.profile.target.TargetFileOptions;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -20,7 +19,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
-    "fragmentRef",
+    "fragment",
     "directory",
     "targetFileOptions"
 })
@@ -29,13 +28,11 @@ public class Target {
     /**
      * Fragment Reference
      * <p>
-     * Reference to a local or protocol fragment, identified by type. For protocol types, 'ref' is required. For LOCAL, 'ref' is not needed and the 'local' block may carry local options.
-     * (Required)
+     * 
      * 
      */
-    @JsonProperty("fragmentRef")
-    @JsonPropertyDescription("Reference to a local or protocol fragment, identified by type. For protocol types, 'ref' is required. For LOCAL, 'ref' is not needed and the 'local' block may carry local options.")
-    private FragmentRef fragmentRef;
+    @JsonProperty("fragment")
+    private Fragment fragment;
     /**
      * Any non-empty string. May contain variable references such as ${VAR} that are resolved at runtime.
      * <p>
@@ -63,13 +60,13 @@ public class Target {
 
     /**
      * 
-     * @param fragmentRef
+     * @param fragment
      * @param directory
      * @param targetFileOptions
      */
-    public Target(FragmentRef fragmentRef, String directory, TargetFileOptions targetFileOptions) {
+    public Target(Fragment fragment, String directory, TargetFileOptions targetFileOptions) {
         super();
-        this.fragmentRef = fragmentRef;
+        this.fragment = fragment;
         this.directory = directory;
         this.targetFileOptions = targetFileOptions;
     }
@@ -77,25 +74,23 @@ public class Target {
     /**
      * Fragment Reference
      * <p>
-     * Reference to a local or protocol fragment, identified by type. For protocol types, 'ref' is required. For LOCAL, 'ref' is not needed and the 'local' block may carry local options.
-     * (Required)
+     * 
      * 
      */
-    @JsonProperty("fragmentRef")
-    public FragmentRef getFragmentRef() {
-        return fragmentRef;
+    @JsonProperty("fragment")
+    public Fragment getFragment() {
+        return fragment;
     }
 
     /**
      * Fragment Reference
      * <p>
-     * Reference to a local or protocol fragment, identified by type. For protocol types, 'ref' is required. For LOCAL, 'ref' is not needed and the 'local' block may carry local options.
-     * (Required)
+     * 
      * 
      */
-    @JsonProperty("fragmentRef")
-    public void setFragmentRef(FragmentRef fragmentRef) {
-        this.fragmentRef = fragmentRef;
+    @JsonProperty("fragment")
+    public void setFragment(Fragment fragment) {
+        this.fragment = fragment;
     }
 
     /**
@@ -146,12 +141,12 @@ public class Target {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("fragmentRef", fragmentRef).append("directory", directory).append("targetFileOptions", targetFileOptions).toString();
+        return new ToStringBuilder(this).append("fragment", fragment).append("directory", directory).append("targetFileOptions", targetFileOptions).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(fragmentRef).append(directory).append(targetFileOptions).toHashCode();
+        return new HashCodeBuilder().append(fragment).append(directory).append(targetFileOptions).toHashCode();
     }
 
     @Override
@@ -163,7 +158,7 @@ public class Target {
             return false;
         }
         Target rhs = ((Target) other);
-        return new EqualsBuilder().append(fragmentRef, rhs.fragmentRef).append(directory, rhs.directory).append(targetFileOptions, rhs.targetFileOptions).isEquals();
+        return new EqualsBuilder().append(fragment, rhs.fragment).append(directory, rhs.directory).append(targetFileOptions, rhs.targetFileOptions).isEquals();
     }
 
 }

@@ -20,7 +20,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "source",
     "target",
-    "transferOptions"
+    "transferOptions",
+    "notificationTriggers"
 })
 public class Profile
     extends ProfileBase
@@ -52,6 +53,14 @@ public class Profile
      */
     @JsonProperty("transferOptions")
     private TransferOptions transferOptions;
+    /**
+     * Notification triggers. At least one of onError, onSuccess, onEmptyFiles must be set.
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("notificationTriggers")
+    private NotificationTriggers notificationTriggers;
 
     /**
      * No args constructor for use in serialization
@@ -62,21 +71,17 @@ public class Profile
 
     /**
      * 
-     * @param path
-     * @param alternativeRef
+     * @param notificationTriggers
      * @param source
-     * @param documentationName
-     * @param title
      * @param transferOptions
-     * @param operation
-     * @param version
      * @param target
      */
-    public Profile(Source source, Target target, TransferOptions transferOptions, String alternativeRef, ProfileBase.Operation operation, String version, String path, String title, String documentationName) {
-        super(alternativeRef, operation, version, path, title, documentationName);
+    public Profile(Source source, Target target, TransferOptions transferOptions, NotificationTriggers notificationTriggers) {
+        super();
         this.source = source;
         this.target = target;
         this.transferOptions = transferOptions;
+        this.notificationTriggers = notificationTriggers;
     }
 
     /**
@@ -145,14 +150,36 @@ public class Profile
         this.transferOptions = transferOptions;
     }
 
+    /**
+     * Notification triggers. At least one of onError, onSuccess, onEmptyFiles must be set.
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("notificationTriggers")
+    public NotificationTriggers getNotificationTriggers() {
+        return notificationTriggers;
+    }
+
+    /**
+     * Notification triggers. At least one of onError, onSuccess, onEmptyFiles must be set.
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("notificationTriggers")
+    public void setNotificationTriggers(NotificationTriggers notificationTriggers) {
+        this.notificationTriggers = notificationTriggers;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("source", source).append("target", target).append("transferOptions", transferOptions).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("source", source).append("target", target).append("transferOptions", transferOptions).append("notificationTriggers", notificationTriggers).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(source).append(transferOptions).append(target).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(notificationTriggers).append(source).append(transferOptions).append(target).toHashCode();
     }
 
     @Override
@@ -164,7 +191,7 @@ public class Profile
             return false;
         }
         Profile rhs = ((Profile) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(source, rhs.source).append(transferOptions, rhs.transferOptions).append(target, rhs.target).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(notificationTriggers, rhs.notificationTriggers).append(source, rhs.source).append(transferOptions, rhs.transferOptions).append(target, rhs.target).isEquals();
     }
 
 }

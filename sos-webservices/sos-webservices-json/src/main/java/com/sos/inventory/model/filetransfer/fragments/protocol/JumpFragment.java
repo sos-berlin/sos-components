@@ -7,8 +7,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.inventory.model.filetransfer.fragments.protocol.common.BasicConnection;
 import com.sos.inventory.model.filetransfer.fragments.protocol.jump.JumpProcessing;
-import com.sos.inventory.model.filetransfer.fragments.protocol.refs.JumpAlternativeFragmentRef;
-import com.sos.inventory.model.filetransfer.fragments.protocol.refs.ProxyFragmentRefAny;
 import com.sos.inventory.model.filetransfer.fragments.protocol.sftp.SftpAuthentication;
 import com.sos.inventory.model.filetransfer.fragments.protocol.sftp.SftpKeepAlive;
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -24,8 +22,9 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
-    "proxyRef",
-    "alternativeRef",
+    "httpProxyFragmentName",
+    "socksProxyFragmentName",
+    "alternativeJumpFragmentName",
     "connection",
     "authentication",
     "socketTimeout",
@@ -41,22 +40,29 @@ public class JumpFragment
 {
 
     /**
-     * HTTP Proxy Reference
+     * string without < and >
      * <p>
-     * Reference to an HTTP or SOCKS proxy fragment.
+     * 
      * 
      */
-    @JsonProperty("proxyRef")
-    @JsonPropertyDescription("Reference to an HTTP or SOCKS proxy fragment.")
-    private ProxyFragmentRefAny proxyRef;
+    @JsonProperty("httpProxyFragmentName")
+    private String httpProxyFragmentName;
     /**
-     * JUMP Alternative Fragment Reference
+     * string without < and >
      * <p>
      * 
      * 
      */
-    @JsonProperty("alternativeRef")
-    private JumpAlternativeFragmentRef alternativeRef;
+    @JsonProperty("socksProxyFragmentName")
+    private String socksProxyFragmentName;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("alternativeJumpFragmentName")
+    private String alternativeJumpFragmentName;
     /**
      * 
      * (Required)
@@ -141,26 +147,22 @@ public class JumpFragment
      * 
      * @param yadeClientCommand
      * @param tempDirectoryParent
-     * @param proxyRef
-     * @param alternativeRef
      * @param keepAlive
      * @param jumpProcessing
-     * @param strictHostkeyChecking
-     * @param title
-     * @param decryptionRef
-     * @param version
-     * @param path
      * @param configurationFile
      * @param socketTimeout
-     * @param credentialStoreRef
+     * @param alternativeJumpFragmentName
+     * @param httpProxyFragmentName
      * @param connection
-     * @param documentationName
+     * @param strictHostkeyChecking
+     * @param socksProxyFragmentName
      * @param authentication
      */
-    public JumpFragment(ProxyFragmentRefAny proxyRef, JumpAlternativeFragmentRef alternativeRef, BasicConnection connection, SftpAuthentication authentication, String socketTimeout, SftpKeepAlive keepAlive, String strictHostkeyChecking, String configurationFile, String yadeClientCommand, String tempDirectoryParent, JumpProcessing jumpProcessing, String credentialStoreRef, String decryptionRef, String version, String path, String title, String documentationName) {
-        super(credentialStoreRef, decryptionRef, version, path, title, documentationName);
-        this.proxyRef = proxyRef;
-        this.alternativeRef = alternativeRef;
+    public JumpFragment(String httpProxyFragmentName, String socksProxyFragmentName, String alternativeJumpFragmentName, BasicConnection connection, SftpAuthentication authentication, String socketTimeout, SftpKeepAlive keepAlive, String strictHostkeyChecking, String configurationFile, String yadeClientCommand, String tempDirectoryParent, JumpProcessing jumpProcessing) {
+        super();
+        this.httpProxyFragmentName = httpProxyFragmentName;
+        this.socksProxyFragmentName = socksProxyFragmentName;
+        this.alternativeJumpFragmentName = alternativeJumpFragmentName;
         this.connection = connection;
         this.authentication = authentication;
         this.socketTimeout = socketTimeout;
@@ -173,47 +175,69 @@ public class JumpFragment
     }
 
     /**
-     * HTTP Proxy Reference
+     * string without < and >
      * <p>
-     * Reference to an HTTP or SOCKS proxy fragment.
+     * 
      * 
      */
-    @JsonProperty("proxyRef")
-    public ProxyFragmentRefAny getProxyRef() {
-        return proxyRef;
+    @JsonProperty("httpProxyFragmentName")
+    public String getHttpProxyFragmentName() {
+        return httpProxyFragmentName;
     }
 
     /**
-     * HTTP Proxy Reference
+     * string without < and >
      * <p>
-     * Reference to an HTTP or SOCKS proxy fragment.
+     * 
      * 
      */
-    @JsonProperty("proxyRef")
-    public void setProxyRef(ProxyFragmentRefAny proxyRef) {
-        this.proxyRef = proxyRef;
+    @JsonProperty("httpProxyFragmentName")
+    public void setHttpProxyFragmentName(String httpProxyFragmentName) {
+        this.httpProxyFragmentName = httpProxyFragmentName;
     }
 
     /**
-     * JUMP Alternative Fragment Reference
+     * string without < and >
      * <p>
      * 
      * 
      */
-    @JsonProperty("alternativeRef")
-    public JumpAlternativeFragmentRef getAlternativeRef() {
-        return alternativeRef;
+    @JsonProperty("socksProxyFragmentName")
+    public String getSocksProxyFragmentName() {
+        return socksProxyFragmentName;
     }
 
     /**
-     * JUMP Alternative Fragment Reference
+     * string without < and >
      * <p>
      * 
      * 
      */
-    @JsonProperty("alternativeRef")
-    public void setAlternativeRef(JumpAlternativeFragmentRef alternativeRef) {
-        this.alternativeRef = alternativeRef;
+    @JsonProperty("socksProxyFragmentName")
+    public void setSocksProxyFragmentName(String socksProxyFragmentName) {
+        this.socksProxyFragmentName = socksProxyFragmentName;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("alternativeJumpFragmentName")
+    public String getAlternativeJumpFragmentName() {
+        return alternativeJumpFragmentName;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("alternativeJumpFragmentName")
+    public void setAlternativeJumpFragmentName(String alternativeJumpFragmentName) {
+        this.alternativeJumpFragmentName = alternativeJumpFragmentName;
     }
 
     /**
@@ -412,12 +436,12 @@ public class JumpFragment
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("proxyRef", proxyRef).append("alternativeRef", alternativeRef).append("connection", connection).append("authentication", authentication).append("socketTimeout", socketTimeout).append("keepAlive", keepAlive).append("strictHostkeyChecking", strictHostkeyChecking).append("configurationFile", configurationFile).append("yadeClientCommand", yadeClientCommand).append("tempDirectoryParent", tempDirectoryParent).append("jumpProcessing", jumpProcessing).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("httpProxyFragmentName", httpProxyFragmentName).append("socksProxyFragmentName", socksProxyFragmentName).append("alternativeJumpFragmentName", alternativeJumpFragmentName).append("connection", connection).append("authentication", authentication).append("socketTimeout", socketTimeout).append("keepAlive", keepAlive).append("strictHostkeyChecking", strictHostkeyChecking).append("configurationFile", configurationFile).append("yadeClientCommand", yadeClientCommand).append("tempDirectoryParent", tempDirectoryParent).append("jumpProcessing", jumpProcessing).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(yadeClientCommand).append(tempDirectoryParent).append(proxyRef).append(alternativeRef).append(keepAlive).append(jumpProcessing).append(configurationFile).append(socketTimeout).append(connection).append(strictHostkeyChecking).append(authentication).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(yadeClientCommand).append(tempDirectoryParent).append(keepAlive).append(jumpProcessing).append(httpProxyFragmentName).append(strictHostkeyChecking).append(configurationFile).append(socketTimeout).append(alternativeJumpFragmentName).append(connection).append(socksProxyFragmentName).append(authentication).toHashCode();
     }
 
     @Override
@@ -429,7 +453,7 @@ public class JumpFragment
             return false;
         }
         JumpFragment rhs = ((JumpFragment) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(yadeClientCommand, rhs.yadeClientCommand).append(tempDirectoryParent, rhs.tempDirectoryParent).append(proxyRef, rhs.proxyRef).append(alternativeRef, rhs.alternativeRef).append(keepAlive, rhs.keepAlive).append(jumpProcessing, rhs.jumpProcessing).append(configurationFile, rhs.configurationFile).append(socketTimeout, rhs.socketTimeout).append(connection, rhs.connection).append(strictHostkeyChecking, rhs.strictHostkeyChecking).append(authentication, rhs.authentication).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(yadeClientCommand, rhs.yadeClientCommand).append(tempDirectoryParent, rhs.tempDirectoryParent).append(keepAlive, rhs.keepAlive).append(jumpProcessing, rhs.jumpProcessing).append(httpProxyFragmentName, rhs.httpProxyFragmentName).append(strictHostkeyChecking, rhs.strictHostkeyChecking).append(configurationFile, rhs.configurationFile).append(socketTimeout, rhs.socketTimeout).append(alternativeJumpFragmentName, rhs.alternativeJumpFragmentName).append(connection, rhs.connection).append(socksProxyFragmentName, rhs.socksProxyFragmentName).append(authentication, rhs.authentication).isEquals();
     }
 
 }

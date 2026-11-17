@@ -3,13 +3,10 @@ package com.sos.inventory.model.filetransfer.fragments.protocol;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.inventory.model.filetransfer.common.HttpHeaders;
 import com.sos.inventory.model.filetransfer.fragments.protocol.common.BasicAuthentication;
 import com.sos.inventory.model.filetransfer.fragments.protocol.common.UrlConnection;
-import com.sos.inventory.model.filetransfer.fragments.protocol.refs.ProxyFragmentRefHttpOnly;
-import com.sos.inventory.model.filetransfer.fragments.protocol.refs.WebdavAlternativeFragmentRef;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -23,9 +20,9 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
-    "jumpRef",
-    "proxyRef",
-    "alternativeRef",
+    "jumpFragmentName",
+    "httpProxyFragmentName",
+    "alternativeWebdavFragmentName",
     "connection",
     "authentication",
     "httpHeaders"
@@ -40,25 +37,24 @@ public class AWebdavFragment
      * 
      * 
      */
-    @JsonProperty("jumpRef")
-    private String jumpRef;
+    @JsonProperty("jumpFragmentName")
+    private String jumpFragmentName;
     /**
-     * HTTP Proxy Reference
-     * <p>
-     * Reference to an HTTP proxy fragment.
-     * 
-     */
-    @JsonProperty("proxyRef")
-    @JsonPropertyDescription("Reference to an HTTP proxy fragment.")
-    private ProxyFragmentRefHttpOnly proxyRef;
-    /**
-     * WebDAV Alternative Fragment Reference
+     * string without < and >
      * <p>
      * 
      * 
      */
-    @JsonProperty("alternativeRef")
-    private WebdavAlternativeFragmentRef alternativeRef;
+    @JsonProperty("httpProxyFragmentName")
+    private String httpProxyFragmentName;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("alternativeWebdavFragmentName")
+    private String alternativeWebdavFragmentName;
     /**
      * 
      * (Required)
@@ -86,24 +82,18 @@ public class AWebdavFragment
 
     /**
      * 
-     * @param path
-     * @param proxyRef
-     * @param alternativeRef
-     * @param credentialStoreRef
-     * @param jumpRef
+     * @param jumpFragmentName
+     * @param alternativeWebdavFragmentName
+     * @param httpProxyFragmentName
      * @param connection
      * @param httpHeaders
-     * @param documentationName
-     * @param title
-     * @param decryptionRef
-     * @param version
      * @param authentication
      */
-    public AWebdavFragment(String jumpRef, ProxyFragmentRefHttpOnly proxyRef, WebdavAlternativeFragmentRef alternativeRef, UrlConnection connection, BasicAuthentication authentication, HttpHeaders httpHeaders, String credentialStoreRef, String decryptionRef, String version, String path, String title, String documentationName) {
-        super(credentialStoreRef, decryptionRef, version, path, title, documentationName);
-        this.jumpRef = jumpRef;
-        this.proxyRef = proxyRef;
-        this.alternativeRef = alternativeRef;
+    public AWebdavFragment(String jumpFragmentName, String httpProxyFragmentName, String alternativeWebdavFragmentName, UrlConnection connection, BasicAuthentication authentication, HttpHeaders httpHeaders) {
+        super();
+        this.jumpFragmentName = jumpFragmentName;
+        this.httpProxyFragmentName = httpProxyFragmentName;
+        this.alternativeWebdavFragmentName = alternativeWebdavFragmentName;
         this.connection = connection;
         this.authentication = authentication;
         this.httpHeaders = httpHeaders;
@@ -115,9 +105,9 @@ public class AWebdavFragment
      * 
      * 
      */
-    @JsonProperty("jumpRef")
-    public String getJumpRef() {
-        return jumpRef;
+    @JsonProperty("jumpFragmentName")
+    public String getJumpFragmentName() {
+        return jumpFragmentName;
     }
 
     /**
@@ -126,53 +116,53 @@ public class AWebdavFragment
      * 
      * 
      */
-    @JsonProperty("jumpRef")
-    public void setJumpRef(String jumpRef) {
-        this.jumpRef = jumpRef;
+    @JsonProperty("jumpFragmentName")
+    public void setJumpFragmentName(String jumpFragmentName) {
+        this.jumpFragmentName = jumpFragmentName;
     }
 
     /**
-     * HTTP Proxy Reference
-     * <p>
-     * Reference to an HTTP proxy fragment.
-     * 
-     */
-    @JsonProperty("proxyRef")
-    public ProxyFragmentRefHttpOnly getProxyRef() {
-        return proxyRef;
-    }
-
-    /**
-     * HTTP Proxy Reference
-     * <p>
-     * Reference to an HTTP proxy fragment.
-     * 
-     */
-    @JsonProperty("proxyRef")
-    public void setProxyRef(ProxyFragmentRefHttpOnly proxyRef) {
-        this.proxyRef = proxyRef;
-    }
-
-    /**
-     * WebDAV Alternative Fragment Reference
+     * string without < and >
      * <p>
      * 
      * 
      */
-    @JsonProperty("alternativeRef")
-    public WebdavAlternativeFragmentRef getAlternativeRef() {
-        return alternativeRef;
+    @JsonProperty("httpProxyFragmentName")
+    public String getHttpProxyFragmentName() {
+        return httpProxyFragmentName;
     }
 
     /**
-     * WebDAV Alternative Fragment Reference
+     * string without < and >
      * <p>
      * 
      * 
      */
-    @JsonProperty("alternativeRef")
-    public void setAlternativeRef(WebdavAlternativeFragmentRef alternativeRef) {
-        this.alternativeRef = alternativeRef;
+    @JsonProperty("httpProxyFragmentName")
+    public void setHttpProxyFragmentName(String httpProxyFragmentName) {
+        this.httpProxyFragmentName = httpProxyFragmentName;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("alternativeWebdavFragmentName")
+    public String getAlternativeWebdavFragmentName() {
+        return alternativeWebdavFragmentName;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("alternativeWebdavFragmentName")
+    public void setAlternativeWebdavFragmentName(String alternativeWebdavFragmentName) {
+        this.alternativeWebdavFragmentName = alternativeWebdavFragmentName;
     }
 
     /**
@@ -229,12 +219,12 @@ public class AWebdavFragment
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("jumpRef", jumpRef).append("proxyRef", proxyRef).append("alternativeRef", alternativeRef).append("connection", connection).append("authentication", authentication).append("httpHeaders", httpHeaders).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("jumpFragmentName", jumpFragmentName).append("httpProxyFragmentName", httpProxyFragmentName).append("alternativeWebdavFragmentName", alternativeWebdavFragmentName).append("connection", connection).append("authentication", authentication).append("httpHeaders", httpHeaders).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(proxyRef).append(alternativeRef).append(jumpRef).append(connection).append(httpHeaders).append(authentication).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(jumpFragmentName).append(alternativeWebdavFragmentName).append(httpProxyFragmentName).append(connection).append(httpHeaders).append(authentication).toHashCode();
     }
 
     @Override
@@ -246,7 +236,7 @@ public class AWebdavFragment
             return false;
         }
         AWebdavFragment rhs = ((AWebdavFragment) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(proxyRef, rhs.proxyRef).append(alternativeRef, rhs.alternativeRef).append(jumpRef, rhs.jumpRef).append(connection, rhs.connection).append(httpHeaders, rhs.httpHeaders).append(authentication, rhs.authentication).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(jumpFragmentName, rhs.jumpFragmentName).append(alternativeWebdavFragmentName, rhs.alternativeWebdavFragmentName).append(httpProxyFragmentName, rhs.httpProxyFragmentName).append(connection, rhs.connection).append(httpHeaders, rhs.httpHeaders).append(authentication, rhs.authentication).isEquals();
     }
 
 }

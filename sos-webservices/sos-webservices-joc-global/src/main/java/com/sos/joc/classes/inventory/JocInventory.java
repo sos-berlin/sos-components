@@ -48,6 +48,7 @@ import com.sos.inventory.model.descriptor.DeploymentDescriptor;
 import com.sos.inventory.model.fileordersource.FileOrderSource;
 import com.sos.inventory.model.filetransfer.fragments.cs.CredentialStoreFragment;
 import com.sos.inventory.model.filetransfer.fragments.decryption.DecryptionFragment;
+import com.sos.inventory.model.filetransfer.fragments.mail.MailFragment;
 import com.sos.inventory.model.filetransfer.fragments.protocol.AzureBlobStorageFragment;
 import com.sos.inventory.model.filetransfer.fragments.protocol.FtpFragment;
 import com.sos.inventory.model.filetransfer.fragments.protocol.HttpFragment;
@@ -55,8 +56,8 @@ import com.sos.inventory.model.filetransfer.fragments.protocol.JumpFragment;
 import com.sos.inventory.model.filetransfer.fragments.protocol.SftpFragment;
 import com.sos.inventory.model.filetransfer.fragments.protocol.SmbFragment;
 import com.sos.inventory.model.filetransfer.fragments.protocol.WebdavFragment;
-import com.sos.inventory.model.filetransfer.fragments.proxy.ProxyHttpFragment;
-import com.sos.inventory.model.filetransfer.fragments.proxy.ProxySocksFragment;
+import com.sos.inventory.model.filetransfer.fragments.proxy.HttpProxyFragment;
+import com.sos.inventory.model.filetransfer.fragments.proxy.SocksProxyFragment;
 import com.sos.inventory.model.filetransfer.profile.Profile;
 import com.sos.inventory.model.instruction.InstructionType;
 import com.sos.inventory.model.job.ExecutableScript;
@@ -152,8 +153,9 @@ public class JocInventory {
             
             put(ConfigurationType.FT_FRAGMENT_CREDENTIAL_STORE, "classpath:/raml/inventory/schemas/filetransfer/fragments/cs/credentialStoreFragment-schema-schema.json");
             put(ConfigurationType.FT_FRAGMENT_DECRYPTION, "classpath:/raml/inventory/schemas/filetransfer/fragments/decryption/decryptionFragment-schema.json");
-            put(ConfigurationType.FT_FRAGMENT_PROXY_HTTP, "classpath:/raml/inventory/schemas/filetransfer/fragments/proxy/proxyHttpFragment-schema.json");
-            put(ConfigurationType.FT_FRAGMENT_PROXY_SOCKS, "classpath:/raml/inventory/schemas/filetransfer/fragments/proxy/proxySocksFragment.json");
+            put(ConfigurationType.FT_FRAGMENT_MAIL, "classpath:/raml/inventory/schemas/filetransfer/fragments/mail/mailFragment-schema.json");
+            put(ConfigurationType.FT_FRAGMENT_HTTP_PROXY, "classpath:/raml/inventory/schemas/filetransfer/fragments/proxy/httpProxyFragment-schema.json");
+            put(ConfigurationType.FT_FRAGMENT_SOCKS_PROXY, "classpath:/raml/inventory/schemas/filetransfer/fragments/proxy/socksProxyFragment.json");
             put(ConfigurationType.FT_FRAGMENT_AZURE_BLOB_STORAGE, "classpath:/raml/inventory/schemas/filetransfer/fragments/protocol/azureBlobStorageFragment-schema.json");
             put(ConfigurationType.FT_FRAGMENT_FTP, "classpath:/raml/inventory/schemas/filetransfer/fragments/protocol/ftpFragment-schema.json");
             put(ConfigurationType.FT_FRAGMENT_HTTP, "classpath:/raml/inventory/schemas/filetransfer/fragments/protocol/httpFragment-schema.json");
@@ -223,8 +225,9 @@ public class JocInventory {
             
             put(ConfigurationType.FT_FRAGMENT_CREDENTIAL_STORE, CredentialStoreFragment.class);
             put(ConfigurationType.FT_FRAGMENT_DECRYPTION, DecryptionFragment.class);
-            put(ConfigurationType.FT_FRAGMENT_PROXY_HTTP, ProxyHttpFragment.class);
-            put(ConfigurationType.FT_FRAGMENT_PROXY_SOCKS, ProxySocksFragment.class);
+            put(ConfigurationType.FT_FRAGMENT_MAIL, MailFragment.class);
+            put(ConfigurationType.FT_FRAGMENT_HTTP_PROXY, HttpProxyFragment.class);
+            put(ConfigurationType.FT_FRAGMENT_SOCKS_PROXY, SocksProxyFragment.class);
             put(ConfigurationType.FT_FRAGMENT_AZURE_BLOB_STORAGE, AzureBlobStorageFragment.class);
             put(ConfigurationType.FT_FRAGMENT_FTP, FtpFragment.class);
             put(ConfigurationType.FT_FRAGMENT_HTTP, HttpFragment.class);

@@ -5,13 +5,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.inventory.model.filetransfer.fragments.protocol.common.BasicAuthentication;
-import com.sos.inventory.model.filetransfer.fragments.protocol.common.BasicConnection;
-import com.sos.inventory.model.filetransfer.fragments.protocol.ftp.FtpKeepAlive;
 import com.sos.inventory.model.filetransfer.fragments.protocol.ftp.FtpOptions;
 import com.sos.inventory.model.filetransfer.fragments.protocol.ftp.FtpsOptions;
-import com.sos.inventory.model.filetransfer.fragments.protocol.refs.FtpAlternativeFragmentRef;
-import com.sos.inventory.model.filetransfer.fragments.protocol.refs.ProxyFragmentRefAny;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -57,23 +52,10 @@ public class FtpFragment
     /**
      * 
      * @param ftps
-     * @param proxyRef
      * @param ftp
-     * @param alternativeRef
-     * @param keepAlive
-     * @param jumpRef
-     * @param title
-     * @param decryptionRef
-     * @param version
-     * @param path
-     * @param transferMode
-     * @param credentialStoreRef
-     * @param connection
-     * @param documentationName
-     * @param authentication
      */
-    public FtpFragment(FtpOptions ftp, FtpsOptions ftps, String jumpRef, ProxyFragmentRefAny proxyRef, FtpAlternativeFragmentRef alternativeRef, BasicConnection connection, BasicAuthentication authentication, FtpKeepAlive keepAlive, String transferMode, String credentialStoreRef, String decryptionRef, String version, String path, String title, String documentationName) {
-        super(jumpRef, proxyRef, alternativeRef, connection, authentication, keepAlive, transferMode, credentialStoreRef, decryptionRef, version, path, title, documentationName);
+    public FtpFragment(FtpOptions ftp, FtpsOptions ftps) {
+        super();
         this.ftp = ftp;
         this.ftps = ftps;
     }

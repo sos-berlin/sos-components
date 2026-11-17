@@ -3,8 +3,9 @@ package com.sos.joc.model.inventory.filetransfer;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.inventory.model.filetransfer.fragments.proxy.ProxyHttpFragment;
+import com.sos.inventory.model.filetransfer.fragments.mail.MailFragment;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -21,38 +22,39 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "configuration"
 })
-public class ProxyHttpFragmentEdit
+public class MailFragmentEdit
     extends ConfigurationObject
 {
 
     /**
-     * HTTP Proxy Fragment
+     * Mail Fragment
      * <p>
-     * 
+     * Email notification settings.
      * 
      */
     @JsonProperty("configuration")
-    private ProxyHttpFragment configuration;
+    @JsonPropertyDescription("Email notification settings.")
+    private MailFragment configuration;
 
     /**
-     * HTTP Proxy Fragment
+     * Mail Fragment
      * <p>
-     * 
+     * Email notification settings.
      * 
      */
     @JsonProperty("configuration")
-    public ProxyHttpFragment getConfiguration() {
+    public MailFragment getConfiguration() {
         return configuration;
     }
 
     /**
-     * HTTP Proxy Fragment
+     * Mail Fragment
      * <p>
-     * 
+     * Email notification settings.
      * 
      */
     @JsonProperty("configuration")
-    public void setConfiguration(ProxyHttpFragment configuration) {
+    public void setConfiguration(MailFragment configuration) {
         this.configuration = configuration;
     }
 
@@ -71,10 +73,10 @@ public class ProxyHttpFragmentEdit
         if (other == this) {
             return true;
         }
-        if ((other instanceof ProxyHttpFragmentEdit) == false) {
+        if ((other instanceof MailFragmentEdit) == false) {
             return false;
         }
-        ProxyHttpFragmentEdit rhs = ((ProxyHttpFragmentEdit) other);
+        MailFragmentEdit rhs = ((MailFragmentEdit) other);
         return new EqualsBuilder().appendSuper(super.equals(other)).append(configuration, rhs.configuration).isEquals();
     }
 

@@ -1,5 +1,5 @@
 
-package com.sos.inventory.model.filetransfer.profile.refs;
+package com.sos.inventory.model.filetransfer.profile.fragments;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -15,7 +15,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 /**
  * SFTP Protocol Fragment Reference
  * <p>
- * allOf is present for validator only. jsonschema2pojo uses 'extends' for code generation. allOf ensures the validator applies the base required fields.
+ * allOf is present for and documentation validator only. jsonschema2pojo uses 'extends' for code generation. allOf ensures the validator applies the base required fields.
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -63,13 +63,12 @@ public class SftpFragmentRef
 
     /**
      * 
-     * @param ref
      * @param rename
      * @param processing
      * @param useZlibCompression
      */
-    public SftpFragmentRef(Processing processing, Rename rename, String useZlibCompression, String ref) {
-        super(ref);
+    public SftpFragmentRef(Processing processing, Rename rename, String useZlibCompression) {
+        super();
         this.processing = processing;
         this.rename = rename;
         this.useZlibCompression = useZlibCompression;

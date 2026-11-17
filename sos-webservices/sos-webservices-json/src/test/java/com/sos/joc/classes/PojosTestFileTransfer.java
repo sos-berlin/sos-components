@@ -3,6 +3,7 @@ package com.sos.joc.classes;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import org.junit.Ignore;
@@ -14,8 +15,8 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sos.inventory.model.filetransfer.AFileTransfer;
-import com.sos.inventory.model.filetransfer.common.FragmentRefTypeForProfile;
-import com.sos.inventory.model.filetransfer.common.FragmentRefTypeForProtocolFragment;
+import com.sos.inventory.model.filetransfer.common.PostProcessing;
+import com.sos.inventory.model.filetransfer.common.Processing;
 import com.sos.inventory.model.filetransfer.fragments.cs.CredentialStoreAuthKeyFile;
 import com.sos.inventory.model.filetransfer.fragments.cs.CredentialStoreAuthentication;
 import com.sos.inventory.model.filetransfer.fragments.cs.CredentialStoreFragment;
@@ -29,21 +30,19 @@ import com.sos.inventory.model.filetransfer.fragments.protocol.common.ssl.Ssl;
 import com.sos.inventory.model.filetransfer.fragments.protocol.common.ssl.Trusted;
 import com.sos.inventory.model.filetransfer.fragments.protocol.ftp.FtpOptions;
 import com.sos.inventory.model.filetransfer.fragments.protocol.ftp.FtpsOptions;
-import com.sos.inventory.model.filetransfer.fragments.protocol.refs.FtpAlternativeFragmentRef;
-import com.sos.inventory.model.filetransfer.fragments.protocol.refs.HttpAlternativeFragmentRef;
-import com.sos.inventory.model.filetransfer.fragments.protocol.refs.ProxyFragmentRefAny;
-import com.sos.inventory.model.filetransfer.fragments.protocol.refs.ProxyFragmentRefAny.Type;
-import com.sos.inventory.model.filetransfer.fragments.protocol.refs.SftpAlternativeFragmentRef;
 import com.sos.inventory.model.filetransfer.fragments.protocol.sftp.SftpAuthPublicKey;
 import com.sos.inventory.model.filetransfer.fragments.protocol.sftp.SftpAuthentication;
 import com.sos.inventory.model.filetransfer.profile.Profile;
 import com.sos.inventory.model.filetransfer.profile.ProfileBase.Operation;
 import com.sos.inventory.model.filetransfer.profile.Source;
-import com.sos.inventory.model.filetransfer.profile.refs.FragmentRef;
-import com.sos.inventory.model.filetransfer.profile.refs.Local;
+import com.sos.inventory.model.filetransfer.profile.Target;
+import com.sos.inventory.model.filetransfer.profile.fragments.Fragment;
+import com.sos.inventory.model.filetransfer.profile.fragments.Local;
+import com.sos.inventory.model.filetransfer.profile.fragments.SftpFragmentRef;
 import com.sos.inventory.model.filetransfer.profile.source.FileSpecSelection;
 import com.sos.inventory.model.filetransfer.profile.source.Selection;
 import com.sos.inventory.model.filetransfer.profile.source.SourceFileOptions;
+import com.sos.inventory.model.filetransfer.profile.target.TargetFileOptions;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.schema.JsonValidator;
 
@@ -52,7 +51,7 @@ public class PojosTestFileTransfer {
     private static final Logger LOGGER = LoggerFactory.getLogger(PojosTestFileTransfer.class);
 
     private static final String PATH_RAML = "raml/inventory/schemas/filetransfer";
-    private static final String PATH_INVENTORY_SCHEMA_RESOURCES = "/dev/JS7/2.x/schemas/js7-inventory-schemas/src/main/resources";
+    private static final String PATH_INVENTORY_SCHEMA_RESOURCES = "../../../../schemas/js7-inventory-schemas/src/main/resources";
 
     private ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).configure(
             SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false).configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false);
@@ -101,22 +100,16 @@ public class PojosTestFileTransfer {
             ftps.setSsl(ssl);
             // f.setFtps(ftps);
 
-            FtpAlternativeFragmentRef af = new FtpAlternativeFragmentRef();
-            af.setType(FragmentRefTypeForProtocolFragment.FTP);
-            af.setRef("my alternative fragment");
-            f.setAlternativeRef(af);
+            f.setAlternativeFtpFragmentName("my alternative fragment");
 
-            ProxyFragmentRefAny ph = new ProxyFragmentRefAny();
-            ph.setType(Type.HTTP);
-            ph.setRef("my proxy ref");
-            f.setProxyRef(ph);
+            f.setSocksProxyFragmentName("my socks proxy ref");
 
             LOGGER.info(objectMapper.writeValueAsString(f));
 
             LOGGER.info(Paths.get("").toAbsolutePath().toString());
 
             URI uri = createFromClasspath("fragments/protocol/ftpFragment-schema.json");
-            uri = createFromInventorySchemaResources("fragments/protocol/ftpFragment-schema.json");
+            // uri = createFromInventorySchemaResources("fragments/protocol/ftpFragment-schema.json");
 
             JsonValidator.validate(objectMapper.writeValueAsBytes(f), uri, true);
         } catch (Exception e) {
@@ -142,15 +135,12 @@ public class PojosTestFileTransfer {
             ssl.setTrusted(t);
             f.setSsl(ssl);
 
-            HttpAlternativeFragmentRef af = new HttpAlternativeFragmentRef();
-            af.setType(FragmentRefTypeForProtocolFragment.HTTP);
-            af.setRef("my alternative fragment");
-            f.setAlternativeRef(af);
+            f.setAlternativeHttpFragmentName("my alternative fragment");
 
             LOGGER.info(objectMapper.writeValueAsString(f));
 
             URI uri = createFromClasspath("fragments/protocol/httpFragment-schema.json");
-            uri = createFromInventorySchemaResources("fragments/protocol/httpFragment-schema.json");
+            // uri = createFromInventorySchemaResources("fragments/protocol/httpFragment-schema.json");
 
             JsonValidator.validate(objectMapper.writeValueAsBytes(f), uri, true);
         } catch (Exception e) {
@@ -172,14 +162,18 @@ public class PojosTestFileTransfer {
             sa.setPublicKey(pk);
             f.setAuthentication(sa);
 
-            SftpAlternativeFragmentRef af = new SftpAlternativeFragmentRef();
-            af.setType(FragmentRefTypeForProtocolFragment.SFTP);
-            af.setRef("my alternative fragment");
-            f.setAlternativeRef(af);
+            f.setAlternativeSftpFragmentName("my alternative fragment");
+
+            f.setCredentialStoreFragmentName("cs name");
+            f.setDecryptionFragmentName("decryption name");
+            f.setJumpFragmentName("jump name");
+            f.setSocksProxyFragmentName("my proxy socks"); // only one is allowed: socks or http
+            // f.setHttpProxyFragmentName("my proxy http");
 
             LOGGER.info(objectMapper.writeValueAsString(f));
 
             URI uri = createFromClasspath("fragments/protocol/sftpFragment-schema.json");
+            uri = createFromInventorySchemaResources("fragments/protocol/sftpFragment-schema.json");
             JsonValidator.validate(objectMapper.writeValueAsBytes(f), uri, true);
         } catch (Exception e) {
             LOGGER.error(e.toString(), e);
@@ -188,25 +182,27 @@ public class PojosTestFileTransfer {
 
     @Ignore
     @Test
-    public void validateProfileTest() throws Exception {
+    public void validateProfileTestGetlist() throws Exception {
         try {
             Profile p = new Profile();
             p.setOperation(Operation.GETLIST);
 
-            p.setAlternativeRef("alternative ref");
+            p.setAlternativeProfileName("alternative ref");
 
             Source s = new Source();
-            FragmentRef ref = new FragmentRef();
+            Fragment ref = new Fragment();
 
             Local l = new Local();
-            l.setCredentialStoreRef("cs ref");
-            // ref.setLocal(l);
-            // ref.setType(FragmentRefTypeForProfile_schema.LOCAL);
+            l.setCredentialStoreFragmentName("cs ref");
+            Processing pg = new Processing();
+            PostProcessing pp = new PostProcessing();
+            pp.setCommandAfterFile("command after file");
+            pg.setPostProcessing(pp);
+            l.setProcessing(pg);
+            ref.setLocal(l);
 
-            ref.setType(FragmentRefTypeForProfile.SFTP);
-            ref.setRef("my sftp ref");
+            s.setFragment(ref);
 
-            s.setFragmentRef(ref);
             SourceFileOptions so = new SourceFileOptions();
             Selection sel = new Selection();
             FileSpecSelection sfs = new FileSpecSelection();
@@ -219,6 +215,62 @@ public class PojosTestFileTransfer {
             // csf.setEntryPath("my_entry path");
             // csf.setSubType(FileTransferSubType.CREDENTIAL_STORE);
 
+            LOGGER.info(objectMapper.writeValueAsString(p));
+
+            URI uri = createFromClasspath("profile/profile-schema.json");
+            uri = createFromInventorySchemaResources("profile/profile-schema.json");
+
+            JsonValidator.validate(objectMapper.writeValueAsBytes(p), uri, true);
+        } catch (Exception e) {
+            LOGGER.error(e.toString(), e);
+        }
+    }
+
+    @Ignore
+    @Test
+    public void validateProfileTestCopy() throws Exception {
+        try {
+            Profile p = new Profile();
+            p.setOperation(Operation.COPY);
+
+            p.setAlternativeProfileName("alternative ref");
+
+            Source s = new Source();
+            Fragment ref = new Fragment();
+
+            Local l = new Local();
+            l.setCredentialStoreFragmentName("cs ref");
+            Processing pg = new Processing();
+            PostProcessing pp = new PostProcessing();
+            pp.setCommandAfterFile("command after file");
+            pg.setPostProcessing(pp);
+            l.setProcessing(pg);
+            ref.setLocal(l);
+
+            s.setFragment(ref);
+
+            SourceFileOptions so = new SourceFileOptions();
+            Selection sel = new Selection();
+            FileSpecSelection sfs = new FileSpecSelection();
+            sfs.setFileSpec(".*");
+            sel.setFileSpec(sfs);
+            so.setSelection(sel);
+            s.setSourceFileOptions(so);
+            p.setSource(s);
+
+            Target t = new Target();
+            t.setDirectory("my target dir");
+            TargetFileOptions tfo = new TargetFileOptions();
+            tfo.setAppendFiles("true");
+            t.setTargetFileOptions(tfo);
+
+            SftpFragmentRef sftp = new SftpFragmentRef();
+            sftp.setName("my sftp");
+            ref = new Fragment();
+            ref.setSftp(sftp);
+            t.setFragment(ref);
+
+            p.setTarget(t);
             LOGGER.info(objectMapper.writeValueAsString(p));
 
             URI uri = createFromClasspath("profile/profile-schema.json");
@@ -271,8 +323,12 @@ public class PojosTestFileTransfer {
         return URI.create("classpath:/" + PATH_RAML + "/" + jsonPath);
     }
 
-    private URI createFromInventorySchemaResources(String jsonPath) {
-        return URI.create("file:/" + PATH_INVENTORY_SCHEMA_RESOURCES + "/" + PATH_RAML + "/" + jsonPath);
+    private URI createFromInventorySchemaResources(String jsonPath) throws Exception {
+        Path p = Paths.get(PATH_INVENTORY_SCHEMA_RESOURCES + "/" + PATH_RAML + "/" + jsonPath).toAbsolutePath().normalize();
+        if (!Files.exists(p)) {
+            throw new Exception("[createFromInventorySchemaResources][" + p + "]not found");
+        }
+        return URI.create("file:/" + p.toString().replace('\\', '/'));
     }
 
 }

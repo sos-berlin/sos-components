@@ -4,8 +4,6 @@ package com.sos.inventory.model.filetransfer.fragments.proxy;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.inventory.model.filetransfer.fragments.protocol.common.BasicAuthentication;
-import com.sos.inventory.model.filetransfer.fragments.protocol.common.BasicConnection;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -21,7 +19,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "resolveHostname"
 })
-public class ProxySocksFragment
+public class SocksProxyFragment
     extends AProxyFragment
 {
 
@@ -38,24 +36,15 @@ public class ProxySocksFragment
      * No args constructor for use in serialization
      * 
      */
-    public ProxySocksFragment() {
+    public SocksProxyFragment() {
     }
 
     /**
      * 
-     * @param path
-     * @param protocol
      * @param resolveHostname
-     * @param credentialStoreRef
-     * @param connection
-     * @param documentationName
-     * @param title
-     * @param decryptionRef
-     * @param version
-     * @param authentication
      */
-    public ProxySocksFragment(String resolveHostname, String credentialStoreRef, String decryptionRef, AProxyFragment.Protocol protocol, BasicConnection connection, BasicAuthentication authentication, String version, String path, String title, String documentationName) {
-        super(credentialStoreRef, decryptionRef, protocol, connection, authentication, version, path, title, documentationName);
+    public SocksProxyFragment(String resolveHostname) {
+        super();
         this.resolveHostname = resolveHostname;
     }
 
@@ -96,10 +85,10 @@ public class ProxySocksFragment
         if (other == this) {
             return true;
         }
-        if ((other instanceof ProxySocksFragment) == false) {
+        if ((other instanceof SocksProxyFragment) == false) {
             return false;
         }
-        ProxySocksFragment rhs = ((ProxySocksFragment) other);
+        SocksProxyFragment rhs = ((SocksProxyFragment) other);
         return new EqualsBuilder().appendSuper(super.equals(other)).append(resolveHostname, rhs.resolveHostname).isEquals();
     }
 

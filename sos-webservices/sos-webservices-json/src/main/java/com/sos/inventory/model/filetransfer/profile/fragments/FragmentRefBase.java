@@ -1,5 +1,5 @@
 
-package com.sos.inventory.model.filetransfer.profile.refs;
+package com.sos.inventory.model.filetransfer.profile.fragments;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -17,7 +17,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
-    "ref"
+    "name"
 })
 public class FragmentRefBase {
 
@@ -28,8 +28,8 @@ public class FragmentRefBase {
      * (Required)
      * 
      */
-    @JsonProperty("ref")
-    private String ref;
+    @JsonProperty("name")
+    private String name;
 
     /**
      * No args constructor for use in serialization
@@ -40,11 +40,11 @@ public class FragmentRefBase {
 
     /**
      * 
-     * @param ref
+     * @param name
      */
-    public FragmentRefBase(String ref) {
+    public FragmentRefBase(String name) {
         super();
-        this.ref = ref;
+        this.name = name;
     }
 
     /**
@@ -54,9 +54,9 @@ public class FragmentRefBase {
      * (Required)
      * 
      */
-    @JsonProperty("ref")
-    public String getRef() {
-        return ref;
+    @JsonProperty("name")
+    public String getName() {
+        return name;
     }
 
     /**
@@ -66,19 +66,19 @@ public class FragmentRefBase {
      * (Required)
      * 
      */
-    @JsonProperty("ref")
-    public void setRef(String ref) {
-        this.ref = ref;
+    @JsonProperty("name")
+    public void setName(String name) {
+        this.name = name;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("ref", ref).toString();
+        return new ToStringBuilder(this).append("name", name).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(ref).toHashCode();
+        return new HashCodeBuilder().append(name).toHashCode();
     }
 
     @Override
@@ -90,7 +90,7 @@ public class FragmentRefBase {
             return false;
         }
         FragmentRefBase rhs = ((FragmentRefBase) other);
-        return new EqualsBuilder().append(ref, rhs.ref).isEquals();
+        return new EqualsBuilder().append(name, rhs.name).isEquals();
     }
 
 }

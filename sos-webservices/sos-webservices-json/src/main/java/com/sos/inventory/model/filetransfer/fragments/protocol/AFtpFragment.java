@@ -8,8 +8,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.inventory.model.filetransfer.fragments.protocol.common.BasicAuthentication;
 import com.sos.inventory.model.filetransfer.fragments.protocol.common.BasicConnection;
 import com.sos.inventory.model.filetransfer.fragments.protocol.ftp.FtpKeepAlive;
-import com.sos.inventory.model.filetransfer.fragments.protocol.refs.FtpAlternativeFragmentRef;
-import com.sos.inventory.model.filetransfer.fragments.protocol.refs.ProxyFragmentRefAny;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -23,9 +21,10 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
-    "jumpRef",
-    "proxyRef",
-    "alternativeRef",
+    "jumpFragmentName",
+    "httpProxyFragmentName",
+    "socksProxyFragmentName",
+    "alternativeFtpFragmentName",
     "connection",
     "authentication",
     "keepAlive",
@@ -41,25 +40,32 @@ public class AFtpFragment
      * 
      * 
      */
-    @JsonProperty("jumpRef")
-    private String jumpRef;
+    @JsonProperty("jumpFragmentName")
+    private String jumpFragmentName;
     /**
-     * HTTP Proxy Reference
-     * <p>
-     * Reference to an HTTP or SOCKS proxy fragment.
-     * 
-     */
-    @JsonProperty("proxyRef")
-    @JsonPropertyDescription("Reference to an HTTP or SOCKS proxy fragment.")
-    private ProxyFragmentRefAny proxyRef;
-    /**
-     * FTP Alternative Fragment Reference
+     * string without < and >
      * <p>
      * 
      * 
      */
-    @JsonProperty("alternativeRef")
-    private FtpAlternativeFragmentRef alternativeRef;
+    @JsonProperty("httpProxyFragmentName")
+    private String httpProxyFragmentName;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("socksProxyFragmentName")
+    private String socksProxyFragmentName;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("alternativeFtpFragmentName")
+    private String alternativeFtpFragmentName;
     /**
      * 
      * (Required)
@@ -100,25 +106,21 @@ public class AFtpFragment
 
     /**
      * 
-     * @param proxyRef
-     * @param alternativeRef
+     * @param jumpFragmentName
      * @param keepAlive
-     * @param jumpRef
-     * @param title
-     * @param decryptionRef
-     * @param version
-     * @param path
+     * @param alternativeFtpFragmentName
      * @param transferMode
-     * @param credentialStoreRef
+     * @param httpProxyFragmentName
      * @param connection
-     * @param documentationName
+     * @param socksProxyFragmentName
      * @param authentication
      */
-    public AFtpFragment(String jumpRef, ProxyFragmentRefAny proxyRef, FtpAlternativeFragmentRef alternativeRef, BasicConnection connection, BasicAuthentication authentication, FtpKeepAlive keepAlive, String transferMode, String credentialStoreRef, String decryptionRef, String version, String path, String title, String documentationName) {
-        super(credentialStoreRef, decryptionRef, version, path, title, documentationName);
-        this.jumpRef = jumpRef;
-        this.proxyRef = proxyRef;
-        this.alternativeRef = alternativeRef;
+    public AFtpFragment(String jumpFragmentName, String httpProxyFragmentName, String socksProxyFragmentName, String alternativeFtpFragmentName, BasicConnection connection, BasicAuthentication authentication, FtpKeepAlive keepAlive, String transferMode) {
+        super();
+        this.jumpFragmentName = jumpFragmentName;
+        this.httpProxyFragmentName = httpProxyFragmentName;
+        this.socksProxyFragmentName = socksProxyFragmentName;
+        this.alternativeFtpFragmentName = alternativeFtpFragmentName;
         this.connection = connection;
         this.authentication = authentication;
         this.keepAlive = keepAlive;
@@ -131,9 +133,9 @@ public class AFtpFragment
      * 
      * 
      */
-    @JsonProperty("jumpRef")
-    public String getJumpRef() {
-        return jumpRef;
+    @JsonProperty("jumpFragmentName")
+    public String getJumpFragmentName() {
+        return jumpFragmentName;
     }
 
     /**
@@ -142,53 +144,75 @@ public class AFtpFragment
      * 
      * 
      */
-    @JsonProperty("jumpRef")
-    public void setJumpRef(String jumpRef) {
-        this.jumpRef = jumpRef;
+    @JsonProperty("jumpFragmentName")
+    public void setJumpFragmentName(String jumpFragmentName) {
+        this.jumpFragmentName = jumpFragmentName;
     }
 
     /**
-     * HTTP Proxy Reference
-     * <p>
-     * Reference to an HTTP or SOCKS proxy fragment.
-     * 
-     */
-    @JsonProperty("proxyRef")
-    public ProxyFragmentRefAny getProxyRef() {
-        return proxyRef;
-    }
-
-    /**
-     * HTTP Proxy Reference
-     * <p>
-     * Reference to an HTTP or SOCKS proxy fragment.
-     * 
-     */
-    @JsonProperty("proxyRef")
-    public void setProxyRef(ProxyFragmentRefAny proxyRef) {
-        this.proxyRef = proxyRef;
-    }
-
-    /**
-     * FTP Alternative Fragment Reference
+     * string without < and >
      * <p>
      * 
      * 
      */
-    @JsonProperty("alternativeRef")
-    public FtpAlternativeFragmentRef getAlternativeRef() {
-        return alternativeRef;
+    @JsonProperty("httpProxyFragmentName")
+    public String getHttpProxyFragmentName() {
+        return httpProxyFragmentName;
     }
 
     /**
-     * FTP Alternative Fragment Reference
+     * string without < and >
      * <p>
      * 
      * 
      */
-    @JsonProperty("alternativeRef")
-    public void setAlternativeRef(FtpAlternativeFragmentRef alternativeRef) {
-        this.alternativeRef = alternativeRef;
+    @JsonProperty("httpProxyFragmentName")
+    public void setHttpProxyFragmentName(String httpProxyFragmentName) {
+        this.httpProxyFragmentName = httpProxyFragmentName;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("socksProxyFragmentName")
+    public String getSocksProxyFragmentName() {
+        return socksProxyFragmentName;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("socksProxyFragmentName")
+    public void setSocksProxyFragmentName(String socksProxyFragmentName) {
+        this.socksProxyFragmentName = socksProxyFragmentName;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("alternativeFtpFragmentName")
+    public String getAlternativeFtpFragmentName() {
+        return alternativeFtpFragmentName;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("alternativeFtpFragmentName")
+    public void setAlternativeFtpFragmentName(String alternativeFtpFragmentName) {
+        this.alternativeFtpFragmentName = alternativeFtpFragmentName;
     }
 
     /**
@@ -273,12 +297,12 @@ public class AFtpFragment
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("jumpRef", jumpRef).append("proxyRef", proxyRef).append("alternativeRef", alternativeRef).append("connection", connection).append("authentication", authentication).append("keepAlive", keepAlive).append("transferMode", transferMode).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("jumpFragmentName", jumpFragmentName).append("httpProxyFragmentName", httpProxyFragmentName).append("socksProxyFragmentName", socksProxyFragmentName).append("alternativeFtpFragmentName", alternativeFtpFragmentName).append("connection", connection).append("authentication", authentication).append("keepAlive", keepAlive).append("transferMode", transferMode).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(proxyRef).append(alternativeRef).append(keepAlive).append(transferMode).append(jumpRef).append(connection).append(authentication).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(jumpFragmentName).append(keepAlive).append(alternativeFtpFragmentName).append(transferMode).append(httpProxyFragmentName).append(connection).append(socksProxyFragmentName).append(authentication).toHashCode();
     }
 
     @Override
@@ -290,7 +314,7 @@ public class AFtpFragment
             return false;
         }
         AFtpFragment rhs = ((AFtpFragment) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(proxyRef, rhs.proxyRef).append(alternativeRef, rhs.alternativeRef).append(keepAlive, rhs.keepAlive).append(transferMode, rhs.transferMode).append(jumpRef, rhs.jumpRef).append(connection, rhs.connection).append(authentication, rhs.authentication).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(jumpFragmentName, rhs.jumpFragmentName).append(keepAlive, rhs.keepAlive).append(alternativeFtpFragmentName, rhs.alternativeFtpFragmentName).append(transferMode, rhs.transferMode).append(httpProxyFragmentName, rhs.httpProxyFragmentName).append(connection, rhs.connection).append(socksProxyFragmentName, rhs.socksProxyFragmentName).append(authentication, rhs.authentication).isEquals();
     }
 
 }

@@ -4,7 +4,7 @@ package com.sos.joc.model.inventory.filetransfer;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.inventory.model.filetransfer.fragments.proxy.ProxySocksFragment;
+import com.sos.inventory.model.filetransfer.fragments.proxy.SocksProxyFragment;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -21,7 +21,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "configuration"
 })
-public class ProxySocksFragmentEdit
+public class SocksProxyFragmentEdit
     extends ConfigurationObject
 {
 
@@ -32,7 +32,7 @@ public class ProxySocksFragmentEdit
      * 
      */
     @JsonProperty("configuration")
-    private ProxySocksFragment configuration;
+    private SocksProxyFragment configuration;
 
     /**
      * HTTP Proxy Fragment
@@ -41,7 +41,7 @@ public class ProxySocksFragmentEdit
      * 
      */
     @JsonProperty("configuration")
-    public ProxySocksFragment getConfiguration() {
+    public SocksProxyFragment getConfiguration() {
         return configuration;
     }
 
@@ -52,7 +52,7 @@ public class ProxySocksFragmentEdit
      * 
      */
     @JsonProperty("configuration")
-    public void setConfiguration(ProxySocksFragment configuration) {
+    public void setConfiguration(SocksProxyFragment configuration) {
         this.configuration = configuration;
     }
 
@@ -71,10 +71,10 @@ public class ProxySocksFragmentEdit
         if (other == this) {
             return true;
         }
-        if ((other instanceof ProxySocksFragmentEdit) == false) {
+        if ((other instanceof SocksProxyFragmentEdit) == false) {
             return false;
         }
-        ProxySocksFragmentEdit rhs = ((ProxySocksFragmentEdit) other);
+        SocksProxyFragmentEdit rhs = ((SocksProxyFragmentEdit) other);
         return new EqualsBuilder().appendSuper(super.equals(other)).append(configuration, rhs.configuration).isEquals();
     }
 

@@ -2,11 +2,18 @@
 	"jobschedulerId": "",
 	"configuration": {
 		"version": "1.7.2",
-		"operation": "GETLIST",
+		"alternativeProfileName": "alternative profile ref",
+		"operation": "COPY",
 		"source": {
-			"fragmentRef": {
-				"type": "SFTP",
-				"ref": "my sftp ref"
+			"fragment": {
+				"local": {
+					"credentialStoreFragmentName": "cs ref",
+					"processing": {
+						"postProcessing": {
+							"commandAfterFile": "command after file"
+						}
+					}
+				}
 			},
 			"sourceFileOptions": {
 				"selection": {
@@ -14,6 +21,17 @@
 						"fileSpec": ".*"
 					}
 				}
+			}
+		},
+		"target": {
+			"fragment": {
+				"sftp": {
+					"name": "sftp fragment ref"
+				}
+			},
+			"directory": "my target dir",
+			"targetFileOptions": {
+				"appendFiles": "true"
 			}
 		}
 	},
