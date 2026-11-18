@@ -21,6 +21,8 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
 
     // private static final Logger LOGGER = LoggerFactory.getLogger(ValidateResourceImpl.class);
 
+    // TODO make current path available
+    // - see FileTransferValidator#checkAlternativeName - alternative name must differ from current name
     @Override
     public JOCDefaultResponse validate(final String accessToken, String objectType, byte[] inBytes) {
         try {
@@ -34,13 +36,13 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
             Validate entity = new Validate();
             try {
                 if (objectType.toUpperCase().equals("CALENDAR")) {
-                    objectType = ConfigurationType.WORKINGDAYSCALENDAR.value(); 
+                    objectType = ConfigurationType.WORKINGDAYSCALENDAR.value();
                 }
                 ConfigurationType type = ConfigurationType.fromValue(objectType.toUpperCase());
                 if (ConfigurationType.FOLDER.equals(type)) {
                     throw new JocBadRequestException("Unsupported objectType:" + objectType);
                 }
-                entity = getValidate(type, inBytes);
+                entity = getValidate(type, null, inBytes);
             } catch (IllegalArgumentException e) {
                 throw new JocBadRequestException("Unsupported objectType:" + objectType);
             }
@@ -50,12 +52,11 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
             return responseStatusJSError(e);
         }
     }
-    
-    private static Validate getValidate(ConfigurationType objectType, byte[] inBytes) {
+
+    private static Validate getValidate(ConfigurationType configType, String configPath, byte[] inBytes) {
         Validate v = new Validate();
         try {
-            // TODO current path
-            Validator.validate(objectType, null, inBytes);
+            Validator.validate(configType, configPath, inBytes);
             v.setValid(true);
         } catch (Throwable e) {
             v.setValid(false);
