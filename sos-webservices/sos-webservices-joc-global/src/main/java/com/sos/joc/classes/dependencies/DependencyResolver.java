@@ -161,6 +161,115 @@ public class DependencyResolver {
                             add(ConfigurationType.NONWORKINGDAYSCALENDAR);
                         }
                     }));
+                    // FileTransfer
+                    put(ConfigurationType.FT_FRAGMENT_AZURE_BLOB_STORAGE, Collections.unmodifiableSet(new HashSet<ConfigurationType>() {
+
+                        private static final long serialVersionUID = 1L;
+                        {
+                            add(ConfigurationType.FT_FRAGMENT_CREDENTIAL_STORE);
+                            add(ConfigurationType.FT_FRAGMENT_DECRYPTION);
+
+                            add(ConfigurationType.FT_FRAGMENT_JUMP);
+                            add(ConfigurationType.FT_FRAGMENT_HTTP_PROXY);
+
+                            add(ConfigurationType.FT_FRAGMENT_AZURE_BLOB_STORAGE); // self - alternative name
+                        }
+                    }));
+                    put(ConfigurationType.FT_FRAGMENT_FTP, Collections.unmodifiableSet(new HashSet<ConfigurationType>() {
+
+                        private static final long serialVersionUID = 1L;
+                        {
+                            add(ConfigurationType.FT_FRAGMENT_CREDENTIAL_STORE);
+                            add(ConfigurationType.FT_FRAGMENT_DECRYPTION);
+
+                            add(ConfigurationType.FT_FRAGMENT_JUMP);
+                            add(ConfigurationType.FT_FRAGMENT_HTTP_PROXY);
+                            add(ConfigurationType.FT_FRAGMENT_SOCKS_PROXY);
+
+                            add(ConfigurationType.FT_FRAGMENT_FTP); // self - alternative name
+                        }
+                    }));
+                    put(ConfigurationType.FT_FRAGMENT_HTTP, Collections.unmodifiableSet(new HashSet<ConfigurationType>() {
+
+                        private static final long serialVersionUID = 1L;
+                        {
+                            add(ConfigurationType.FT_FRAGMENT_CREDENTIAL_STORE);
+                            add(ConfigurationType.FT_FRAGMENT_DECRYPTION);
+
+                            add(ConfigurationType.FT_FRAGMENT_JUMP);
+                            add(ConfigurationType.FT_FRAGMENT_HTTP_PROXY);
+
+                            add(ConfigurationType.FT_FRAGMENT_HTTP); // self - alternative name
+                        }
+                    }));
+                    put(ConfigurationType.FT_FRAGMENT_JUMP, Collections.unmodifiableSet(new HashSet<ConfigurationType>() {
+
+                        private static final long serialVersionUID = 1L;
+                        {
+                            add(ConfigurationType.FT_FRAGMENT_CREDENTIAL_STORE);
+                            add(ConfigurationType.FT_FRAGMENT_DECRYPTION);
+
+                            add(ConfigurationType.FT_FRAGMENT_HTTP_PROXY);
+                            add(ConfigurationType.FT_FRAGMENT_SOCKS_PROXY);
+
+                            add(ConfigurationType.FT_FRAGMENT_JUMP); // self - alternative name
+                        }
+                    }));
+                    put(ConfigurationType.FT_FRAGMENT_SFTP, Collections.unmodifiableSet(new HashSet<ConfigurationType>() {
+
+                        private static final long serialVersionUID = 1L;
+                        {
+                            add(ConfigurationType.FT_FRAGMENT_CREDENTIAL_STORE);
+                            add(ConfigurationType.FT_FRAGMENT_DECRYPTION);
+
+                            add(ConfigurationType.FT_FRAGMENT_JUMP);
+                            add(ConfigurationType.FT_FRAGMENT_HTTP_PROXY);
+                            add(ConfigurationType.FT_FRAGMENT_SOCKS_PROXY);
+
+                            add(ConfigurationType.FT_FRAGMENT_SFTP); // self - alternative name
+                        }
+                    }));
+                    put(ConfigurationType.FT_FRAGMENT_SMB, Collections.unmodifiableSet(new HashSet<ConfigurationType>() {
+
+                        private static final long serialVersionUID = 1L;
+                        {
+                            add(ConfigurationType.FT_FRAGMENT_CREDENTIAL_STORE);
+                            add(ConfigurationType.FT_FRAGMENT_DECRYPTION);
+
+                            add(ConfigurationType.FT_FRAGMENT_SMB); // self - alternative name
+                        }
+                    }));
+                    put(ConfigurationType.FT_FRAGMENT_WEBDAV, Collections.unmodifiableSet(new HashSet<ConfigurationType>() {
+
+                        private static final long serialVersionUID = 1L;
+                        {
+                            add(ConfigurationType.FT_FRAGMENT_CREDENTIAL_STORE);
+                            add(ConfigurationType.FT_FRAGMENT_DECRYPTION);
+
+                            add(ConfigurationType.FT_FRAGMENT_JUMP);
+                            add(ConfigurationType.FT_FRAGMENT_HTTP_PROXY);
+
+                            add(ConfigurationType.FT_FRAGMENT_WEBDAV); // self - alternative name
+                        }
+                    }));
+                    put(ConfigurationType.FT_PROFILE, Collections.unmodifiableSet(new HashSet<ConfigurationType>() {
+
+                        private static final long serialVersionUID = 1L;
+                        {
+                            add(ConfigurationType.FT_FRAGMENT_CREDENTIAL_STORE); // if Local
+                            add(ConfigurationType.FT_FRAGMENT_DECRYPTION); // if Local
+
+                            // oneOf for Source/Target
+                            add(ConfigurationType.FT_FRAGMENT_AZURE_BLOB_STORAGE);
+                            add(ConfigurationType.FT_FRAGMENT_FTP);
+                            add(ConfigurationType.FT_FRAGMENT_HTTP);
+                            add(ConfigurationType.FT_FRAGMENT_SFTP);
+                            add(ConfigurationType.FT_FRAGMENT_SMB);
+                            add(ConfigurationType.FT_FRAGMENT_WEBDAV);
+
+                            add(ConfigurationType.FT_PROFILE); // self - alternative name
+                        }
+                    }));
                 }
             });
 

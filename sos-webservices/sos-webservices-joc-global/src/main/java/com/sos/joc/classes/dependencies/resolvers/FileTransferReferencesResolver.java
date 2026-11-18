@@ -247,11 +247,6 @@ public class FileTransferReferencesResolver {
             return;
         }
 
-        // when not found?
-        // if (SOSCollection.isEmpty(dbLayer.getConfigurationByName(name, type.intValue()))) {
-        //
-        // }
-
         if (allItemsGrouped.isEmpty()) {
             item.getReferences().addAll(dbLayer.getConfigurationByName(name, type.intValue()));
         } else {
