@@ -55,14 +55,13 @@ public class ProfileBase
     /**
      * 
      * @param alternativeProfileName
-     * @param path
      * @param documentationName
      * @param title
      * @param operation
      * @param version
      */
-    public ProfileBase(String alternativeProfileName, ProfileBase.Operation operation, String version, String path, String title, String documentationName) {
-        super(version, path, title, documentationName);
+    public ProfileBase(String alternativeProfileName, ProfileBase.Operation operation, String version, String title, String documentationName) {
+        super(version, title, documentationName);
         this.alternativeProfileName = alternativeProfileName;
         this.operation = operation;
     }

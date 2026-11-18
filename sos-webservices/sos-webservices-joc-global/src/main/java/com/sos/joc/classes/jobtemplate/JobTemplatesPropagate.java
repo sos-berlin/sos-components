@@ -795,7 +795,7 @@ public class JobTemplatesPropagate {
         } else {
             try {
                 item.setContent(JocInventory.toString(workflow));
-                Validator.validate(ConfigurationType.WORKFLOW, workflow, dbLayer, null);
+                Validator.validate(ConfigurationType.WORKFLOW, item.getPath(),  workflow, dbLayer, null);
                 item.setValid(true);
             } catch (Throwable e) {
                 item.setValid(false);

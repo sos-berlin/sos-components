@@ -77,7 +77,7 @@ public class EnciphermentUtils {
             dbExistingJobResource.setPath(path.toString().replace('\\', '/'));
             dbExistingJobResource.setAuditLogId(auditLogId);
             try {
-                Validator.validate(ConfigurationType.JOBRESOURCE, existingJobResource);
+                Validator.validate(ConfigurationType.JOBRESOURCE, dbExistingJobResource.getPath(), existingJobResource);
                 dbExistingJobResource.setValid(true);
             } catch (Exception e) {
                 dbExistingJobResource.setValid(false);
@@ -114,7 +114,7 @@ public class EnciphermentUtils {
             newDBJobResource.setReleased(false);
             newDBJobResource.setRepoControlled(false);
             try {
-                Validator.validate(ConfigurationType.JOBRESOURCE, newJobResource);
+                Validator.validate(ConfigurationType.JOBRESOURCE, newDBJobResource.getPath(), newJobResource);
                 newDBJobResource.setValid(true);
             } catch (Exception e) {
                 newDBJobResource.setValid(false);

@@ -51,43 +51,47 @@ import js7.data_for_java.value.JExpression;
 
 public class Validator {
 
-    /** @param type
+    /** @param configPath
+     * @param type
      * @param configBytes
      * @param dbLayer
      * @param visibleAgentNames
      * @throws Exception */
-    public static void validate(ConfigurationType type, byte[] configBytes, InventoryDBLayer dbLayer, Set<String> visibleAgentNames)
-            throws Exception {
-        validate(type, configBytes, (IConfigurationObject) Globals.objectMapper.readValue(configBytes, JocInventory.CLASS_MAPPING.get(type)), dbLayer,
-                visibleAgentNames);
+    public static void validate(ConfigurationType type, String configPath, byte[] configBytes, InventoryDBLayer dbLayer,
+            Set<String> visibleAgentNames) throws Exception {
+        validate(type, configPath, configBytes, (IConfigurationObject) Globals.objectMapper.readValue(configBytes, JocInventory.CLASS_MAPPING.get(
+                type)), dbLayer, visibleAgentNames);
     }
 
-    /** @param type
+    /** @param configPath
+     * @param type
      * @param config
      * @param dbLayer
      * @param visibleAgentNames
      * @throws Exception */
-    public static void validate(ConfigurationType type, IConfigurationObject config, InventoryDBLayer dbLayer, Set<String> visibleAgentNames)
-            throws Exception {
-        validate(type, Globals.objectMapper.writeValueAsBytes(config), config, dbLayer, visibleAgentNames);
+    public static void validate(ConfigurationType type, String configPath, IConfigurationObject config, InventoryDBLayer dbLayer,
+            Set<String> visibleAgentNames) throws Exception {
+        validate(type, configPath, Globals.objectMapper.writeValueAsBytes(config), config, dbLayer, visibleAgentNames);
     }
 
-    /** @param type
+    /** @param configPath
+     * @param type
      * @param configBytes
      * @throws Exception */
-    public static void validate(ConfigurationType type, byte[] configBytes) throws Exception {
-        validate(type, configBytes, (IConfigurationObject) Globals.objectMapper.readValue(configBytes, JocInventory.CLASS_MAPPING.get(type)),
-                (InventoryDBLayer) null, null);
+    public static void validate(ConfigurationType type, String configPath, byte[] configBytes) throws Exception {
+        validate(type, configPath, configBytes, (IConfigurationObject) Globals.objectMapper.readValue(configBytes, JocInventory.CLASS_MAPPING.get(
+                type)), (InventoryDBLayer) null, null);
     }
 
-    /** @param type
+    /** @param configPath
+     * @param type
      * @param config
      * @throws Exception */
-    public static void validate(ConfigurationType type, IConfigurationObject config) throws Exception {
-        validate(type, Globals.objectMapper.writeValueAsBytes(config), config, (InventoryDBLayer) null, null);
+    public static void validate(ConfigurationType type, String configPath, IConfigurationObject config) throws Exception {
+        validate(type, configPath, Globals.objectMapper.writeValueAsBytes(config), config, (InventoryDBLayer) null, null);
     }
 
-    private static void validate(ConfigurationType type, byte[] configBytes, IConfigurationObject config, InventoryDBLayer dbLayer,
+    private static void validate(ConfigurationType type, String configPath, byte[] configBytes, IConfigurationObject config, InventoryDBLayer dbLayer,
             Set<String> visibleAgentNames) throws Exception {
 
         JsonValidator.validate(configBytes, URI.create(JocInventory.SCHEMA_LOCATION.get(type)), true);
@@ -144,19 +148,19 @@ public class Validator {
 
             // FileTransfer
             case FT_FRAGMENT_CREDENTIAL_STORE:
-                FileTransferValidator.validateCredentialStoreFragment(config);
+                FileTransferValidator.validateCredentialStoreFragment(configPath, config);
                 break;
             case FT_FRAGMENT_DECRYPTION:
-                FileTransferValidator.validateDecryptionFragment(config);
+                FileTransferValidator.validateDecryptionFragment(configPath, config);
                 break;
             case FT_FRAGMENT_MAIL:
-                FileTransferValidator.validateMailFragment(config);
+                FileTransferValidator.validateMailFragment(configPath, config);
                 break;
             case FT_FRAGMENT_HTTP_PROXY:
-                FileTransferValidator.validateHttpProxyFragment(config);
+                FileTransferValidator.validateHttpProxyFragment(configPath, config);
                 break;
             case FT_FRAGMENT_SOCKS_PROXY:
-                FileTransferValidator.validateSocksProxyFragment(config);
+                FileTransferValidator.validateSocksProxyFragment(configPath, config);
                 break;
 
             case FT_FRAGMENT_AZURE_BLOB_STORAGE:
@@ -164,56 +168,56 @@ public class Validator {
                     session = Globals.createSosHibernateStatelessConnection("validateAzureBlobStorageFragment");
                     dbLayer = new InventoryDBLayer(session);
                 }
-                FileTransferValidator.validateAzureBlobStorageFragment(config, dbLayer);
+                FileTransferValidator.validateAzureBlobStorageFragment(configPath, config, dbLayer);
                 break;
             case FT_FRAGMENT_FTP:
                 if (dbLayer == null) {
                     session = Globals.createSosHibernateStatelessConnection("validateFtpFragment");
                     dbLayer = new InventoryDBLayer(session);
                 }
-                FileTransferValidator.validateFtpFragment(config, dbLayer);
+                FileTransferValidator.validateFtpFragment(configPath, config, dbLayer);
                 break;
             case FT_FRAGMENT_HTTP:
                 if (dbLayer == null) {
                     session = Globals.createSosHibernateStatelessConnection("validateHttpFragment");
                     dbLayer = new InventoryDBLayer(session);
                 }
-                FileTransferValidator.validateHttpFragment(config, dbLayer);
+                FileTransferValidator.validateHttpFragment(configPath, config, dbLayer);
                 break;
             case FT_FRAGMENT_JUMP:
                 if (dbLayer == null) {
                     session = Globals.createSosHibernateStatelessConnection("validateJumpFragment");
                     dbLayer = new InventoryDBLayer(session);
                 }
-                FileTransferValidator.validateJumpFragment(config, dbLayer);
+                FileTransferValidator.validateJumpFragment(configPath, config, dbLayer);
                 break;
             case FT_FRAGMENT_SFTP:
                 if (dbLayer == null) {
                     session = Globals.createSosHibernateStatelessConnection("validateSftpFragment");
                     dbLayer = new InventoryDBLayer(session);
                 }
-                FileTransferValidator.validateSftpFragment(config, dbLayer);
+                FileTransferValidator.validateSftpFragment(configPath, config, dbLayer);
                 break;
             case FT_FRAGMENT_SMB:
                 if (dbLayer == null) {
                     session = Globals.createSosHibernateStatelessConnection("validateSmbFragment");
                     dbLayer = new InventoryDBLayer(session);
                 }
-                FileTransferValidator.validateSmbFragment(config, dbLayer);
+                FileTransferValidator.validateSmbFragment(configPath, config, dbLayer);
                 break;
             case FT_FRAGMENT_WEBDAV:
                 if (dbLayer == null) {
                     session = Globals.createSosHibernateStatelessConnection("validateWebdavFragment");
                     dbLayer = new InventoryDBLayer(session);
                 }
-                FileTransferValidator.validateWebdavFragment(config, dbLayer);
+                FileTransferValidator.validateWebdavFragment(configPath, config, dbLayer);
                 break;
             case FT_PROFILE:
                 if (dbLayer == null) {
                     session = Globals.createSosHibernateStatelessConnection("validateProfile");
                     dbLayer = new InventoryDBLayer(session);
                 }
-                FileTransferValidator.validateProfile(config, dbLayer);
+                FileTransferValidator.validateProfile(configPath, config, dbLayer);
                 break;
 
             case FOLDER:

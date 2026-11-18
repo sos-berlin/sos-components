@@ -19,7 +19,7 @@ import com.sos.joc.model.common.IReleaseObject;
  * <p>
  * Abstract base for File Transfer Inventory releasable configuration objects */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-@JsonPropertyOrder({ "version", "path", "title", "documentationName" })
+@JsonPropertyOrder({ "version", "title", "documentationName" })
 public abstract class AFileTransfer implements IInventoryObject, IConfigurationObject, IReleaseObject {
 
     /** inventory repository version
@@ -28,12 +28,6 @@ public abstract class AFileTransfer implements IInventoryObject, IConfigurationO
     @JsonProperty("version")
     @JsonPropertyDescription("inventory repository version")
     private String version = "1.7.2";
-    /** path
-     * <p>
-     * absolute path of an object. */
-    @JsonProperty("path")
-    @JsonPropertyDescription("absolute path of an object.")
-    private String path;
     /** string without < and >
      * <p>
      */
@@ -53,10 +47,9 @@ public abstract class AFileTransfer implements IInventoryObject, IConfigurationO
      * @param documentationName
      * @param title
      * @param version */
-    public AFileTransfer(String version, String path, String title, String documentationName) {
+    public AFileTransfer(String version, String title, String documentationName) {
         super();
         this.version = version;
-        this.path = path;
         this.title = title;
         this.documentationName = documentationName;
     }
@@ -75,22 +68,6 @@ public abstract class AFileTransfer implements IInventoryObject, IConfigurationO
     @JsonProperty("version")
     public void setVersion(String version) {
         this.version = version;
-    }
-
-    /** path
-     * <p>
-     * absolute path of an object. */
-    @JsonProperty("path")
-    public String getPath() {
-        return path;
-    }
-
-    /** path
-     * <p>
-     * absolute path of an object. */
-    @JsonProperty("path")
-    public void setPath(String path) {
-        this.path = path;
     }
 
     /** string without < and >
@@ -127,12 +104,12 @@ public abstract class AFileTransfer implements IInventoryObject, IConfigurationO
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("path", path).append("title", title).append("documentationName", documentationName).toString();
+        return new ToStringBuilder(this).append("title", title).append("documentationName", documentationName).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(documentationName).append(title).toHashCode();
+        return new HashCodeBuilder().append(documentationName).append(title).toHashCode();
     }
 
     @Override
@@ -144,7 +121,7 @@ public abstract class AFileTransfer implements IInventoryObject, IConfigurationO
             return false;
         }
         AFileTransfer rhs = ((AFileTransfer) other);
-        return new EqualsBuilder().append(path, rhs.path).append(documentationName, rhs.documentationName).append(title, rhs.title).isEquals();
+        return new EqualsBuilder().append(documentationName, rhs.documentationName).append(title, rhs.title).isEquals();
     }
 
     @Override

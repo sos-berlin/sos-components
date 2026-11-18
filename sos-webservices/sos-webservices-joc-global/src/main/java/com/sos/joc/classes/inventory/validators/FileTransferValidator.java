@@ -1,6 +1,7 @@
 package com.sos.joc.classes.inventory.validators;
 
 import com.sos.commons.util.SOSCollection;
+import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.filetransfer.fragments.protocol.AProtocolFragment;
 import com.sos.inventory.model.filetransfer.fragments.protocol.AzureBlobStorageFragment;
@@ -35,45 +36,50 @@ public class FileTransferValidator {
 
     /** Currently nothing to do, validated by the schema. May be extended later.
      * 
+     * @param configPath
      * @param config
      * @throws Exception */
-    public static void validateCredentialStoreFragment(IConfigurationObject config) throws Exception {
+    public static void validateCredentialStoreFragment(String configPath, IConfigurationObject config) throws Exception {
 
     }
 
     /** Currently nothing to do, validated by the schema. May be extended later.
      * 
+     * @param configPath
      * @param config
      * @throws Exception */
-    public static void validateDecryptionFragment(IConfigurationObject config) throws Exception {
+    public static void validateDecryptionFragment(String configPath, IConfigurationObject config) throws Exception {
 
     }
 
     /** Currently nothing to do, validated by the schema. May be extended later.
      * 
+     * @param configPath
      * @param config
      * @throws Exception */
-    public static void validateMailFragment(IConfigurationObject config) throws Exception {
+    public static void validateMailFragment(String configPath, IConfigurationObject config) throws Exception {
 
     }
 
     /** Currently nothing to do, validated by the schema. May be extended later.
      * 
+     * @param configPath
      * @param config
      * @throws Exception */
-    public static void validateHttpProxyFragment(IConfigurationObject config) throws Exception {
+    public static void validateHttpProxyFragment(String configPath, IConfigurationObject config) throws Exception {
 
     }
 
     /** Currently nothing to do, validated by the schema. May be extended later.
      * 
+     * @param configPath
      * @param config
      * @throws Exception */
-    public static void validateSocksProxyFragment(IConfigurationObject config) throws Exception {
+    public static void validateSocksProxyFragment(String configPath, IConfigurationObject config) throws Exception {
 
     }
 
-    public static void validateAzureBlobStorageFragment(IConfigurationObject config, InventoryDBLayer dbLayer) throws Exception {
+    public static void validateAzureBlobStorageFragment(String configPath, IConfigurationObject config, InventoryDBLayer dbLayer) throws Exception {
         AzureBlobStorageFragment f = (AzureBlobStorageFragment) config;
 
         // 1) Fragment references
@@ -82,11 +88,11 @@ public class FileTransferValidator {
         checkName(dbLayer, ConfigurationType.FT_FRAGMENT_HTTP_PROXY, PROPERTY_NAME_FRAGMENT_HTTP_PROXY, f.getHttpProxyFragmentName());
 
         // 2) Alternative name
-        checkName(dbLayer, ConfigurationType.FT_FRAGMENT_AZURE_BLOB_STORAGE, PROPERTY_NAME_ALTERNATIVE, f
+        checkAlternativeName(dbLayer, ConfigurationType.FT_FRAGMENT_AZURE_BLOB_STORAGE, PROPERTY_NAME_ALTERNATIVE, configPath, f
                 .getAlternativeAzureBlobStorageFragmentName());
     }
 
-    public static void validateFtpFragment(IConfigurationObject config, InventoryDBLayer dbLayer) throws Exception {
+    public static void validateFtpFragment(String configPath, IConfigurationObject config, InventoryDBLayer dbLayer) throws Exception {
         FtpFragment f = (FtpFragment) config;
 
         // 1) Fragment references
@@ -96,10 +102,10 @@ public class FileTransferValidator {
         checkName(dbLayer, ConfigurationType.FT_FRAGMENT_HTTP_PROXY, PROPERTY_NAME_FRAGMENT_SOCKS_PROXY, f.getSocksProxyFragmentName());
 
         // 2) Alternative name
-        checkName(dbLayer, ConfigurationType.FT_FRAGMENT_FTP, PROPERTY_NAME_ALTERNATIVE, f.getAlternativeFtpFragmentName());
+        checkAlternativeName(dbLayer, ConfigurationType.FT_FRAGMENT_FTP, PROPERTY_NAME_ALTERNATIVE, configPath, f.getAlternativeFtpFragmentName());
     }
 
-    public static void validateHttpFragment(IConfigurationObject config, InventoryDBLayer dbLayer) throws Exception {
+    public static void validateHttpFragment(String configPath, IConfigurationObject config, InventoryDBLayer dbLayer) throws Exception {
         HttpFragment f = (HttpFragment) config;
 
         // 1) Fragment references
@@ -108,10 +114,10 @@ public class FileTransferValidator {
         checkName(dbLayer, ConfigurationType.FT_FRAGMENT_HTTP_PROXY, PROPERTY_NAME_FRAGMENT_HTTP_PROXY, f.getHttpProxyFragmentName());
 
         // 2) Alternative name
-        checkName(dbLayer, ConfigurationType.FT_FRAGMENT_HTTP, PROPERTY_NAME_ALTERNATIVE, f.getAlternativeHttpFragmentName());
+        checkAlternativeName(dbLayer, ConfigurationType.FT_FRAGMENT_HTTP, PROPERTY_NAME_ALTERNATIVE, configPath, f.getAlternativeHttpFragmentName());
     }
 
-    public static void validateJumpFragment(IConfigurationObject config, InventoryDBLayer dbLayer) throws Exception {
+    public static void validateJumpFragment(String configPath, IConfigurationObject config, InventoryDBLayer dbLayer) throws Exception {
         JumpFragment f = (JumpFragment) config;
 
         // 1) Fragment references
@@ -120,10 +126,10 @@ public class FileTransferValidator {
         checkName(dbLayer, ConfigurationType.FT_FRAGMENT_HTTP_PROXY, PROPERTY_NAME_FRAGMENT_SOCKS_PROXY, f.getSocksProxyFragmentName());
 
         // 2) Alternative name
-        checkName(dbLayer, ConfigurationType.FT_FRAGMENT_JUMP, PROPERTY_NAME_ALTERNATIVE, f.getAlternativeJumpFragmentName());
+        checkAlternativeName(dbLayer, ConfigurationType.FT_FRAGMENT_JUMP, PROPERTY_NAME_ALTERNATIVE, configPath, f.getAlternativeJumpFragmentName());
     }
 
-    public static void validateSftpFragment(IConfigurationObject config, InventoryDBLayer dbLayer) throws Exception {
+    public static void validateSftpFragment(String configPath, IConfigurationObject config, InventoryDBLayer dbLayer) throws Exception {
         SftpFragment f = (SftpFragment) config;
 
         // 1) Fragment references
@@ -133,20 +139,20 @@ public class FileTransferValidator {
         checkName(dbLayer, ConfigurationType.FT_FRAGMENT_HTTP_PROXY, PROPERTY_NAME_FRAGMENT_SOCKS_PROXY, f.getSocksProxyFragmentName());
 
         // 2) Alternative name
-        checkName(dbLayer, ConfigurationType.FT_FRAGMENT_SFTP, PROPERTY_NAME_ALTERNATIVE, f.getAlternativeSftpFragmentName());
+        checkAlternativeName(dbLayer, ConfigurationType.FT_FRAGMENT_SFTP, PROPERTY_NAME_ALTERNATIVE, configPath, f.getAlternativeSftpFragmentName());
     }
 
-    public static void validateSmbFragment(IConfigurationObject config, InventoryDBLayer dbLayer) throws Exception {
+    public static void validateSmbFragment(String configPath, IConfigurationObject config, InventoryDBLayer dbLayer) throws Exception {
         SmbFragment f = (SmbFragment) config;
 
         // 1) Fragment references
         checkCommonProtocolFragmentNames(dbLayer, f);
 
         // 2) Alternative name
-        checkName(dbLayer, ConfigurationType.FT_FRAGMENT_SMB, PROPERTY_NAME_ALTERNATIVE, f.getAlternativeSmbFragmentName());
+        checkAlternativeName(dbLayer, ConfigurationType.FT_FRAGMENT_SMB, PROPERTY_NAME_ALTERNATIVE, configPath, f.getAlternativeSmbFragmentName());
     }
 
-    public static void validateWebdavFragment(IConfigurationObject config, InventoryDBLayer dbLayer) throws Exception {
+    public static void validateWebdavFragment(String configPath, IConfigurationObject config, InventoryDBLayer dbLayer) throws Exception {
         WebdavFragment f = (WebdavFragment) config;
 
         // 1) Fragment references
@@ -155,13 +161,14 @@ public class FileTransferValidator {
         checkName(dbLayer, ConfigurationType.FT_FRAGMENT_HTTP_PROXY, PROPERTY_NAME_FRAGMENT_HTTP_PROXY, f.getHttpProxyFragmentName());
 
         // 2) Alternative name
-        checkName(dbLayer, ConfigurationType.FT_FRAGMENT_WEBDAV, PROPERTY_NAME_ALTERNATIVE, f.getAlternativeWebdavFragmentName());
+        checkAlternativeName(dbLayer, ConfigurationType.FT_FRAGMENT_WEBDAV, PROPERTY_NAME_ALTERNATIVE, configPath, f
+                .getAlternativeWebdavFragmentName());
     }
 
-    public static void validateProfile(IConfigurationObject config, InventoryDBLayer dbLayer) throws JocConfigurationException {
+    public static void validateProfile(String configPath, IConfigurationObject config, InventoryDBLayer dbLayer) throws JocConfigurationException {
         Profile p = (Profile) config;
         // 1) Alternative profile name
-        checkName(dbLayer, ConfigurationType.FT_PROFILE, PROPERTY_NAME_ALTERNATIVE, p.getAlternativeProfileName());
+        checkAlternativeName(dbLayer, ConfigurationType.FT_PROFILE, PROPERTY_NAME_ALTERNATIVE, configPath, p.getAlternativeProfileName());
 
         // 2) Source
         if (p.getSource() == null) {  // Redundant to schema validation, but kept as a safety net.
@@ -230,17 +237,41 @@ public class FileTransferValidator {
         checkName(dbLayer, ConfigurationType.FT_FRAGMENT_DECRYPTION, PROPERTY_NAME_FRAGMENT_DECRYPTION, f.getDecryptionFragmentName());
     }
 
+    private static void checkAlternativeName(InventoryDBLayer dbLayer, ConfigurationType type, String propertyName, String configPath,
+            String alternativeName) throws JocConfigurationException {
+        if (SOSString.isEmpty(alternativeName) || alternativeName.startsWith("${")) {
+            // Empty or variable reference: skip lookup.
+            return;
+        }
+
+        // TODO check if can be empty?
+        // if (SOSString.isEmpty(configPath)) {
+        // throw new JocConfigurationException("Missing path for the current configuration item");
+        // }
+
+        if (!SOSString.isEmpty(configPath)) {
+            String currentName = SOSPathUtils.getName(configPath);
+            if (alternativeName.equalsIgnoreCase(currentName)) {
+                String err = "The current configuration name and the alternative name are identical: " + alternativeName;
+                if (!alternativeName.equals(currentName)) {
+                    err = "The current configuration name (" + currentName + ") and the alternative name (" + alternativeName
+                            + ") are identical except for case";
+                }
+                throw new JocConfigurationException(err);
+            }
+        }
+
+        if (SOSCollection.isEmpty(dbLayer.getConfigurationByName(alternativeName, type.intValue()))) {
+            throw new JocConfigurationException("The assigned " + propertyName + " name  does not exist: " + alternativeName);
+        }
+    }
+
     private static void checkName(InventoryDBLayer dbLayer, ConfigurationType type, String propertyName, String name)
             throws JocConfigurationException {
         if (SOSString.isEmpty(name) || name.startsWith("${")) {
             // Empty or variable reference: skip lookup.
             return;
         }
-
-        // YADE allows/ignores duplicate names, so no uniqueness check is performed here.
-        // if (SOSString.isEmpty(currentPath)) {
-        // throw new JocConfigurationException("Missing " + type + " item path ");
-        // }
 
         if (SOSCollection.isEmpty(dbLayer.getConfigurationByName(name, type.intValue()))) {
             throw new JocConfigurationException("The assigned " + propertyName + " name  does not exist: " + name);

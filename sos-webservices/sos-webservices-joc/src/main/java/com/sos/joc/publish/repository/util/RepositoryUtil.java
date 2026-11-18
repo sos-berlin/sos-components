@@ -799,7 +799,7 @@ public abstract class RepositoryUtil {
                                         }
                                         boolean valid = true;
                                         try {
-                                            Validator.validate(objType, content, invDbLayer, null);
+                                            Validator.validate(objType, dbItem.getPath(), content, invDbLayer, null);
                                         } catch (Exception e) {
                                             valid = false;
                                         }
@@ -890,7 +890,7 @@ public abstract class RepositoryUtil {
                 if (updatedContent != null) {
                     boolean valid = true;
                     try {
-                        Validator.validate(objType, content, invDbLayer, null);
+                        Validator.validate(objType, newItem.getConfiguration().getPath(), content, invDbLayer, null);
                     } catch (Exception e) {
                         valid = false;
                     }

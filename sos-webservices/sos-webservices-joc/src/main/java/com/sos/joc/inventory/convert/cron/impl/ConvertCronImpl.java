@@ -256,7 +256,7 @@ public class ConvertCronImpl extends JOCResourceImpl implements IConvertCronReso
 
         try {
             item.setContent(JocInventory.toString(in.getConfiguration()));
-            Validator.validate(in.getObjectType(), in.getConfiguration(), dbLayer, null);
+            Validator.validate(in.getObjectType(), in.getPath(), in.getConfiguration(), dbLayer, null);
             item.setValid(true);
         } catch (Throwable e) {
             item.setValid(false);

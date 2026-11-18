@@ -1023,7 +1023,7 @@ public class DBLayerDeploy {
         try {
             boolean valid = false;
             try {
-                Validator.validate(configuration.getObjectType(), configuration.getConfiguration(), new InventoryDBLayer(session), agentNames);
+                Validator.validate(configuration.getObjectType(), configuration.getPath(), configuration.getConfiguration(), new InventoryDBLayer(session), agentNames);
                 valid = true;
             } catch (Throwable e) {
                 valid = false;
@@ -1060,7 +1060,7 @@ public class DBLayerDeploy {
         try {
             boolean valid = false;
             try {
-                Validator.validate(configuration.getObjectType(), configuration.getConfiguration(), new InventoryDBLayer(session), agentNames);
+                Validator.validate(configuration.getObjectType(), configuration.getPath(), configuration.getConfiguration(), new InventoryDBLayer(session), agentNames);
                 valid = true;
             } catch (Throwable e) {
                 valid = false;

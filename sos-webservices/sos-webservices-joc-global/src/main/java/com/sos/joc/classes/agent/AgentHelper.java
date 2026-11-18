@@ -174,7 +174,7 @@ public class AgentHelper {
             workflowsByMissedAgentNames.stream().peek(w -> w.setDeployed(false)).forEach(w -> {
                 if (w.getValid()) {
                     try {
-                        Validator.validate(ConfigurationType.WORKFLOW, w.getContent().getBytes(StandardCharsets.UTF_8), invDbLayer, visibleAgentNames);
+                        Validator.validate(ConfigurationType.WORKFLOW, w.getPath(), w.getContent().getBytes(StandardCharsets.UTF_8), invDbLayer, visibleAgentNames);
                     } catch (Exception e) {
                         w.setValid(false);
                     }
@@ -194,7 +194,7 @@ public class AgentHelper {
             if (!invalidWorkflowsByAgentNames.isEmpty()) {
                 invalidWorkflowsByAgentNames.stream().filter(w -> {
                     try {
-                        Validator.validate(ConfigurationType.WORKFLOW, w.getContent().getBytes(StandardCharsets.UTF_8), invDbLayer, visibleAgentNames);
+                        Validator.validate(ConfigurationType.WORKFLOW, w.getPath(), w.getContent().getBytes(StandardCharsets.UTF_8), invDbLayer, visibleAgentNames);
                         return true;
                     } catch (Exception e) {
                         return false;

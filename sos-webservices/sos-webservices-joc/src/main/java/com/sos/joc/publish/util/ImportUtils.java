@@ -385,7 +385,7 @@ public class ImportUtils {
             try {
                 alreadyExist.setContent(JocInventory.toString(config.getConfiguration()));
                 try {
-                    Validator.validate(alreadyExist.getTypeAsEnum(), alreadyExist.getContent().getBytes(), new InventoryDBLayer(dbLayer.getSession()),
+                    Validator.validate(alreadyExist.getTypeAsEnum(), alreadyExist.getPath(), alreadyExist.getContent().getBytes(), new InventoryDBLayer(dbLayer.getSession()),
                             null);
                     alreadyExist.setValid(true);
                 } catch (Throwable e) {
@@ -1434,7 +1434,7 @@ public class ImportUtils {
 
     private static boolean validateConfiguration(DBItemInventoryConfiguration cfg, Set<String> visibleAgentNames, InventoryDBLayer dbLayer) {
         try {
-            Validator.validate(cfg.getTypeAsEnum(), cfg.getContent().getBytes(StandardCharsets.UTF_8), dbLayer, visibleAgentNames);
+            Validator.validate(cfg.getTypeAsEnum(), cfg.getPath(), cfg.getContent().getBytes(StandardCharsets.UTF_8), dbLayer, visibleAgentNames);
             return true;
         } catch (Exception e) {
             return false;

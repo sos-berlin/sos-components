@@ -531,7 +531,7 @@ public class DeleteDeployments {
         item.setType(oldItem.getType());
         item.setContent(oldItem.getContent());
         try {
-            Validator.validate(item.getTypeAsEnum(), item.getContent().getBytes(StandardCharsets.UTF_8), dbLayer, null);
+            Validator.validate(item.getTypeAsEnum(), item.getPath(), item.getContent().getBytes(StandardCharsets.UTF_8), dbLayer, null);
             item.setValid(true);
         } catch (Throwable e) {
             item.setValid(false);

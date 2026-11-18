@@ -54,7 +54,8 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
     private static Validate getValidate(ConfigurationType objectType, byte[] inBytes) {
         Validate v = new Validate();
         try {
-            Validator.validate(objectType, inBytes);
+            // TODO current path
+            Validator.validate(objectType, null, inBytes);
             v.setValid(true);
         } catch (Throwable e) {
             v.setValid(false);

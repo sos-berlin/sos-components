@@ -88,10 +88,10 @@ public class StoreConfigurationResourceImplTest {
         sa.setPublicKey(pk);
         f.setAuthentication(sa);
 
-        f.setAlternativeSftpFragmentName("my alternative fragment");
+        f.setAlternativeSftpFragmentName("myftp");
 
         ConfigurationObject in = new ConfigurationObject();
-        in.setPath("/b");
+        in.setPath("/filetransfer/myFtp");
         in.setConfiguration(f);
         in.setObjectType(ConfigurationType.FT_FRAGMENT_SFTP);
 

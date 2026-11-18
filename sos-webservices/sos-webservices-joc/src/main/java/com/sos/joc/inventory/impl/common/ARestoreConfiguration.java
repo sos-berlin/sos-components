@@ -269,7 +269,7 @@ public abstract class ARestoreConfiguration extends JOCResourceImpl {
             return true;
         }
         try {
-            Validator.validate(item.getTypeAsEnum(), item.getContent().getBytes(StandardCharsets.UTF_8), dbLayer, null);
+            Validator.validate(item.getTypeAsEnum(), item.getPath(), item.getContent().getBytes(StandardCharsets.UTF_8), dbLayer, null);
             return true;
         } catch (Throwable e) {
             return false;

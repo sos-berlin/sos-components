@@ -33,13 +33,12 @@ public class AFragment
 
     /**
      * 
-     * @param path
      * @param documentationName
      * @param title
      * @param version
      */
-    public AFragment(String version, String path, String title, String documentationName) {
-        super(version, path, title, documentationName);
+    public AFragment(String version, String title, String documentationName) {
+        super(version, title, documentationName);
     }
 
     @Override
