@@ -21,7 +21,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "name",
     "required",
     "dataType",
-    "defaultValue"
+    "defaultValue",
+    "description"
 })
 public class Param {
 
@@ -38,6 +39,8 @@ public class Param {
     private GlobalSettingsSectionValueType dataType = GlobalSettingsSectionValueType.STRING;
     @JsonProperty("defaultValue")
     private Object defaultValue;
+    @JsonProperty("description")
+    private String description;
 
     /**
      * No args constructor for use in serialization
@@ -51,14 +54,16 @@ public class Param {
      * @param defaultValue
      * @param dataType
      * @param name
+     * @param description
      * @param required
      */
-    public Param(String name, Boolean required, GlobalSettingsSectionValueType dataType, Object defaultValue) {
+    public Param(String name, Boolean required, GlobalSettingsSectionValueType dataType, Object defaultValue, String description) {
         super();
         this.name = name;
         this.required = required;
         this.dataType = dataType;
         this.defaultValue = defaultValue;
+        this.description = description;
     }
 
     /**
@@ -111,14 +116,24 @@ public class Param {
         this.defaultValue = defaultValue;
     }
 
+    @JsonProperty("description")
+    public String getDescription() {
+        return description;
+    }
+
+    @JsonProperty("description")
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("name", name).append("required", required).append("dataType", dataType).append("defaultValue", defaultValue).toString();
+        return new ToStringBuilder(this).append("name", name).append("required", required).append("dataType", dataType).append("defaultValue", defaultValue).append("description", description).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(name).append(required).append(defaultValue).append(dataType).toHashCode();
+        return new HashCodeBuilder().append(name).append(description).append(required).append(defaultValue).append(dataType).toHashCode();
     }
 
     @Override
@@ -130,7 +145,7 @@ public class Param {
             return false;
         }
         Param rhs = ((Param) other);
-        return new EqualsBuilder().append(name, rhs.name).append(required, rhs.required).append(defaultValue, rhs.defaultValue).append(dataType, rhs.dataType).isEquals();
+        return new EqualsBuilder().append(name, rhs.name).append(description, rhs.description).append(required, rhs.required).append(defaultValue, rhs.defaultValue).append(dataType, rhs.dataType).isEquals();
     }
 
 }
