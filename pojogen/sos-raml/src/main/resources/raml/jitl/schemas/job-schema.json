@@ -4,23 +4,33 @@
   "javaType": "com.sos.jitl.model.Job",
   "type": "object",
   "required": [
-    "name"
+    "job"
   ],
   "properties": {
-    "name": {
-		"type": "string",
-  		"minLength": 1
-	},
-	"category": {
-		"type": "string"
-	},
-	"language": {
-		"type": "string",
-  		"default": "Java"
-	},
-	"class": {
-	    "type": "string"
-	},
+    "job": {
+        "type": "object",
+        "javaType": "com.sos.jitl.model.JobDefinition",
+        "additionalProperties": false,
+        "required": [
+            "name"
+        ],
+        "properties": {
+            "name": {
+                "type": "string",
+                "minLength": 1
+            },
+            "category": {
+                "type": "string"
+            },
+            "language": {
+                "type": "string",
+                "default": "Java"
+            },
+            "class": {
+                "type": "string"
+            }
+        }
+    },
     "arguments": {
         "type": "array",
         "uniqueItems": true,

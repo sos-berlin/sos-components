@@ -24,7 +24,10 @@
 	    "javaType": "java.lang.Object", 
 	    "type": "object",
 	    "additionalProperties": false
-	}
+	},
+    "description": {
+        "type": "string"
+    }
   },
   "additionalProperties": false
 }
