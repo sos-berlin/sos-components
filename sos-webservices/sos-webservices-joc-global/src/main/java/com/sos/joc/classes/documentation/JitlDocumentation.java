@@ -40,6 +40,7 @@ public class JitlDocumentation {
             connection = Globals.createSosHibernateStatelessConnection(JitlDocumentation.class.getSimpleName());
             // updateVersion(connection);
             updateNotification(connection);
+            //JOC-2358
 //            stream = JitlDocumentation.class.getClassLoader().getResourceAsStream(DOCUS);
 //            if (stream != null) {
 //                try {
@@ -77,6 +78,14 @@ public class JitlDocumentation {
                   }
                 }
             }
+            DocumentationDBLayer docDbLayer = new DocumentationDBLayer(connection);
+            List<DBItemDocumentation> jitlDocs = docDbLayer.getDocumentations(null, JitlDocumentation.FOLDER, true, false);
+            if (jitlDocs != null) {
+                for (DBItemDocumentation jitlDoc : jitlDocs) {
+                    docDbLayer.getSession().delete(jitlDoc);
+                }
+            }
+            
         } catch (Exception e) {
             LOGGER.warn(String.format("Error while reading resource %1$s from classpath: ", "/jitl-jobdoc/default-markdown.css"), e);
         } finally {

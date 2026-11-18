@@ -4,11 +4,13 @@ package com.sos.joc.model.wizard;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.inventory.model.jobtemplate.Parameters;
+import com.sos.jitl.model.Param;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -92,7 +94,7 @@ public class Job {
      * deprecated: use 'arguments'
      * 
      */
-    @JsonProperty("params")
+    @JsonProperty("arguments")
     @JsonPropertyDescription("deprecated: use 'arguments'")
     private List<Param> params = new ArrayList<Param>();
     /**
@@ -102,7 +104,7 @@ public class Job {
      * 
      */
     @JsonProperty("arguments")
-    private Parameters arguments;
+    private Map<String, Param> arguments;
 
     /**
      * timestamp
@@ -275,7 +277,7 @@ public class Job {
      * 
      */
     @JsonProperty("arguments")
-    public Parameters getArguments() {
+    public Map<String, Param> getArguments() {
         return arguments;
     }
 
@@ -286,7 +288,7 @@ public class Job {
      * 
      */
     @JsonProperty("arguments")
-    public void setArguments(Parameters arguments) {
+    public void setArguments(Map<String, Param> arguments) {
         this.arguments = arguments;
     }
 
