@@ -529,10 +529,8 @@ public class OrdersHelper {
             Map<JWorkflowId, Collection<String>> finalParameters, Long surveyDateMillis, ZoneId zoneId) {
         OrderV o = new OrderV();
         WorkflowId wId = oItem.getWorkflowPosition().getWorkflowId();
-        if (compact) {
-            o.setArguments(null);
-        } else if (finalParameters != null) {
-            o.setArguments(removeFinalParameters(oItem.getArguments(), finalParameters.get(jOrder.workflowId())));
+        if (finalParameters != null) {
+            o.setArguments(removeFinalParametersAndTruncateValues(oItem.getArguments(), finalParameters.get(jOrder.workflowId())));
         }
         o.setAttachedState(oItem.getAttachedState());
         o.setOrderId(oItem.getId());
@@ -870,11 +868,52 @@ public class OrdersHelper {
         }
     }
 
-    public static Variables removeFinalParameters(Variables variables, Collection<String> finalParameters) {
+    private static Variables removeFinalParameters(Variables variables, Collection<String> finalParameters) {
         if (finalParameters != null && variables != null && variables.getAdditionalProperties() != null) {
             finalParameters.forEach(p -> variables.removeAdditionalProperty(p));
         }
         return variables;
+    }
+    
+    private static Variables removeFinalParametersAndTruncateValues(Variables variables, Collection<String> finalParameters) {
+        return truncateParameterValues(removeFinalParameters(variables, finalParameters), 100);
+    }
+    
+    private static Variables truncateParameterValues(Variables variables) {
+        return truncateParameterValues(variables, 100);
+    }
+    
+    private static Variables truncateParameterValues(Variables variables, int limit) {
+        if (variables != null && variables.getAdditionalProperties() != null) {
+            for (Map.Entry<String, Object> entry : variables.getAdditionalProperties().entrySet()) {
+                entry.setValue(truncateParameterValue(entry.getValue(), limit));
+            }
+        }
+        return variables;
+    }
+    
+    private static Object truncateParameterValue(Object value, int limit) {
+        if (value != null) {
+            if (value instanceof String) {
+                String val = (String) value;
+                if (val.length() > limit) {
+                    value = val.substring(0, limit - 3) + "...";
+                }
+            } else if (value instanceof Map) {
+                Map<Object, Object> map = (Map<Object, Object>) value;
+                for (Map.Entry<Object, Object> entry : map.entrySet()) {
+                    entry.setValue(truncateParameterValue(entry.getValue(), limit));
+                }
+                value = map;
+            } else if (value instanceof List) {
+                List<Object> list = (List<Object>) value;
+                for (Object val : list) {
+                    val = truncateParameterValue(val, limit);
+                }
+                value = list;
+            }
+        }
+        return value;
     }
 
     public static Variables checkArgumentsWithAllowedDollarInValues(Variables arguments, Requirements orderRequirements)
