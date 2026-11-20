@@ -47,11 +47,10 @@ public class Fragment {
     /**
      * HTTP Protocol Fragment Reference
      * <p>
-     * allOf is present for and documentation validator only. jsonschema2pojo uses 'extends' for code generation. allOf ensures the validator applies the base required fields.
+     * 
      * 
      */
     @JsonProperty("http")
-    @JsonPropertyDescription("allOf is present for and documentation validator only. jsonschema2pojo uses 'extends' for code generation. allOf ensures the validator applies the base required fields.")
     private HttpFragmentRef http;
     /**
      * Local Protocol Fragment Reference
@@ -65,29 +64,26 @@ public class Fragment {
     /**
      * SFTP Protocol Fragment Reference
      * <p>
-     * allOf is present for and documentation validator only. jsonschema2pojo uses 'extends' for code generation. allOf ensures the validator applies the base required fields.
+     * 
      * 
      */
     @JsonProperty("sftp")
-    @JsonPropertyDescription("allOf is present for and documentation validator only. jsonschema2pojo uses 'extends' for code generation. allOf ensures the validator applies the base required fields.")
     private SftpFragmentRef sftp;
     /**
      * SMB Protocol Fragment Reference
      * <p>
-     * allOf is present for and documentation validator only. jsonschema2pojo uses 'extends' for code generation. allOf ensures the validator applies the base required fields.
+     * 
      * 
      */
     @JsonProperty("smb")
-    @JsonPropertyDescription("allOf is present for and documentation validator only. jsonschema2pojo uses 'extends' for code generation. allOf ensures the validator applies the base required fields.")
     private SmbFragmentsRef smb;
     /**
      * WebDAV Protocol Fragment Reference
      * <p>
-     * allOf is present for and documentation validator only. jsonschema2pojo uses 'extends' for code generation. allOf ensures the validator applies the base required fields.
+     * 
      * 
      */
     @JsonProperty("webdav")
-    @JsonPropertyDescription("allOf is present for and documentation validator only. jsonschema2pojo uses 'extends' for code generation. allOf ensures the validator applies the base required fields.")
     private WebdavFragmentRef webdav;
 
     /**
@@ -165,7 +161,7 @@ public class Fragment {
     /**
      * HTTP Protocol Fragment Reference
      * <p>
-     * allOf is present for and documentation validator only. jsonschema2pojo uses 'extends' for code generation. allOf ensures the validator applies the base required fields.
+     * 
      * 
      */
     @JsonProperty("http")
@@ -176,7 +172,7 @@ public class Fragment {
     /**
      * HTTP Protocol Fragment Reference
      * <p>
-     * allOf is present for and documentation validator only. jsonschema2pojo uses 'extends' for code generation. allOf ensures the validator applies the base required fields.
+     * 
      * 
      */
     @JsonProperty("http")
@@ -209,7 +205,7 @@ public class Fragment {
     /**
      * SFTP Protocol Fragment Reference
      * <p>
-     * allOf is present for and documentation validator only. jsonschema2pojo uses 'extends' for code generation. allOf ensures the validator applies the base required fields.
+     * 
      * 
      */
     @JsonProperty("sftp")
@@ -220,7 +216,7 @@ public class Fragment {
     /**
      * SFTP Protocol Fragment Reference
      * <p>
-     * allOf is present for and documentation validator only. jsonschema2pojo uses 'extends' for code generation. allOf ensures the validator applies the base required fields.
+     * 
      * 
      */
     @JsonProperty("sftp")
@@ -231,7 +227,7 @@ public class Fragment {
     /**
      * SMB Protocol Fragment Reference
      * <p>
-     * allOf is present for and documentation validator only. jsonschema2pojo uses 'extends' for code generation. allOf ensures the validator applies the base required fields.
+     * 
      * 
      */
     @JsonProperty("smb")
@@ -242,7 +238,7 @@ public class Fragment {
     /**
      * SMB Protocol Fragment Reference
      * <p>
-     * allOf is present for and documentation validator only. jsonschema2pojo uses 'extends' for code generation. allOf ensures the validator applies the base required fields.
+     * 
      * 
      */
     @JsonProperty("smb")
@@ -253,7 +249,7 @@ public class Fragment {
     /**
      * WebDAV Protocol Fragment Reference
      * <p>
-     * allOf is present for and documentation validator only. jsonschema2pojo uses 'extends' for code generation. allOf ensures the validator applies the base required fields.
+     * 
      * 
      */
     @JsonProperty("webdav")
@@ -264,7 +260,7 @@ public class Fragment {
     /**
      * WebDAV Protocol Fragment Reference
      * <p>
-     * allOf is present for and documentation validator only. jsonschema2pojo uses 'extends' for code generation. allOf ensures the validator applies the base required fields.
+     * 
      * 
      */
     @JsonProperty("webdav")

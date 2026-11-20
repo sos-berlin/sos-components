@@ -46,6 +46,7 @@ import com.sos.inventory.model.common.IInventoryObject;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.descriptor.DeploymentDescriptor;
 import com.sos.inventory.model.fileordersource.FileOrderSource;
+import com.sos.inventory.model.filetransfer.FileTransferJobResource;
 import com.sos.inventory.model.filetransfer.fragments.cs.CredentialStoreFragment;
 import com.sos.inventory.model.filetransfer.fragments.decryption.DecryptionFragment;
 import com.sos.inventory.model.filetransfer.fragments.mail.MailFragment;
@@ -58,7 +59,6 @@ import com.sos.inventory.model.filetransfer.fragments.protocol.SmbFragment;
 import com.sos.inventory.model.filetransfer.fragments.protocol.WebdavFragment;
 import com.sos.inventory.model.filetransfer.fragments.proxy.HttpProxyFragment;
 import com.sos.inventory.model.filetransfer.fragments.proxy.SocksProxyFragment;
-import com.sos.inventory.model.filetransfer.profile.Profile;
 import com.sos.inventory.model.instruction.InstructionType;
 import com.sos.inventory.model.job.ExecutableScript;
 import com.sos.inventory.model.job.ExecutableType;
@@ -150,20 +150,24 @@ public class JocInventory {
             put(ConfigurationType.FOLDER, "classpath:/raml/api/schemas/inventory/folder-schema.json");
             put(ConfigurationType.DEPLOYMENTDESCRIPTOR, "classpath:/raml/inventory/schemas/deploymentDescriptor/deploymentDescriptor-schema.json");
             put(ConfigurationType.DESCRIPTORFOLDER, "classpath:/raml/api/schemas/inventory/folder-schema.json");
-            
-            put(ConfigurationType.FT_FRAGMENT_CREDENTIAL_STORE, "classpath:/raml/inventory/schemas/filetransfer/fragments/cs/credentialStoreFragment-schema-schema.json");
-            put(ConfigurationType.FT_FRAGMENT_DECRYPTION, "classpath:/raml/inventory/schemas/filetransfer/fragments/decryption/decryptionFragment-schema.json");
+
+            put(ConfigurationType.FT_FRAGMENT_CREDENTIAL_STORE,
+                    "classpath:/raml/inventory/schemas/filetransfer/fragments/cs/credentialStoreFragment-schema-schema.json");
+            put(ConfigurationType.FT_FRAGMENT_DECRYPTION,
+                    "classpath:/raml/inventory/schemas/filetransfer/fragments/decryption/decryptionFragment-schema.json");
             put(ConfigurationType.FT_FRAGMENT_MAIL, "classpath:/raml/inventory/schemas/filetransfer/fragments/mail/mailFragment-schema.json");
-            put(ConfigurationType.FT_FRAGMENT_HTTP_PROXY, "classpath:/raml/inventory/schemas/filetransfer/fragments/proxy/httpProxyFragment-schema.json");
+            put(ConfigurationType.FT_FRAGMENT_HTTP_PROXY,
+                    "classpath:/raml/inventory/schemas/filetransfer/fragments/proxy/httpProxyFragment-schema.json");
             put(ConfigurationType.FT_FRAGMENT_SOCKS_PROXY, "classpath:/raml/inventory/schemas/filetransfer/fragments/proxy/socksProxyFragment.json");
-            put(ConfigurationType.FT_FRAGMENT_AZURE_BLOB_STORAGE, "classpath:/raml/inventory/schemas/filetransfer/fragments/protocol/azureBlobStorageFragment-schema.json");
+            put(ConfigurationType.FT_FRAGMENT_AZURE_BLOB_STORAGE,
+                    "classpath:/raml/inventory/schemas/filetransfer/fragments/protocol/azureBlobStorageFragment-schema.json");
             put(ConfigurationType.FT_FRAGMENT_FTP, "classpath:/raml/inventory/schemas/filetransfer/fragments/protocol/ftpFragment-schema.json");
             put(ConfigurationType.FT_FRAGMENT_HTTP, "classpath:/raml/inventory/schemas/filetransfer/fragments/protocol/httpFragment-schema.json");
             put(ConfigurationType.FT_FRAGMENT_JUMP, "classpath:/raml/inventory/schemas/filetransfer/fragments/protocol/jumpFragment-schema.json");
             put(ConfigurationType.FT_FRAGMENT_SFTP, "classpath:/raml/inventory/schemas/filetransfer/fragments/protocol/sftpFragment-schema.json");
             put(ConfigurationType.FT_FRAGMENT_SMB, "classpath:/raml/inventory/schemas/filetransfer/fragments/protocol/smbFragment-schema.json");
             put(ConfigurationType.FT_FRAGMENT_WEBDAV, "classpath:/raml/inventory/schemas/filetransfer/fragments/protocol/webdavFragment-schema.json");
-            put(ConfigurationType.FT_PROFILE, "classpath:/raml/inventory/schemas/filetransfer/profile/profile-schema.json");
+            put(ConfigurationType.FT_PROFILE_JOBRESOURCE, "classpath:/raml/inventory/schemas/filetransfer/filetransferJobResource-schema.json");
         }
     });
 
@@ -222,7 +226,7 @@ public class JocInventory {
             put(ConfigurationType.FOLDER, Folder.class);
             put(ConfigurationType.DEPLOYMENTDESCRIPTOR, DeploymentDescriptor.class);
             put(ConfigurationType.DESCRIPTORFOLDER, Folder.class);
-            
+
             put(ConfigurationType.FT_FRAGMENT_CREDENTIAL_STORE, CredentialStoreFragment.class);
             put(ConfigurationType.FT_FRAGMENT_DECRYPTION, DecryptionFragment.class);
             put(ConfigurationType.FT_FRAGMENT_MAIL, MailFragment.class);
@@ -235,8 +239,8 @@ public class JocInventory {
             put(ConfigurationType.FT_FRAGMENT_SFTP, SftpFragment.class);
             put(ConfigurationType.FT_FRAGMENT_SMB, SmbFragment.class);
             put(ConfigurationType.FT_FRAGMENT_WEBDAV, WebdavFragment.class);
-            put(ConfigurationType.FT_PROFILE, Profile.class);
-            
+            put(ConfigurationType.FT_PROFILE_JOBRESOURCE, FileTransferJobResource.class);
+
         }
     });
 
@@ -286,6 +290,14 @@ public class JocInventory {
         return ConfigurationType.WORKFLOW.intValue() == type;
     }
 
+    public static boolean isJobResource(ConfigurationType type) {
+        return ConfigurationType.JOBRESOURCE.equals(type) || ConfigurationType.FT_PROFILE_JOBRESOURCE.equals(type);
+    }
+
+    public static boolean isJobResource(Integer type) {
+        return Arrays.asList(ConfigurationType.JOBRESOURCE.intValue(), ConfigurationType.FT_PROFILE_JOBRESOURCE.intValue()).contains(type);
+    }
+
     public static boolean isCalendar(ConfigurationType type) {
         return ConfigurationType.WORKINGDAYSCALENDAR.equals(type) || ConfigurationType.NONWORKINGDAYSCALENDAR.equals(type);
     }
@@ -303,6 +315,10 @@ public class JocInventory {
         return Arrays.asList(ConfigurationType.WORKFLOW.intValue(), ConfigurationType.FILEORDERSOURCE.intValue(), ConfigurationType.SCHEDULE
                 .intValue(), ConfigurationType.JOBTEMPLATE.intValue(), ConfigurationType.WORKINGDAYSCALENDAR.intValue(), ConfigurationType.FOLDER
                         .intValue());
+    }
+
+    public static List<Integer> getJobResourceTypes() {
+        return Arrays.asList(ConfigurationType.JOBRESOURCE.intValue(), ConfigurationType.FT_PROFILE_JOBRESOURCE.intValue());
     }
 
     public static List<Integer> getCalendarTypes() {
@@ -769,17 +785,17 @@ public class JocInventory {
             return SOSString.isEmpty(s) ? ROOT_FOLDER : s;
         }
     }
-    
-    public static DBItemInventoryConfiguration getConfiguration(InventoryDBLayer dbLayer, RequestFilter in,
-            AuthFolders permittedFolders) throws Exception {
+
+    public static DBItemInventoryConfiguration getConfiguration(InventoryDBLayer dbLayer, RequestFilter in, AuthFolders permittedFolders)
+            throws Exception {
         return getConfiguration(dbLayer, in.getId(), in.getPath(), in.getObjectType(), permittedFolders);
     }
-    
+
     public static DBItemInventoryConfiguration getConfiguration(InventoryDBLayer dbLayer, Long id, String path, ConfigurationType type,
             AuthFolders permittedFolders) throws Exception {
         return getConfiguration(dbLayer, id, path, type, permittedFolders, false);
     }
-    
+
     public static DBItemInventoryConfiguration getConfiguration(InventoryDBLayer dbLayer, Long id, String path, ConfigurationType type,
             AuthFolders permittedFolders, boolean withIsNotPermittedParentFolder) throws Exception {
         DBItemInventoryConfiguration config = null;
@@ -851,11 +867,11 @@ public class JocInventory {
         }
         return config;
     }
-    
+
     public static void checkFolderPermissions(DBItemInventoryConfiguration item, AuthFolders permittedFolders) {
         checkFolderPermissions(item, permittedFolders, false);
     }
-    
+
     public static void checkFolderPermissions(DBItemInventoryConfiguration item, AuthFolders permittedFolders,
             boolean withIsNotPermittedParentFolder) {
         if (isFolder(item.getTypeAsEnum())) {
@@ -869,7 +885,7 @@ public class JocInventory {
             throw new JocFolderPermissionsException("Access denied for folder: " + item.getFolder());
         }
     }
-    
+
     private static boolean isNotPermittedParentFolder(AuthFolders permittedFolders, String path, boolean withIsNotPermittedParentFolder) {
         if (!withIsNotPermittedParentFolder) {
             return true;
@@ -878,8 +894,8 @@ public class JocInventory {
         return notPermittedParentFolders.contains(path);
     }
 
-    public static DBItemInventoryConfigurationTrash getTrashConfiguration(InventoryDBLayer dbLayer, RequestFilter in,
-            AuthFolders authFolders) throws Exception {
+    public static DBItemInventoryConfigurationTrash getTrashConfiguration(InventoryDBLayer dbLayer, RequestFilter in, AuthFolders authFolders)
+            throws Exception {
         return getTrashConfiguration(dbLayer, in.getId(), in.getPath(), in.getObjectType(), authFolders);
     }
 

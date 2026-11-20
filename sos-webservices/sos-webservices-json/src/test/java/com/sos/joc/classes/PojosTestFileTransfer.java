@@ -15,6 +15,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sos.inventory.model.filetransfer.AFileTransfer;
+import com.sos.inventory.model.filetransfer.FileTransferJobResource;
 import com.sos.inventory.model.filetransfer.common.PostProcessing;
 import com.sos.inventory.model.filetransfer.common.Processing;
 import com.sos.inventory.model.filetransfer.fragments.cs.CredentialStoreAuthKeyFile;
@@ -41,8 +42,8 @@ import com.sos.inventory.model.filetransfer.profile.fragments.Local;
 import com.sos.inventory.model.filetransfer.profile.fragments.SftpFragmentRef;
 import com.sos.inventory.model.filetransfer.profile.source.FileSpecSelection;
 import com.sos.inventory.model.filetransfer.profile.source.Selection;
-import com.sos.inventory.model.filetransfer.profile.source.SourceFileOptions;
-import com.sos.inventory.model.filetransfer.profile.target.TargetFileOptions;
+import com.sos.inventory.model.filetransfer.profile.source.SourceOptions;
+import com.sos.inventory.model.filetransfer.profile.target.TargetOptions;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.schema.JsonValidator;
 
@@ -203,13 +204,14 @@ public class PojosTestFileTransfer {
 
             s.setFragment(ref);
 
-            SourceFileOptions so = new SourceFileOptions();
             Selection sel = new Selection();
             FileSpecSelection sfs = new FileSpecSelection();
             sfs.setFileSpec(".*");
             sel.setFileSpec(sfs);
-            so.setSelection(sel);
-            s.setSourceFileOptions(so);
+            s.setSelection(sel);
+
+            SourceOptions so = new SourceOptions();
+            s.setOptions(so);
             p.setSource(s);
 
             // csf.setEntryPath("my_entry path");
@@ -249,20 +251,22 @@ public class PojosTestFileTransfer {
 
             s.setFragment(ref);
 
-            SourceFileOptions so = new SourceFileOptions();
             Selection sel = new Selection();
             FileSpecSelection sfs = new FileSpecSelection();
             sfs.setFileSpec(".*");
             sel.setFileSpec(sfs);
-            so.setSelection(sel);
-            s.setSourceFileOptions(so);
+            s.setSelection(sel);
+            
+            
+            SourceOptions so = new SourceOptions();
+            s.setOptions(so);
             p.setSource(s);
 
             Target t = new Target();
             t.setDirectory("my target dir");
-            TargetFileOptions tfo = new TargetFileOptions();
-            tfo.setAppendFiles("true");
-            t.setTargetFileOptions(tfo);
+            TargetOptions to = new TargetOptions();
+            to.setAppendFiles("true");
+            t.setOptions(to);
 
             SftpFragmentRef sftp = new SftpFragmentRef();
             sftp.setName("my sftp");
@@ -271,12 +275,17 @@ public class PojosTestFileTransfer {
             t.setFragment(ref);
 
             p.setTarget(t);
-            LOGGER.info(objectMapper.writeValueAsString(p));
+            
+            FileTransferJobResource jr = new FileTransferJobResource();
+            jr.setProfile(p);
+            
+            LOGGER.info(objectMapper.writeValueAsString(jr));
 
+            
             URI uri = createFromClasspath("profile/profile-schema.json");
-            uri = createFromInventorySchemaResources("profile/profile-schema.json");
+            uri = createFromInventorySchemaResources("filetransferJobResource-schema.json");
 
-            JsonValidator.validate(objectMapper.writeValueAsBytes(p), uri, true);
+            JsonValidator.validate(objectMapper.writeValueAsBytes(jr), uri, true);
         } catch (Exception e) {
             LOGGER.error(e.toString(), e);
         }

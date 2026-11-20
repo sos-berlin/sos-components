@@ -5,7 +5,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.inventory.model.filetransfer.profile.fragments.Fragment;
-import com.sos.inventory.model.filetransfer.profile.source.SourceFileOptions;
+import com.sos.inventory.model.filetransfer.profile.source.Selection;
+import com.sos.inventory.model.filetransfer.profile.source.SourceOptions;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -20,7 +21,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
     "fragment",
-    "sourceFileOptions"
+    "selection",
+    "options"
 })
 public class Source {
 
@@ -34,14 +36,22 @@ public class Source {
     @JsonProperty("fragment")
     private Fragment fragment;
     /**
-     * Source File Options
+     * Selection
      * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("sourceFileOptions")
-    private SourceFileOptions sourceFileOptions;
+    @JsonProperty("selection")
+    private Selection selection;
+    /**
+     * Source Options
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("options")
+    private SourceOptions options;
 
     /**
      * No args constructor for use in serialization
@@ -52,13 +62,15 @@ public class Source {
 
     /**
      * 
-     * @param sourceFileOptions
      * @param fragment
+     * @param selection
+     * @param options
      */
-    public Source(Fragment fragment, SourceFileOptions sourceFileOptions) {
+    public Source(Fragment fragment, Selection selection, SourceOptions options) {
         super();
         this.fragment = fragment;
-        this.sourceFileOptions = sourceFileOptions;
+        this.selection = selection;
+        this.options = options;
     }
 
     /**
@@ -86,37 +98,59 @@ public class Source {
     }
 
     /**
-     * Source File Options
+     * Selection
      * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("sourceFileOptions")
-    public SourceFileOptions getSourceFileOptions() {
-        return sourceFileOptions;
+    @JsonProperty("selection")
+    public Selection getSelection() {
+        return selection;
     }
 
     /**
-     * Source File Options
+     * Selection
      * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("sourceFileOptions")
-    public void setSourceFileOptions(SourceFileOptions sourceFileOptions) {
-        this.sourceFileOptions = sourceFileOptions;
+    @JsonProperty("selection")
+    public void setSelection(Selection selection) {
+        this.selection = selection;
+    }
+
+    /**
+     * Source Options
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("options")
+    public SourceOptions getOptions() {
+        return options;
+    }
+
+    /**
+     * Source Options
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("options")
+    public void setOptions(SourceOptions options) {
+        this.options = options;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("fragment", fragment).append("sourceFileOptions", sourceFileOptions).toString();
+        return new ToStringBuilder(this).append("fragment", fragment).append("selection", selection).append("options", options).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(sourceFileOptions).append(fragment).toHashCode();
+        return new HashCodeBuilder().append(options).append(fragment).append(selection).toHashCode();
     }
 
     @Override
@@ -128,7 +162,7 @@ public class Source {
             return false;
         }
         Source rhs = ((Source) other);
-        return new EqualsBuilder().append(sourceFileOptions, rhs.sourceFileOptions).append(fragment, rhs.fragment).isEquals();
+        return new EqualsBuilder().append(options, rhs.options).append(fragment, rhs.fragment).append(selection, rhs.selection).isEquals();
     }
 
 }

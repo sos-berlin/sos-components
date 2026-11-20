@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.inventory.model.filetransfer.profile.fragments.Fragment;
-import com.sos.inventory.model.filetransfer.profile.target.TargetFileOptions;
+import com.sos.inventory.model.filetransfer.profile.target.TargetOptions;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -21,7 +21,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "fragment",
     "directory",
-    "targetFileOptions"
+    "options"
 })
 public class Target {
 
@@ -44,13 +44,13 @@ public class Target {
     @JsonProperty("directory")
     private String directory;
     /**
-     * Target File Options
+     * Target Options
      * <p>
      * 
      * 
      */
-    @JsonProperty("targetFileOptions")
-    private TargetFileOptions targetFileOptions;
+    @JsonProperty("options")
+    private TargetOptions options;
 
     /**
      * No args constructor for use in serialization
@@ -62,14 +62,14 @@ public class Target {
     /**
      * 
      * @param fragment
+     * @param options
      * @param directory
-     * @param targetFileOptions
      */
-    public Target(Fragment fragment, String directory, TargetFileOptions targetFileOptions) {
+    public Target(Fragment fragment, String directory, TargetOptions options) {
         super();
         this.fragment = fragment;
         this.directory = directory;
-        this.targetFileOptions = targetFileOptions;
+        this.options = options;
     }
 
     /**
@@ -121,35 +121,35 @@ public class Target {
     }
 
     /**
-     * Target File Options
+     * Target Options
      * <p>
      * 
      * 
      */
-    @JsonProperty("targetFileOptions")
-    public TargetFileOptions getTargetFileOptions() {
-        return targetFileOptions;
+    @JsonProperty("options")
+    public TargetOptions getOptions() {
+        return options;
     }
 
     /**
-     * Target File Options
+     * Target Options
      * <p>
      * 
      * 
      */
-    @JsonProperty("targetFileOptions")
-    public void setTargetFileOptions(TargetFileOptions targetFileOptions) {
-        this.targetFileOptions = targetFileOptions;
+    @JsonProperty("options")
+    public void setOptions(TargetOptions options) {
+        this.options = options;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("fragment", fragment).append("directory", directory).append("targetFileOptions", targetFileOptions).toString();
+        return new ToStringBuilder(this).append("fragment", fragment).append("directory", directory).append("options", options).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(fragment).append(directory).append(targetFileOptions).toHashCode();
+        return new HashCodeBuilder().append(options).append(fragment).append(directory).toHashCode();
     }
 
     @Override
@@ -161,7 +161,7 @@ public class Target {
             return false;
         }
         Target rhs = ((Target) other);
-        return new EqualsBuilder().append(fragment, rhs.fragment).append(directory, rhs.directory).append(targetFileOptions, rhs.targetFileOptions).isEquals();
+        return new EqualsBuilder().append(options, rhs.options).append(fragment, rhs.fragment).append(directory, rhs.directory).isEquals();
     }
 
 }

@@ -15,7 +15,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 /**
  * SMB Protocol Fragment Reference
  * <p>
- * allOf is present for and documentation validator only. jsonschema2pojo uses 'extends' for code generation. allOf ensures the validator applies the base required fields.
+ * 
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)

@@ -212,12 +212,12 @@ public class Validator {
                 }
                 FileTransferValidator.validateWebdavFragment(configPath, config, dbLayer);
                 break;
-            case FT_PROFILE:
+            case FT_PROFILE_JOBRESOURCE:
                 if (dbLayer == null) {
-                    session = Globals.createSosHibernateStatelessConnection("validateProfile");
+                    session = Globals.createSosHibernateStatelessConnection("validateProfileJobResource");
                     dbLayer = new InventoryDBLayer(session);
                 }
-                FileTransferValidator.validateProfile(configPath, config, dbLayer);
+                FileTransferValidator.validateJobResource(configPath, config, dbLayer);
                 break;
 
             case FOLDER:
@@ -280,7 +280,7 @@ public class Validator {
         case FT_FRAGMENT_SMB:
         case FT_FRAGMENT_SOCKS_PROXY:
         case FT_FRAGMENT_WEBDAV:
-        case FT_PROFILE:
+        case FT_PROFILE_JOBRESOURCE:
             // Nothing to do for FileTransfer types - validated by schema.
             break;
 

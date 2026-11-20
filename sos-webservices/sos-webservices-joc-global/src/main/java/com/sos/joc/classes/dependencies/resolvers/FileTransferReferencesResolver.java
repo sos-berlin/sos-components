@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.sos.commons.util.SOSString;
+import com.sos.inventory.model.filetransfer.FileTransferJobResource;
 import com.sos.inventory.model.filetransfer.fragments.protocol.AProtocolFragment;
 import com.sos.inventory.model.filetransfer.fragments.protocol.AzureBlobStorageFragment;
 import com.sos.inventory.model.filetransfer.fragments.protocol.FtpFragment;
@@ -16,7 +17,10 @@ import com.sos.inventory.model.filetransfer.fragments.protocol.SmbFragment;
 import com.sos.inventory.model.filetransfer.fragments.protocol.WebdavFragment;
 import com.sos.inventory.model.filetransfer.profile.Profile;
 import com.sos.inventory.model.filetransfer.profile.fragments.Fragment;
+import com.sos.inventory.model.jobresource.JobResource;
+import com.sos.joc.Globals;
 import com.sos.joc.classes.dependencies.items.ReferencedDbItem;
+import com.sos.joc.classes.filetransfer.FileTransferJobResourceHandler;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
@@ -171,12 +175,21 @@ public class FileTransferReferencesResolver {
         resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_WEBDAV, f.getAlternativeWebdavFragmentName());
     }
 
-    public static void resolveProfile(InventoryDBLayer dbLayer, ReferencedDbItem item,
+    public static void resolveJobResource(InventoryDBLayer dbLayer, ReferencedDbItem item,
             Map<ConfigurationType, Set<DBItemInventoryConfiguration>> allItemsGrouped) throws IOException {
-        Profile p = (Profile) JocInventory.content2IJSObject(item.getReferencedItem().getContent(), ConfigurationType.FT_PROFILE);
+
+        JobResource jr = (JobResource) JocInventory.content2IJSObject(item.getReferencedItem().getContent(), ConfigurationType.JOBRESOURCE);
+        FileTransferJobResource ftjr = null;
+        if (jr.getArguments() == null) {
+            ftjr = Globals.objectMapper.readValue(item.getReferencedItem().getContent(), FileTransferJobResource.class);
+        } else {
+            ftjr = FileTransferJobResourceHandler.toFileTransferJobResource(jr);
+        }
+
+        Profile p = ftjr.getProfile();
 
         // 1) Alternative profile name
-        resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_PROFILE, p.getAlternativeProfileName());
+        resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_PROFILE_JOBRESOURCE, p.getAlternativeProfileName());
 
         // 2) Source
         if (p.getSource() != null) {

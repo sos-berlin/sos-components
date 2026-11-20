@@ -28,6 +28,11 @@
 			<artifactId>sos-commons-mail</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>com.sos-berlin</groupId>
+			<artifactId>sos-webservices-json</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 		<!-- 3rd Party Dependencies -->
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>

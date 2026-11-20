@@ -24,7 +24,25 @@ public enum TreeType {
     REPORT(15),
     DOCUMENTATION(20),
     WORKINGDAYSCALENDAR(60),
-    NONWORKINGDAYSCALENDAR(61);
+    NONWORKINGDAYSCALENDAR(61),
+    // FileTransfer: Total range 80-99
+    // FileTransfer: Non-protocol Fragments (80–84)
+    FT_FRAGMENT_CREDENTIAL_STORE(80), 
+    FT_FRAGMENT_DECRYPTION(81), 
+    FT_FRAGMENT_MAIL(82), 
+    FT_FRAGMENT_HTTP_PROXY(83), 
+    FT_FRAGMENT_SOCKS_PROXY(84),
+    // FileTransfer: Protocol fragments (85–91)
+    FT_FRAGMENT_AZURE_BLOB_STORAGE(85), 
+    FT_FRAGMENT_FTP(86), 
+    FT_FRAGMENT_HTTP(87), 
+    FT_FRAGMENT_JUMP(88), 
+    FT_FRAGMENT_SFTP(89), 
+    FT_FRAGMENT_SMB(90), 
+    FT_FRAGMENT_WEBDAV(91),
+    // Reserve 92–98 for future
+    // FileTransfer: JobResource per profile
+    FT_JOBRESOURCE(99);
     private final Integer intValue;
     private final static Map<String, TreeType> CONSTANTS = new HashMap<String, TreeType>();
     private final static Map<Integer, TreeType> INTCONSTANTS = new HashMap<Integer, TreeType>();

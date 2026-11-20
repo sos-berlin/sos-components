@@ -80,7 +80,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     @JsonSubTypes.Type(value = com.sos.joc.model.inventory.filetransfer.SftpFragmentEdit.class, name = "FT_FRAGMENT_SFTP"),
     @JsonSubTypes.Type(value = com.sos.joc.model.inventory.filetransfer.SmbFragmentEdit.class, name = "FT_FRAGMENT_SMB"),
     @JsonSubTypes.Type(value = com.sos.joc.model.inventory.filetransfer.WebdavFragmentEdit.class, name = "FT_FRAGMENT_WEBDAV"),
-    @JsonSubTypes.Type(value = com.sos.joc.model.inventory.filetransfer.ProfileEdit.class, name = "FT_PROFILE")})
+    @JsonSubTypes.Type(value = com.sos.joc.model.inventory.filetransfer.FileTransferJobResourceEdit.class, name = "FT_PROFILE_JOBRESOURCE")})
 public class ConfigurationObject {
 
     /**

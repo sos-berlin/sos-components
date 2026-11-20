@@ -8,7 +8,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.sos.inventory.model.filetransfer.AFileTransfer;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -25,9 +24,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "alternativeProfileName",
     "operation"
 })
-public class ProfileBase
-    extends AFileTransfer
-{
+public class ProfileBase {
 
     /**
      * Any non-empty string. May contain variable references such as ${VAR} that are resolved at runtime.
@@ -55,13 +52,10 @@ public class ProfileBase
     /**
      * 
      * @param alternativeProfileName
-     * @param documentationName
-     * @param title
      * @param operation
-     * @param version
      */
-    public ProfileBase(String alternativeProfileName, ProfileBase.Operation operation, String version, String title, String documentationName) {
-        super(version, title, documentationName);
+    public ProfileBase(String alternativeProfileName, ProfileBase.Operation operation) {
+        super();
         this.alternativeProfileName = alternativeProfileName;
         this.operation = operation;
     }
@@ -110,12 +104,12 @@ public class ProfileBase
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("alternativeProfileName", alternativeProfileName).append("operation", operation).toString();
+        return new ToStringBuilder(this).append("alternativeProfileName", alternativeProfileName).append("operation", operation).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(alternativeProfileName).append(operation).toHashCode();
+        return new HashCodeBuilder().append(alternativeProfileName).append(operation).toHashCode();
     }
 
     @Override
@@ -127,7 +121,7 @@ public class ProfileBase
             return false;
         }
         ProfileBase rhs = ((ProfileBase) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(alternativeProfileName, rhs.alternativeProfileName).append(operation, rhs.operation).isEquals();
+        return new EqualsBuilder().append(alternativeProfileName, rhs.alternativeProfileName).append(operation, rhs.operation).isEquals();
     }
 
     public enum Operation {

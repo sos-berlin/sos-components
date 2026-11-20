@@ -39,8 +39,8 @@ public enum ConfigurationType {
     FT_FRAGMENT_SMB(90), 
     FT_FRAGMENT_WEBDAV(91),
     // Reserve 92–98 for future
-    // FileTransfer: Profile
-    FT_PROFILE(99);
+    // FileTransfer: JobResource per profile
+    FT_PROFILE_JOBRESOURCE(99);
 
     private final Integer intValue;
     private final static Map<String, ConfigurationType> CONSTANTS = new HashMap<String, ConfigurationType>();

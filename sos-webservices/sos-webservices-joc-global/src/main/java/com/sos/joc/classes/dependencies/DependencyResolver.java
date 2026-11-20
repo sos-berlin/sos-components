@@ -110,7 +110,7 @@ public class DependencyResolver {
             add(ConfigurationType.FT_FRAGMENT_SFTP.intValue());
             add(ConfigurationType.FT_FRAGMENT_SMB.intValue());
             add(ConfigurationType.FT_FRAGMENT_WEBDAV.intValue());
-            add(ConfigurationType.FT_PROFILE.intValue());
+            add(ConfigurationType.FT_PROFILE_JOBRESOURCE.intValue());
         }
     });
 
@@ -252,7 +252,7 @@ public class DependencyResolver {
                             add(ConfigurationType.FT_FRAGMENT_WEBDAV); // self - alternative name
                         }
                     }));
-                    put(ConfigurationType.FT_PROFILE, Collections.unmodifiableSet(new HashSet<ConfigurationType>() {
+                    put(ConfigurationType.FT_PROFILE_JOBRESOURCE, Collections.unmodifiableSet(new HashSet<ConfigurationType>() {
 
                         private static final long serialVersionUID = 1L;
                         {
@@ -267,7 +267,7 @@ public class DependencyResolver {
                             add(ConfigurationType.FT_FRAGMENT_SMB);
                             add(ConfigurationType.FT_FRAGMENT_WEBDAV);
 
-                            add(ConfigurationType.FT_PROFILE); // self - alternative name
+                            add(ConfigurationType.FT_PROFILE_JOBRESOURCE); // self - alternative name
                         }
                     }));
                 }
@@ -655,8 +655,8 @@ public class DependencyResolver {
         case FT_FRAGMENT_WEBDAV:
             FileTransferReferencesResolver.resolveWebdavFragment(dbLayer, item, allItemsGrouped);
             break;
-        case FT_PROFILE:
-            FileTransferReferencesResolver.resolveProfile(dbLayer, item, allItemsGrouped);
+        case FT_PROFILE_JOBRESOURCE:
+            FileTransferReferencesResolver.resolveJobResource(dbLayer, item, allItemsGrouped);
             break;
         default:
             break;

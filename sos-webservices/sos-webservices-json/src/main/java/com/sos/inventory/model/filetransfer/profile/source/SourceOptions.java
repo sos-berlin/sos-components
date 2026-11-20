@@ -10,36 +10,35 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 
 
 /**
- * Source File Options
+ * Source Options
  * <p>
  * 
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
-    "selection",
+    "disableErrorOnNoFilesFound",
     "checkSteadyState",
-    "directives",
-    "polling",
-    "resultSet",
+    "checkIntegrityHash",
     "maxFiles",
     "minFileAge",
     "maxFileAge",
     "minFileSize",
     "maxFileSize",
-    "checkIntegrityHash"
+    "polling",
+    "resultSet",
+    "transferZeroByteFiles"
 })
-public class SourceFileOptions {
+public class SourceOptions {
 
     /**
-     * Selection
+     * Fixed values: true, false. Or a single variable reference such as ${VAR}.
      * <p>
      * 
-     * (Required)
      * 
      */
-    @JsonProperty("selection")
-    private Selection selection;
+    @JsonProperty("disableErrorOnNoFilesFound")
+    private String disableErrorOnNoFilesFound;
     /**
      * Check Steady State
      * <p>
@@ -49,29 +48,13 @@ public class SourceFileOptions {
     @JsonProperty("checkSteadyState")
     private CheckSteadyState checkSteadyState;
     /**
-     * Directives
+     * Check Integrity Hash
      * <p>
      * 
      * 
      */
-    @JsonProperty("directives")
-    private Directives directives;
-    /**
-     * Polling
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("polling")
-    private Polling polling;
-    /**
-     * Result Set
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("resultSet")
-    private ResultSet resultSet;
+    @JsonProperty("checkIntegrityHash")
+    private CheckIntegrityHash checkIntegrityHash;
     /**
      * A non-negative integer, -1, or a single variable reference such as ${VAR}. Used for MaxFiles.
      * <p>
@@ -113,72 +96,86 @@ public class SourceFileOptions {
     @JsonProperty("maxFileSize")
     private String maxFileSize;
     /**
-     * Check Integrity Hash
+     * Polling
      * <p>
      * 
      * 
      */
-    @JsonProperty("checkIntegrityHash")
-    private CheckIntegrityHash checkIntegrityHash;
+    @JsonProperty("polling")
+    private Polling polling;
+    /**
+     * Result Set
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("resultSet")
+    private ResultSet resultSet;
+    /**
+     * Transfer zero-byte files: 'true', 'false', 'strict', 'relaxed', or a single variable reference.
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("transferZeroByteFiles")
+    private String transferZeroByteFiles;
 
     /**
      * No args constructor for use in serialization
      * 
      */
-    public SourceFileOptions() {
+    public SourceOptions() {
     }
 
     /**
      * 
-     * @param selection
-     * @param directives
+     * @param disableErrorOnNoFilesFound
      * @param minFileSize
      * @param minFileAge
-     * @param polling
      * @param maxFileSize
+     * @param polling
      * @param maxFileAge
-     * @param resultSet
-     * @param maxFiles
+     * @param transferZeroByteFiles
      * @param checkIntegrityHash
+     * @param maxFiles
+     * @param resultSet
      * @param checkSteadyState
      */
-    public SourceFileOptions(Selection selection, CheckSteadyState checkSteadyState, Directives directives, Polling polling, ResultSet resultSet, String maxFiles, String minFileAge, String maxFileAge, String minFileSize, String maxFileSize, CheckIntegrityHash checkIntegrityHash) {
+    public SourceOptions(String disableErrorOnNoFilesFound, CheckSteadyState checkSteadyState, CheckIntegrityHash checkIntegrityHash, String maxFiles, String minFileAge, String maxFileAge, String minFileSize, String maxFileSize, Polling polling, ResultSet resultSet, String transferZeroByteFiles) {
         super();
-        this.selection = selection;
+        this.disableErrorOnNoFilesFound = disableErrorOnNoFilesFound;
         this.checkSteadyState = checkSteadyState;
-        this.directives = directives;
-        this.polling = polling;
-        this.resultSet = resultSet;
+        this.checkIntegrityHash = checkIntegrityHash;
         this.maxFiles = maxFiles;
         this.minFileAge = minFileAge;
         this.maxFileAge = maxFileAge;
         this.minFileSize = minFileSize;
         this.maxFileSize = maxFileSize;
-        this.checkIntegrityHash = checkIntegrityHash;
+        this.polling = polling;
+        this.resultSet = resultSet;
+        this.transferZeroByteFiles = transferZeroByteFiles;
     }
 
     /**
-     * Selection
+     * Fixed values: true, false. Or a single variable reference such as ${VAR}.
      * <p>
      * 
-     * (Required)
      * 
      */
-    @JsonProperty("selection")
-    public Selection getSelection() {
-        return selection;
+    @JsonProperty("disableErrorOnNoFilesFound")
+    public String getDisableErrorOnNoFilesFound() {
+        return disableErrorOnNoFilesFound;
     }
 
     /**
-     * Selection
+     * Fixed values: true, false. Or a single variable reference such as ${VAR}.
      * <p>
      * 
-     * (Required)
      * 
      */
-    @JsonProperty("selection")
-    public void setSelection(Selection selection) {
-        this.selection = selection;
+    @JsonProperty("disableErrorOnNoFilesFound")
+    public void setDisableErrorOnNoFilesFound(String disableErrorOnNoFilesFound) {
+        this.disableErrorOnNoFilesFound = disableErrorOnNoFilesFound;
     }
 
     /**
@@ -204,69 +201,25 @@ public class SourceFileOptions {
     }
 
     /**
-     * Directives
+     * Check Integrity Hash
      * <p>
      * 
      * 
      */
-    @JsonProperty("directives")
-    public Directives getDirectives() {
-        return directives;
+    @JsonProperty("checkIntegrityHash")
+    public CheckIntegrityHash getCheckIntegrityHash() {
+        return checkIntegrityHash;
     }
 
     /**
-     * Directives
+     * Check Integrity Hash
      * <p>
      * 
      * 
      */
-    @JsonProperty("directives")
-    public void setDirectives(Directives directives) {
-        this.directives = directives;
-    }
-
-    /**
-     * Polling
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("polling")
-    public Polling getPolling() {
-        return polling;
-    }
-
-    /**
-     * Polling
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("polling")
-    public void setPolling(Polling polling) {
-        this.polling = polling;
-    }
-
-    /**
-     * Result Set
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("resultSet")
-    public ResultSet getResultSet() {
-        return resultSet;
-    }
-
-    /**
-     * Result Set
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("resultSet")
-    public void setResultSet(ResultSet resultSet) {
-        this.resultSet = resultSet;
+    @JsonProperty("checkIntegrityHash")
+    public void setCheckIntegrityHash(CheckIntegrityHash checkIntegrityHash) {
+        this.checkIntegrityHash = checkIntegrityHash;
     }
 
     /**
@@ -380,35 +333,79 @@ public class SourceFileOptions {
     }
 
     /**
-     * Check Integrity Hash
+     * Polling
      * <p>
      * 
      * 
      */
-    @JsonProperty("checkIntegrityHash")
-    public CheckIntegrityHash getCheckIntegrityHash() {
-        return checkIntegrityHash;
+    @JsonProperty("polling")
+    public Polling getPolling() {
+        return polling;
     }
 
     /**
-     * Check Integrity Hash
+     * Polling
      * <p>
      * 
      * 
      */
-    @JsonProperty("checkIntegrityHash")
-    public void setCheckIntegrityHash(CheckIntegrityHash checkIntegrityHash) {
-        this.checkIntegrityHash = checkIntegrityHash;
+    @JsonProperty("polling")
+    public void setPolling(Polling polling) {
+        this.polling = polling;
+    }
+
+    /**
+     * Result Set
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("resultSet")
+    public ResultSet getResultSet() {
+        return resultSet;
+    }
+
+    /**
+     * Result Set
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("resultSet")
+    public void setResultSet(ResultSet resultSet) {
+        this.resultSet = resultSet;
+    }
+
+    /**
+     * Transfer zero-byte files: 'true', 'false', 'strict', 'relaxed', or a single variable reference.
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("transferZeroByteFiles")
+    public String getTransferZeroByteFiles() {
+        return transferZeroByteFiles;
+    }
+
+    /**
+     * Transfer zero-byte files: 'true', 'false', 'strict', 'relaxed', or a single variable reference.
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("transferZeroByteFiles")
+    public void setTransferZeroByteFiles(String transferZeroByteFiles) {
+        this.transferZeroByteFiles = transferZeroByteFiles;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("selection", selection).append("checkSteadyState", checkSteadyState).append("directives", directives).append("polling", polling).append("resultSet", resultSet).append("maxFiles", maxFiles).append("minFileAge", minFileAge).append("maxFileAge", maxFileAge).append("minFileSize", minFileSize).append("maxFileSize", maxFileSize).append("checkIntegrityHash", checkIntegrityHash).toString();
+        return new ToStringBuilder(this).append("disableErrorOnNoFilesFound", disableErrorOnNoFilesFound).append("checkSteadyState", checkSteadyState).append("checkIntegrityHash", checkIntegrityHash).append("maxFiles", maxFiles).append("minFileAge", minFileAge).append("maxFileAge", maxFileAge).append("minFileSize", minFileSize).append("maxFileSize", maxFileSize).append("polling", polling).append("resultSet", resultSet).append("transferZeroByteFiles", transferZeroByteFiles).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(selection).append(directives).append(minFileSize).append(minFileAge).append(polling).append(maxFileSize).append(maxFileAge).append(resultSet).append(maxFiles).append(checkIntegrityHash).append(checkSteadyState).toHashCode();
+        return new HashCodeBuilder().append(disableErrorOnNoFilesFound).append(minFileSize).append(minFileAge).append(maxFileSize).append(polling).append(maxFileAge).append(transferZeroByteFiles).append(checkIntegrityHash).append(maxFiles).append(resultSet).append(checkSteadyState).toHashCode();
     }
 
     @Override
@@ -416,11 +413,11 @@ public class SourceFileOptions {
         if (other == this) {
             return true;
         }
-        if ((other instanceof SourceFileOptions) == false) {
+        if ((other instanceof SourceOptions) == false) {
             return false;
         }
-        SourceFileOptions rhs = ((SourceFileOptions) other);
-        return new EqualsBuilder().append(selection, rhs.selection).append(directives, rhs.directives).append(minFileSize, rhs.minFileSize).append(minFileAge, rhs.minFileAge).append(polling, rhs.polling).append(maxFileSize, rhs.maxFileSize).append(maxFileAge, rhs.maxFileAge).append(resultSet, rhs.resultSet).append(maxFiles, rhs.maxFiles).append(checkIntegrityHash, rhs.checkIntegrityHash).append(checkSteadyState, rhs.checkSteadyState).isEquals();
+        SourceOptions rhs = ((SourceOptions) other);
+        return new EqualsBuilder().append(disableErrorOnNoFilesFound, rhs.disableErrorOnNoFilesFound).append(minFileSize, rhs.minFileSize).append(minFileAge, rhs.minFileAge).append(maxFileSize, rhs.maxFileSize).append(polling, rhs.polling).append(maxFileAge, rhs.maxFileAge).append(transferZeroByteFiles, rhs.transferZeroByteFiles).append(checkIntegrityHash, rhs.checkIntegrityHash).append(maxFiles, rhs.maxFiles).append(resultSet, rhs.resultSet).append(checkSteadyState, rhs.checkSteadyState).isEquals();
     }
 
 }

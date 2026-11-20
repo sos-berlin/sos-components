@@ -55,8 +55,8 @@ public abstract class AStoreConfiguration extends JOCResourceImpl {
             throws Exception {
 
         // TODO too early -> in.getPath can be undefined -> JocInventory.getConfiguration with AuthFolders
-        //JOCResourceImpl.throwIfFolderIsUnpermitted(in.getPath(), permittedFolders);
-        
+        // JOCResourceImpl.throwIfFolderIsUnpermitted(in.getPath(), permittedFolders);
+
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(request);
@@ -67,7 +67,7 @@ public abstract class AStoreConfiguration extends JOCResourceImpl {
             DBItemInventoryConfiguration item;
             try {
                 item = JocInventory.getConfiguration(dbLayer, in.getId(), in.getPath(), in.getObjectType(), permittedFolders, true);
-                //JocInventory.checkFolderPermissions(item, permittedFolders, true);
+                // JocInventory.checkFolderPermissions(item, permittedFolders, true);
                 item = setProperties(in, item, dbLayer, false);
                 DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog(), Collections.singleton(
                         new AuditLogDetail(item.getPath(), item.getType())));
@@ -274,6 +274,7 @@ public abstract class AStoreConfiguration extends JOCResourceImpl {
 
         try {
             item.setContent(JocInventory.toString(in.getConfiguration()));
+
             Validator.validate(in.getObjectType(), in.getPath(), in.getConfiguration(), dbLayer, null);
             item.setValid(true);
         } catch (Throwable e) {

@@ -4,55 +4,31 @@ package com.sos.joc.model.inventory.filetransfer;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.inventory.model.filetransfer.profile.Profile;
+import com.sos.inventory.model.filetransfer.FileTransferJobResource;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
-
-/**
+/** Manually maintained. Do not regenerate from schema.
+ * <p>
  * File Transfer Edit configuration
  * <p>
- * 
- * 
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-@JsonPropertyOrder({
-    "configuration"
-})
-public class ProfileEdit
-    extends ConfigurationObject
-{
+@JsonPropertyOrder({ "configuration" })
+public class FileTransferJobResourceEdit extends ConfigurationObject {
 
-    /**
-     * Profile
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("configuration")
-    private Profile configuration;
+    private FileTransferJobResource configuration;
 
-    /**
-     * Profile
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("configuration")
-    public Profile getConfiguration() {
+    public FileTransferJobResource getConfiguration() {
         return configuration;
     }
 
-    /**
-     * Profile
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("configuration")
-    public void setConfiguration(Profile configuration) {
+    public void setConfiguration(FileTransferJobResource configuration) {
         this.configuration = configuration;
     }
 
@@ -71,10 +47,10 @@ public class ProfileEdit
         if (other == this) {
             return true;
         }
-        if ((other instanceof ProfileEdit) == false) {
+        if ((other instanceof FileTransferJobResourceEdit) == false) {
             return false;
         }
-        ProfileEdit rhs = ((ProfileEdit) other);
+        FileTransferJobResourceEdit rhs = ((FileTransferJobResourceEdit) other);
         return new EqualsBuilder().appendSuper(super.equals(other)).append(configuration, rhs.configuration).isEquals();
     }
 
