@@ -86,7 +86,7 @@
     <jna.version>5.17.0</jna.version>
 <!--    <yaml.version>1.33</yaml.version> -->
     <yaml.version>2.0</yaml.version>
-    <jwt.version>4.2.2</jwt.version>
+    <jwt.version>4.6.2</jwt.version>
 <!-- important: same version like org.glassfish dependency in hibernate, see comment at com.sun.xml.bind:jaxb-core dependency -->
     <jaxb.core.version>4.0.9</jaxb.core.version>
     <json.schema.validator.version>1.0.29</json.schema.validator.version>
