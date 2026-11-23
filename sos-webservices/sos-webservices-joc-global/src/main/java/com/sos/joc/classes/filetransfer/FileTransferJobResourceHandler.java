@@ -107,6 +107,10 @@ public class FileTransferJobResourceHandler {
         return Globals.objectMapper.readValue(extractJson(val), FileTransferJobResource.class);
     }
 
+    public static FileTransferJobResource toFileTransferJobResource(String val) throws JsonProcessingException {
+        return Globals.objectMapper.readValue(extractJson(val), FileTransferJobResource.class);
+    }
+
     // throw specific exception
     private static void complete(FileTransferJobResource ft, String ftJobResourceName, InventoryDBLayer dbLayer) throws Exception {
         if (LOGGER.isDebugEnabled()) {
@@ -138,9 +142,9 @@ public class FileTransferJobResourceHandler {
         boolean hasAlternativeName = !SOSString.isEmpty(p.getAlternativeProfileName()) && !p.getAlternativeProfileName().equalsIgnoreCase(s
                 .getProfileName());
         boolean hasNotificationTriggers = p.getNotificationTriggers() != null;
-        boolean isSourceFragmentLocal = isLocalFragment(p.getSource().getFragment());
-        boolean isTargetFragmentLocalOrNull = p.getTarget() == null || isLocalFragment(p.getTarget().getFragment());
-        if (!hasAlternativeName && !hasNotificationTriggers && isSourceFragmentLocal && isTargetFragmentLocalOrNull) {
+        boolean isSourceFragmentLocal = FileTransferHelper.isSourceFragmentLocal(p.getSource());
+        boolean isTargetFragmentNullOrLocal = FileTransferHelper.isTargetFragmentNullOrLocal(p.getTarget());
+        if (!hasAlternativeName && !hasNotificationTriggers && isSourceFragmentLocal && isTargetFragmentNullOrLocal) {
             return;
         }
 
@@ -149,7 +153,7 @@ public class FileTransferJobResourceHandler {
         setSettingsFragment(dbLayer, s, p.getSource().getFragment());
 
         // 2) Target
-        if (!isTargetFragmentLocalOrNull) {
+        if (!isTargetFragmentNullOrLocal) {
             setSettingsFragment(dbLayer, s, p.getTarget().getFragment());
         }
 
@@ -185,22 +189,20 @@ public class FileTransferJobResourceHandler {
     }
 
     private static void setSettingsFragment(InventoryDBLayer dbLayer, Settings s, Fragment f) throws Exception {
-        if (isLocalFragment(f)) {
+        if (FileTransferHelper.isLocal(f)) {
             resolveCredentialStoreFragment(dbLayer, s, f.getLocal().getCredentialStoreFragmentName());
             resolveDecryptionFragment(dbLayer, s, f.getLocal().getDecryptionFragmentName());
-            return;
-        }
-        if (f.getSftp() != null) {
+        } else if (FileTransferHelper.isSftp(f)) {
             resolveSftpFragment(dbLayer, s, f.getSftp().getName());
-        } else if (f.getSmb() != null) {
+        } else if (FileTransferHelper.isSmb(f)) {
             resolveSmbFragment(dbLayer, s, f.getSmb().getName());
-        } else if (f.getFtp() != null) {
+        } else if (FileTransferHelper.isFtp(f)) {
             resolveFtpFragment(dbLayer, s, f.getFtp().getName());
-        } else if (f.getWebdav() != null) {
+        } else if (FileTransferHelper.isWebdav(f)) {
             resolveWebdavFragment(dbLayer, s, f.getWebdav().getName());
-        } else if (f.getHttp() != null) {
+        } else if (FileTransferHelper.isHttp(f)) {
             resolveHttpFragment(dbLayer, s, f.getHttp().getName());
-        } else if (f.getAzureBlobStorage() != null) {
+        } else if (FileTransferHelper.isAzureBlobStorage(f)) {
             resolveAzureBlobStorageFragment(dbLayer, s, f.getAzureBlobStorage().getName());
         }
     }
@@ -469,6 +471,9 @@ public class FileTransferJobResourceHandler {
 
     // String variableValue = "toFile( '{....}', '*.json' )";
     private static String extractJson(String variableValue) {
+        if (!variableValue.contains("toFile(")) {
+            return variableValue;
+        }
         int start = variableValue.indexOf('{'); // first {
         int quoteEnd = variableValue.lastIndexOf('\''); // last '
         int end = variableValue.lastIndexOf('}', quoteEnd); // last } before '
@@ -479,7 +484,4 @@ public class FileTransferJobResourceHandler {
         return json.replace("\\r\\n", "\r\n").replace("\\\"", "\"").trim();
     }
 
-    private static boolean isLocalFragment(Fragment f) {
-        return f.getLocal() != null;
-    }
 }

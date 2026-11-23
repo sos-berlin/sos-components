@@ -76,7 +76,7 @@ public class SOSString {
         return source.toLowerCase().contains(term.toLowerCase());
     }
 
-    public static String mapToString(Map<String, ?> o, boolean newLine) {
+    public static String mapToString(Map<?, ?> o, boolean newLine) {
         StringBuilder sb = new StringBuilder();
         String add = newLine ? "\n" : "";
         o.forEach((k, v) -> sb.append("[").append(k).append("->").append(toString(v)).append("]").append(add));

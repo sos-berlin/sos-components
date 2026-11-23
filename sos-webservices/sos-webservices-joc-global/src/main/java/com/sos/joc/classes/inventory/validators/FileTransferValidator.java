@@ -14,6 +14,7 @@ import com.sos.inventory.model.filetransfer.fragments.protocol.SmbFragment;
 import com.sos.inventory.model.filetransfer.fragments.protocol.WebdavFragment;
 import com.sos.inventory.model.filetransfer.profile.Profile;
 import com.sos.inventory.model.filetransfer.profile.fragments.Fragment;
+import com.sos.joc.classes.filetransfer.FileTransferHelper;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.model.common.IConfigurationObject;
@@ -207,35 +208,28 @@ public class FileTransferValidator {
     }
 
     private static void checkProfileFragment(InventoryDBLayer dbLayer, String sourceOrTarget, Fragment f) throws JocConfigurationException {
-        if (f == null) {
-            throw new JocConfigurationException("Missing " + sourceOrTarget + ".fragment");
-        }
-
-        if (f.getLocal() == null) {
-            // Referenced protocol fragments
-            if (f.getSftp() != null) {
-                checkName(dbLayer, ConfigurationType.FT_FRAGMENT_SFTP, sourceOrTarget + " " + PROPERTY_NAME_FRAGMENT_SFTP, f.getSftp().getName());
-            } else if (f.getSmb() != null) {
-                checkName(dbLayer, ConfigurationType.FT_FRAGMENT_SMB, sourceOrTarget + " " + PROPERTY_NAME_FRAGMENT_SMB, f.getSmb().getName());
-            } else if (f.getFtp() != null) {
-                checkName(dbLayer, ConfigurationType.FT_FRAGMENT_FTP, sourceOrTarget + " " + PROPERTY_NAME_FRAGMENT_FTP, f.getFtp().getName());
-            } else if (f.getWebdav() != null) {
-                checkName(dbLayer, ConfigurationType.FT_FRAGMENT_WEBDAV, sourceOrTarget + " " + PROPERTY_NAME_FRAGMENT_WEBDAV, f.getWebdav()
-                        .getName());
-            } else if (f.getHttp() != null) {
-                checkName(dbLayer, ConfigurationType.FT_FRAGMENT_HTTP, sourceOrTarget + " " + PROPERTY_NAME_FRAGMENT_HTTP, f.getHttp().getName());
-            } else if (f.getAzureBlobStorage() != null) {
-                checkName(dbLayer, ConfigurationType.FT_FRAGMENT_AZURE_BLOB_STORAGE, sourceOrTarget + " " + PROPERTY_NAME_FRAGMENT_AZURE_BLOB_STORAGE,
-                        f.getAzureBlobStorage().getName());
-            } else {
-                throw new JocConfigurationException("Not supported " + sourceOrTarget + ".fragment: " + SOSString.toString(f));
-            }
-        } else {
-            // Local
+        if (FileTransferHelper.isLocal(f)) {
             checkName(dbLayer, ConfigurationType.FT_FRAGMENT_CREDENTIAL_STORE, sourceOrTarget + " " + PROPERTY_NAME_FRAGMENT_CREDENTIAL_STORE, f
                     .getLocal().getCredentialStoreFragmentName());
             checkName(dbLayer, ConfigurationType.FT_FRAGMENT_DECRYPTION, sourceOrTarget + " " + PROPERTY_NAME_FRAGMENT_DECRYPTION, f.getLocal()
                     .getDecryptionFragmentName());
+        }
+        // Referenced protocol fragments
+        else if (FileTransferHelper.isSftp(f)) {
+            checkName(dbLayer, ConfigurationType.FT_FRAGMENT_SFTP, sourceOrTarget + " " + PROPERTY_NAME_FRAGMENT_SFTP, f.getSftp().getName());
+        } else if (FileTransferHelper.isSmb(f)) {
+            checkName(dbLayer, ConfigurationType.FT_FRAGMENT_SMB, sourceOrTarget + " " + PROPERTY_NAME_FRAGMENT_SMB, f.getSmb().getName());
+        } else if (FileTransferHelper.isFtp(f)) {
+            checkName(dbLayer, ConfigurationType.FT_FRAGMENT_FTP, sourceOrTarget + " " + PROPERTY_NAME_FRAGMENT_FTP, f.getFtp().getName());
+        } else if (FileTransferHelper.isWebdav(f)) {
+            checkName(dbLayer, ConfigurationType.FT_FRAGMENT_WEBDAV, sourceOrTarget + " " + PROPERTY_NAME_FRAGMENT_WEBDAV, f.getWebdav().getName());
+        } else if (FileTransferHelper.isHttp(f)) {
+            checkName(dbLayer, ConfigurationType.FT_FRAGMENT_HTTP, sourceOrTarget + " " + PROPERTY_NAME_FRAGMENT_HTTP, f.getHttp().getName());
+        } else if (FileTransferHelper.isAzureBlobStorage(f)) {
+            checkName(dbLayer, ConfigurationType.FT_FRAGMENT_AZURE_BLOB_STORAGE, sourceOrTarget + " " + PROPERTY_NAME_FRAGMENT_AZURE_BLOB_STORAGE, f
+                    .getAzureBlobStorage().getName());
+        } else {
+            throw new JocConfigurationException("Not supported " + sourceOrTarget + ".fragment: " + SOSString.toString(f));
         }
     }
 

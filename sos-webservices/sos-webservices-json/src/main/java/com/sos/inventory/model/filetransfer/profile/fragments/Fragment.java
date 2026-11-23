@@ -35,7 +35,7 @@ public class Fragment {
      * 
      */
     @JsonProperty("azureBlobStorage")
-    private AzureFragmentRef azureBlobStorage;
+    private AzureBlobStorageFragmentRef azureBlobStorage;
     /**
      * FTP Protocol Fragment Reference
      * <p>
@@ -76,7 +76,7 @@ public class Fragment {
      * 
      */
     @JsonProperty("smb")
-    private SmbFragmentsRef smb;
+    private SmbFragmentRef smb;
     /**
      * WebDAV Protocol Fragment Reference
      * <p>
@@ -103,7 +103,7 @@ public class Fragment {
      * @param webdav
      * @param local
      */
-    public Fragment(AzureFragmentRef azureBlobStorage, FtpFragmentRef ftp, HttpFragmentRef http, Local local, SftpFragmentRef sftp, SmbFragmentsRef smb, WebdavFragmentRef webdav) {
+    public Fragment(AzureBlobStorageFragmentRef azureBlobStorage, FtpFragmentRef ftp, HttpFragmentRef http, Local local, SftpFragmentRef sftp, SmbFragmentRef smb, WebdavFragmentRef webdav) {
         super();
         this.azureBlobStorage = azureBlobStorage;
         this.ftp = ftp;
@@ -121,7 +121,7 @@ public class Fragment {
      * 
      */
     @JsonProperty("azureBlobStorage")
-    public AzureFragmentRef getAzureBlobStorage() {
+    public AzureBlobStorageFragmentRef getAzureBlobStorage() {
         return azureBlobStorage;
     }
 
@@ -132,7 +132,7 @@ public class Fragment {
      * 
      */
     @JsonProperty("azureBlobStorage")
-    public void setAzureBlobStorage(AzureFragmentRef azureBlobStorage) {
+    public void setAzureBlobStorage(AzureBlobStorageFragmentRef azureBlobStorage) {
         this.azureBlobStorage = azureBlobStorage;
     }
 
@@ -231,7 +231,7 @@ public class Fragment {
      * 
      */
     @JsonProperty("smb")
-    public SmbFragmentsRef getSmb() {
+    public SmbFragmentRef getSmb() {
         return smb;
     }
 
@@ -242,7 +242,7 @@ public class Fragment {
      * 
      */
     @JsonProperty("smb")
-    public void setSmb(SmbFragmentsRef smb) {
+    public void setSmb(SmbFragmentRef smb) {
         this.smb = smb;
     }
 

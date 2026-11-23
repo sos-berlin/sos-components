@@ -43,13 +43,13 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.google.common.base.Predicate;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.calendar.Calendar;
 import com.sos.inventory.model.calendar.Frequencies;
 import com.sos.inventory.model.schedule.Schedule;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.dependencies.callables.ReferenceCallable;
 import com.sos.joc.classes.dependencies.items.ReferencedDbItem;
-import com.sos.joc.classes.dependencies.resolvers.FileTransferReferencesResolver;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JsonConverter;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
@@ -290,6 +290,7 @@ public class DependencyResolver {
         JsonObject wfsearchInstructions = null;
         JsonObject wfsearchJobs = null;
         JsonObject wfsearchScripts = null;
+
         switch (item.getReferencedItem().getTypeAsEnum()) {
         // determine references in configurations json
         case WORKFLOW:
@@ -618,45 +619,45 @@ public class DependencyResolver {
                 }
             }
             break;
-        // FileTransfer
+        // FileTransfer - TODO - Check functionality before activation
         case FT_FRAGMENT_CREDENTIAL_STORE:
-            FileTransferReferencesResolver.resolveCredentialStoreFragment(dbLayer, item, allItemsGrouped);
+            // FileTransferReferencesResolver.resolveCredentialStoreFragment(dbLayer, item, allItemsGrouped);
             break;
         case FT_FRAGMENT_DECRYPTION:
-            FileTransferReferencesResolver.resolveDecryptionFragment(dbLayer, item, allItemsGrouped);
+            // FileTransferReferencesResolver.resolveDecryptionFragment(dbLayer, item, allItemsGrouped);
             break;
         case FT_FRAGMENT_MAIL:
-            FileTransferReferencesResolver.resolveMailFragment(dbLayer, item, allItemsGrouped);
+            // FileTransferReferencesResolver.resolveMailFragment(dbLayer, item, allItemsGrouped);
             break;
         case FT_FRAGMENT_HTTP_PROXY:
-            FileTransferReferencesResolver.resolveHttpProxyFragment(dbLayer, item, allItemsGrouped);
+            // FileTransferReferencesResolver.resolveHttpProxyFragment(dbLayer, item, allItemsGrouped);
             break;
         case FT_FRAGMENT_SOCKS_PROXY:
-            FileTransferReferencesResolver.resolveSocksProxyFragment(dbLayer, item, allItemsGrouped);
+            // FileTransferReferencesResolver.resolveSocksProxyFragment(dbLayer, item, allItemsGrouped);
             break;
         case FT_FRAGMENT_AZURE_BLOB_STORAGE:
-            FileTransferReferencesResolver.resolveAzureBlobStorageFragment(dbLayer, item, allItemsGrouped);
+            // FileTransferReferencesResolver.resolveAzureBlobStorageFragment(dbLayer, item, allItemsGrouped);
             break;
         case FT_FRAGMENT_FTP:
-            FileTransferReferencesResolver.resolveFtpFragment(dbLayer, item, allItemsGrouped);
+            // FileTransferReferencesResolver.resolveFtpFragment(dbLayer, item, allItemsGrouped);
             break;
         case FT_FRAGMENT_HTTP:
-            FileTransferReferencesResolver.resolveHttpFragment(dbLayer, item, allItemsGrouped);
+            // FileTransferReferencesResolver.resolveHttpFragment(dbLayer, item, allItemsGrouped);
             break;
         case FT_FRAGMENT_JUMP:
-            FileTransferReferencesResolver.resolveJumpFragment(dbLayer, item, allItemsGrouped);
+            // FileTransferReferencesResolver.resolveJumpFragment(dbLayer, item, allItemsGrouped);
             break;
         case FT_FRAGMENT_SFTP:
-            FileTransferReferencesResolver.resolveSftpFragment(dbLayer, item, allItemsGrouped);
+            // FileTransferReferencesResolver.resolveSftpFragment(dbLayer, item, allItemsGrouped);
             break;
         case FT_FRAGMENT_SMB:
-            FileTransferReferencesResolver.resolveSmbFragment(dbLayer, item, allItemsGrouped);
+            // FileTransferReferencesResolver.resolveSmbFragment(dbLayer, item, allItemsGrouped);
             break;
         case FT_FRAGMENT_WEBDAV:
-            FileTransferReferencesResolver.resolveWebdavFragment(dbLayer, item, allItemsGrouped);
+            // FileTransferReferencesResolver.resolveWebdavFragment(dbLayer, item, allItemsGrouped);
             break;
         case FT_PROFILE_JOBRESOURCE:
-            FileTransferReferencesResolver.resolveJobResource(dbLayer, item, allItemsGrouped);
+            // FileTransferReferencesResolver.resolveJobResource(dbLayer, item, allItemsGrouped);
             break;
         default:
             break;
@@ -741,6 +742,10 @@ public class DependencyResolver {
         }
         Map<ConfigurationType, Set<DBItemInventoryConfiguration>> allItemsGrouped = allCfgs.stream().collect(Collectors.groupingBy(
                 DBItemInventoryConfiguration::getTypeAsEnum, Collectors.toSet()));
+
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("[resolveThreaded]allItemsGrouped=" + SOSString.mapToString(allItemsGrouped, false));
+        }
 
         Date threadsStarted = Date.from(Instant.now());
         Stream<ReferencedDbItem> referencedItemStream = Stream.empty();

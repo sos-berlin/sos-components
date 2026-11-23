@@ -20,6 +20,7 @@ import com.sos.inventory.model.filetransfer.profile.fragments.Fragment;
 import com.sos.inventory.model.jobresource.JobResource;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.dependencies.items.ReferencedDbItem;
+import com.sos.joc.classes.filetransfer.FileTransferHelper;
 import com.sos.joc.classes.filetransfer.FileTransferJobResourceHandler;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
@@ -226,30 +227,24 @@ public class FileTransferReferencesResolver {
 
     private static void resolveProfileFragment(InventoryDBLayer dbLayer, ReferencedDbItem item,
             Map<ConfigurationType, Set<DBItemInventoryConfiguration>> allItemsGrouped, Fragment f) throws JocConfigurationException {
-        if (f == null) {
-            return;
-        }
-
-        if (f.getLocal() == null) {
-            // Referenced protocol fragments
-            if (f.getSftp() != null) {
-                resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_SFTP, f.getSftp().getName());
-            } else if (f.getSmb() != null) {
-                resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_SMB, f.getSmb().getName());
-            } else if (f.getFtp() != null) {
-                resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_FTP, f.getFtp().getName());
-            } else if (f.getWebdav() != null) {
-                resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_WEBDAV, f.getWebdav().getName());
-            } else if (f.getHttp() != null) {
-                resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_HTTP, f.getHttp().getName());
-            } else if (f.getAzureBlobStorage() != null) {
-                resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_AZURE_BLOB_STORAGE, f.getAzureBlobStorage().getName());
-            }
-        } else {
-            // Local
+        if (FileTransferHelper.isLocal(f)) {
             resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_CREDENTIAL_STORE, f.getLocal()
                     .getCredentialStoreFragmentName());
             resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_DECRYPTION, f.getLocal().getDecryptionFragmentName());
+        }
+        // Referenced protocol fragments
+        else if (FileTransferHelper.isSftp(f)) {
+            resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_SFTP, f.getSftp().getName());
+        } else if (FileTransferHelper.isSmb(f)) {
+            resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_SMB, f.getSmb().getName());
+        } else if (FileTransferHelper.isFtp(f)) {
+            resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_FTP, f.getFtp().getName());
+        } else if (FileTransferHelper.isWebdav(f)) {
+            resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_WEBDAV, f.getWebdav().getName());
+        } else if (FileTransferHelper.isHttp(f)) {
+            resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_HTTP, f.getHttp().getName());
+        } else if (FileTransferHelper.isAzureBlobStorage(f)) {
+            resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_AZURE_BLOB_STORAGE, f.getAzureBlobStorage().getName());
         }
     }
 

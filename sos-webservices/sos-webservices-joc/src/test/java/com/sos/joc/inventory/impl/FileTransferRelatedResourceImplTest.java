@@ -72,6 +72,50 @@ public class FileTransferRelatedResourceImplTest {
 
     @Ignore
     @Test
+    public void testRenameWorkflow() throws Exception {
+        UnitTestSimpleWSImplHelper h = new UnitTestSimpleWSImplHelper(new RenameConfigurationResourceImpl());
+        h.setHibernateConfigurationFileFromWebservicesGlobal("hibernate.cfg.mysql.xml");
+
+        com.sos.joc.model.inventory.rename.RequestFilter f = new com.sos.joc.model.inventory.rename.RequestFilter();
+        f.setNewPath("/filetransfer/ft_w");
+        f.setObjectType(ConfigurationType.WORKFLOW);
+        f.setPath("/filetransfer/ft_wR");
+
+        try {
+            h.init();
+
+            h.post("rename", f);
+        } catch (Throwable e) {
+            LOGGER.error(e.toString(), e);
+        } finally {
+            h.destroy();
+        }
+    }
+
+    @Ignore
+    @Test
+    public void testRenameSftpFragment() throws Exception {
+        UnitTestSimpleWSImplHelper h = new UnitTestSimpleWSImplHelper(new RenameConfigurationResourceImpl());
+        h.setHibernateConfigurationFileFromWebservicesGlobal("hibernate.cfg.mysql.xml");
+
+        com.sos.joc.model.inventory.rename.RequestFilter f = new com.sos.joc.model.inventory.rename.RequestFilter();
+        f.setNewPath("/filetransfer/mySftp");
+        f.setObjectType(ConfigurationType.FT_FRAGMENT_SFTP);
+        f.setPath("/filetransfer/mySftpR");
+
+        try {
+            h.init();
+
+            h.post("rename", f);
+        } catch (Throwable e) {
+            LOGGER.error(e.toString(), e);
+        } finally {
+            h.destroy();
+        }
+    }
+
+    @Ignore
+    @Test
     public void testStoreProfile() throws Exception {
         UnitTestSimpleWSImplHelper h = new UnitTestSimpleWSImplHelper(new StoreConfigurationResourceImpl());
         h.setHibernateConfigurationFileFromWebservicesGlobal("hibernate.cfg.mysql.xml");

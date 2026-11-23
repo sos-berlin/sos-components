@@ -74,6 +74,7 @@ import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
+import com.sos.joc.classes.filetransfer.FileTransferUpdateConfigurationHelper;
 import com.sos.joc.classes.inventory.search.WorkflowConverter;
 import com.sos.joc.classes.order.OrderTags;
 import com.sos.joc.classes.settings.ClusterSettings;
@@ -308,7 +309,11 @@ public class JocInventory {
 
     public static List<Integer> getTypesFromObjectsWithReferences() {
         return Arrays.asList(ConfigurationType.WORKFLOW.intValue(), ConfigurationType.FILEORDERSOURCE.intValue(), ConfigurationType.SCHEDULE
-                .intValue(), ConfigurationType.JOBTEMPLATE.intValue(), ConfigurationType.WORKINGDAYSCALENDAR.intValue());
+                .intValue(), ConfigurationType.JOBTEMPLATE.intValue(), ConfigurationType.WORKINGDAYSCALENDAR.intValue(),
+                ConfigurationType.FT_FRAGMENT_AZURE_BLOB_STORAGE.intValue(), ConfigurationType.FT_FRAGMENT_FTP.intValue(),
+                ConfigurationType.FT_FRAGMENT_HTTP.intValue(), ConfigurationType.FT_FRAGMENT_SFTP.intValue(), ConfigurationType.FT_FRAGMENT_SMB
+                        .intValue(), ConfigurationType.FT_FRAGMENT_JUMP.intValue(), ConfigurationType.FT_FRAGMENT_WEBDAV.intValue(),
+                ConfigurationType.FT_PROFILE_JOBRESOURCE.intValue());
     }
 
     public static List<Integer> getTypesFromObjectsWithReferencesAndFolders() {
@@ -1225,18 +1230,21 @@ public class JocInventory {
         }
     }
 
-    public static Set<String> deepCopy(DBItemInventoryConfiguration config, String newName, InventoryDBLayer dbLayer) throws JsonParseException,
-            JsonMappingException, SOSHibernateException, JsonProcessingException, IOException {
+    public static Set<String> deepCopy(DBItemInventoryConfiguration config, String newName, InventoryDBLayer dbLayer) throws Exception {
         return deepCopy(config, newName, Collections.emptyList(), dbLayer);
     }
 
     public static Set<String> deepCopy(DBItemInventoryConfiguration config, String newName, List<DBItemInventoryConfiguration> items,
-            InventoryDBLayer dbLayer) throws JsonParseException, JsonMappingException, SOSHibernateException, JsonProcessingException, IOException {
+            InventoryDBLayer dbLayer) throws Exception {
         Set<String> events = new HashSet<>();
         if (config.getName().equals(newName)) {
             return events;
         }
         Predicate<String> workflowNamePredicate = Pattern.compile("\"workflowName\"\\s*:\\s*\"" + config.getName() + "\"").asPredicate();
+        boolean isDebugEnabled = LOGGER.isDebugEnabled();
+        if (isDebugEnabled) {
+            LOGGER.debug(String.format("[deepCopy]%s", config.getTypeAsEnum()));
+        }
         switch (config.getTypeAsEnum()) {
         case LOCK: // determine Workflows with Lock instructions
             Set<DBItemInventoryConfiguration> workflows = dbLayer.getUsedWorkflowsByLockId(config.getName());
@@ -1244,6 +1252,10 @@ public class JocInventory {
                 Predicate<String> lockNamePredicate = Pattern.compile("\"lockName\"\\s*:\\s*\"" + config.getName() + "\"").asPredicate();
                 for (DBItemInventoryConfiguration workflow : workflows) {
                     boolean changed = lockNamePredicate.test(workflow.getContent());
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[deepCopy][%s][workflow=%s]changed=%s", config.getTypeAsEnum(), workflow.getPath(), changed));
+                    }
+
                     if (changed) {
                         workflow.setContent(workflow.getContent().replaceAll("(\"lockName\"\\s*:\\s*\")" + config.getName() + "\"", "$1" + newName
                                 + "\""));
@@ -1275,6 +1287,10 @@ public class JocInventory {
                             }
                         }
                     }
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[deepCopy][%s][workflow=%s][after worflow level]changed=%s", config.getTypeAsEnum(), workflow
+                                .getPath(), changed));
+                    }
                     // JobResources on Job level
                     if (w.getJobs() != null) {
                         for (Map.Entry<String, Job> entry : w.getJobs().getAdditionalProperties().entrySet()) {
@@ -1288,6 +1304,10 @@ public class JocInventory {
                                 }
                             }
                         }
+                    }
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[deepCopy][%s][workflow=%s][after worflow job level]changed=%s", config.getTypeAsEnum(), workflow
+                                .getPath(), changed));
                     }
                     if (changed) {
                         workflow.setContent(Globals.objectMapper.writeValueAsString(w));
@@ -1315,6 +1335,12 @@ public class JocInventory {
                                 changed = true;
                             }
                         }
+
+                        if (isDebugEnabled) {
+                            LOGGER.debug(String.format("[deepCopy][%s][jobTemplate=%s]changed=%s", config.getTypeAsEnum(), jobTemplate.getPath(),
+                                    changed));
+                        }
+
                         if (changed) {
                             jobTemplate.setContent(Globals.objectMapper.writeValueAsString(jt));
                             jobTemplate.setReleased(false);
@@ -1336,6 +1362,10 @@ public class JocInventory {
             Set<DBItemInventoryConfiguration> workflow3 = dbLayer.getUsedWorkflowsByBoardName(config.getName());
             if (workflow3 != null && !workflow3.isEmpty()) {
                 for (DBItemInventoryConfiguration workflow : workflow3) {
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[deepCopy][%s]workflow=%s", config.getTypeAsEnum(), workflow.getPath()));
+                    }
+
                     Workflow w = Globals.objectMapper.readValue(workflow.getContent(), Workflow.class);
                     // TODO updateWorkflowBoardname should return true iff something changed
                     WorkflowsHelper.updateWorkflowBoardname(Collections.singletonMap(config.getName(), newName), w.getInstructions());
@@ -1387,6 +1417,10 @@ public class JocInventory {
                         s.setWorkflowName(s.getWorkflowNames().get(0));
                     }
 
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[deepCopy][%s][schedule=%s]changed=%s", config.getTypeAsEnum(), schedule.getPath(), changed));
+                    }
+
                     if (changed) {
                         schedule.setContent(Globals.objectMapper.writeValueAsString(s));
                         schedule.setReleased(false);
@@ -1405,6 +1439,11 @@ public class JocInventory {
             if (fileOrderSources != null && !fileOrderSources.isEmpty()) {
                 for (DBItemInventoryConfiguration fileOrderSource : fileOrderSources) {
                     boolean changed = workflowNamePredicate.test(fileOrderSource.getContent());
+
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[deepCopy][%s][fileOrderSource=%s]changed=%s", config.getTypeAsEnum(), fileOrderSource.getPath(),
+                                changed));
+                    }
                     if (changed) {
                         fileOrderSource.setContent(fileOrderSource.getContent().replaceAll("(\"workflowName\"\\s*:\\s*\")" + config.getName() + "\"",
                                 "$1" + newName + "\""));
@@ -1449,6 +1488,11 @@ public class JocInventory {
                     Schedule s = convertSchedule(schedule.getContent(), Schedule.class);
                     Optional.ofNullable(s.getCalendars()).ifPresent(cs -> cs.forEach(ac -> {
                         if (ac.getCalendarName().equals(config.getName())) {
+                            if (isDebugEnabled) {
+                                LOGGER.debug(String.format("[deepCopy][%s][schedule=%s, calendarName=%s]new calendar name=%s", config.getTypeAsEnum(),
+                                        schedule.getPath(), ac.getCalendarName(), newName));
+                            }
+
                             ac.setCalendarName(newName);
                         }
                         Optional.ofNullable(ac.getExcludes()).map(Frequencies::getNonWorkingDayCalendars).filter(nwcs -> nwcs.remove(config
@@ -1456,6 +1500,10 @@ public class JocInventory {
                     }));
                     Optional.ofNullable(s.getNonWorkingDayCalendars()).ifPresent(cs -> cs.forEach(ac -> {
                         if (!ac.getCalendarName().equals(config.getName())) {
+                            if (isDebugEnabled) {
+                                LOGGER.debug(String.format("[deepCopy][%s][schedule=%s, calendarName=%s]new calendar name=%s", config.getTypeAsEnum(),
+                                        schedule.getPath(), ac.getCalendarName(), newName));
+                            }
                             ac.setCalendarName(newName);
                         }
                     }));
@@ -1593,7 +1641,26 @@ public class JocInventory {
                 }
             }
             break;
-
+        // FileTransfer
+        // FileTransfer - protocol fragments
+        case FT_FRAGMENT_SFTP:
+            FileTransferUpdateConfigurationHelper.updateSftpConfiguration(dbLayer, config, newName, items, events);
+            break;
+        case FT_FRAGMENT_FTP:
+            FileTransferUpdateConfigurationHelper.updateFtpConfiguration(dbLayer, config, newName, items, events);
+            break;
+        case FT_FRAGMENT_SMB:
+            FileTransferUpdateConfigurationHelper.updateSmbConfiguration(dbLayer, config, newName, items, events);
+            break;
+        case FT_FRAGMENT_WEBDAV:
+            FileTransferUpdateConfigurationHelper.updateWebdavConfiguration(dbLayer, config, newName, items, events);
+            break;
+        case FT_FRAGMENT_HTTP:
+            FileTransferUpdateConfigurationHelper.updateHttpConfiguration(dbLayer, config, newName, items, events);
+            break;
+        case FT_FRAGMENT_AZURE_BLOB_STORAGE:
+            FileTransferUpdateConfigurationHelper.updateAzureBlobStorageConfiguration(dbLayer, config, newName, items, events);
+            break;
         default:
             break;
         }

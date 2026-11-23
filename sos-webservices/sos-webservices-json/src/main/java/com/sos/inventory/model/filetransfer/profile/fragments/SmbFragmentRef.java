@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.inventory.model.filetransfer.common.HttpHeaders;
+import com.sos.inventory.model.filetransfer.common.Processing;
 import com.sos.inventory.model.filetransfer.profile.common.Rename;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -13,28 +13,28 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 
 
 /**
- * Azure Protocol Fragment Reference
+ * SMB Protocol Fragment Reference
  * <p>
  * 
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
-    "httpHeaders",
+    "processing",
     "rename"
 })
-public class AzureFragmentRef
+public class SmbFragmentRef
     extends FragmentRefBase
 {
 
     /**
-     * HTTP Headers
+     * SSH processing options.
      * <p>
      * 
      * 
      */
-    @JsonProperty("httpHeaders")
-    private HttpHeaders httpHeaders;
+    @JsonProperty("processing")
+    private Processing processing;
     /**
      * Rename
      * <p>
@@ -49,40 +49,40 @@ public class AzureFragmentRef
      * No args constructor for use in serialization
      * 
      */
-    public AzureFragmentRef() {
+    public SmbFragmentRef() {
     }
 
     /**
      * 
      * @param rename
-     * @param httpHeaders
+     * @param processing
      */
-    public AzureFragmentRef(HttpHeaders httpHeaders, Rename rename) {
+    public SmbFragmentRef(Processing processing, Rename rename) {
         super();
-        this.httpHeaders = httpHeaders;
+        this.processing = processing;
         this.rename = rename;
     }
 
     /**
-     * HTTP Headers
+     * SSH processing options.
      * <p>
      * 
      * 
      */
-    @JsonProperty("httpHeaders")
-    public HttpHeaders getHttpHeaders() {
-        return httpHeaders;
+    @JsonProperty("processing")
+    public Processing getProcessing() {
+        return processing;
     }
 
     /**
-     * HTTP Headers
+     * SSH processing options.
      * <p>
      * 
      * 
      */
-    @JsonProperty("httpHeaders")
-    public void setHttpHeaders(HttpHeaders httpHeaders) {
-        this.httpHeaders = httpHeaders;
+    @JsonProperty("processing")
+    public void setProcessing(Processing processing) {
+        this.processing = processing;
     }
 
     /**
@@ -109,12 +109,12 @@ public class AzureFragmentRef
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("httpHeaders", httpHeaders).append("rename", rename).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("processing", processing).append("rename", rename).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(rename).append(httpHeaders).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(processing).append(rename).toHashCode();
     }
 
     @Override
@@ -122,11 +122,11 @@ public class AzureFragmentRef
         if (other == this) {
             return true;
         }
-        if ((other instanceof AzureFragmentRef) == false) {
+        if ((other instanceof SmbFragmentRef) == false) {
             return false;
         }
-        AzureFragmentRef rhs = ((AzureFragmentRef) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(rename, rhs.rename).append(httpHeaders, rhs.httpHeaders).isEquals();
+        SmbFragmentRef rhs = ((SmbFragmentRef) other);
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(processing, rhs.processing).append(rename, rhs.rename).isEquals();
     }
 
 }

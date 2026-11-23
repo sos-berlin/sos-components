@@ -33,6 +33,7 @@ import com.sos.commons.hibernate.function.json.SOSHibernateJsonValue;
 import com.sos.commons.hibernate.function.json.SOSHibernateJsonValue.ReturnType;
 import com.sos.commons.hibernate.function.regex.SOSHibernateRegexp;
 import com.sos.inventory.model.deploy.DeployType;
+import com.sos.joc.classes.filetransfer.FileTransferHelper;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JsonConverter;
 import com.sos.joc.db.DBItem;
@@ -2159,6 +2160,107 @@ public class InventoryDBLayer extends DBLayer {
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
         query.setParameter("type", ConfigurationType.FOLDER.intValue());
         query.setParameter("docName", docName);
+        return getSession().getResultList(query);
+    }
+
+    public List<DBItemInventoryConfiguration> getUsedFileTransferAzureBlobStorageFragmentAlternatives(String name) throws SOSHibernateException {
+        return getUsedFileTransferAlternatives(ConfigurationType.FT_FRAGMENT_AZURE_BLOB_STORAGE, name);
+    }
+
+    public List<DBItemInventoryConfiguration> getUsedFileTransferFtpFragmentAlternatives(String name) throws SOSHibernateException {
+        return getUsedFileTransferAlternatives(ConfigurationType.FT_FRAGMENT_FTP, name);
+    }
+
+    public List<DBItemInventoryConfiguration> getUsedFileTransferHttpFragmentAlternatives(String name) throws SOSHibernateException {
+        return getUsedFileTransferAlternatives(ConfigurationType.FT_FRAGMENT_HTTP, name);
+    }
+
+    public List<DBItemInventoryConfiguration> getUsedFileTransferJumpFragmentAlternatives(String name) throws SOSHibernateException {
+        return getUsedFileTransferAlternatives(ConfigurationType.FT_FRAGMENT_JUMP, name);
+    }
+
+    public List<DBItemInventoryConfiguration> getUsedFileTransferSftpFragmentAlternatives(String name) throws SOSHibernateException {
+        return getUsedFileTransferAlternatives(ConfigurationType.FT_FRAGMENT_SFTP, name);
+    }
+
+    public List<DBItemInventoryConfiguration> getUsedFileTransferSmbFragmentAlternatives(String name) throws SOSHibernateException {
+        return getUsedFileTransferAlternatives(ConfigurationType.FT_FRAGMENT_SMB, name);
+    }
+
+    public List<DBItemInventoryConfiguration> getUsedFileTransferWebdavFragmentAlternatives(String name) throws SOSHibernateException {
+        return getUsedFileTransferAlternatives(ConfigurationType.FT_FRAGMENT_WEBDAV, name);
+    }
+
+    public List<DBItemInventoryConfiguration> getUsedFileTransferAlternatives(ConfigurationType fileTransferType, String name)
+            throws SOSHibernateException {
+        String alternativePropertyName = FileTransferHelper.getAlternativeProtocolFragmentPropertyName(fileTransferType);
+        if (alternativePropertyName == null) {
+            return null;
+        }
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+        hql.append(" where type = :type and ");
+        hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "jsonContent", "$." + alternativePropertyName)).append("=:name");
+
+        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+        query.setParameter("type", fileTransferType.intValue());
+        query.setParameter("name", name);
+        return getSession().getResultList(query);
+    }
+
+    /** List of configuration items that may reference a jump fragment, excluding JUMP itself
+     * 
+     * @param jumpName
+     * @return
+     * @throws SOSHibernateException */
+    public List<DBItemInventoryConfiguration> getUsedFileTransferFragmentsByJumpExcludingSelf(String jumpName) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+        hql.append(" where type in (:types) and ");
+        hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "jsonContent", "$.jumpFragmentName")).append("=:name");
+
+        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+        query.setParameterList("types", FileTransferHelper.getOtherFragmentsUsingJump());
+        query.setParameter("name", jumpName);
+        return getSession().getResultList(query);
+    }
+
+    public List<DBItemInventoryConfiguration> getUsedFileTransferProfilesByAzureBlobStorageFragmentName(String name) throws SOSHibernateException {
+        return getUsedFileTransferProfilesByFragmentJsonPath("azureBlobStorage.name", name);
+    }
+
+    public List<DBItemInventoryConfiguration> getUsedFileTransferProfilesByFtpFragmentName(String name) throws SOSHibernateException {
+        return getUsedFileTransferProfilesByFragmentJsonPath("ftp.name", name);
+    }
+
+    public List<DBItemInventoryConfiguration> getUsedFileTransferProfilesByHttpFragmentName(String name) throws SOSHibernateException {
+        return getUsedFileTransferProfilesByFragmentJsonPath("http.name", name);
+    }
+
+    public List<DBItemInventoryConfiguration> getUsedFileTransferProfilesBySftpFragmentName(String name) throws SOSHibernateException {
+        return getUsedFileTransferProfilesByFragmentJsonPath("sftp.name", name);
+    }
+
+    public List<DBItemInventoryConfiguration> getUsedFileTransferProfilesBySmbFragmentName(String name) throws SOSHibernateException {
+        return getUsedFileTransferProfilesByFragmentJsonPath("smb.name", name);
+    }
+
+    public List<DBItemInventoryConfiguration> getUsedFileTransferProfilesByWebdavFragmentName(String name) throws SOSHibernateException {
+        return getUsedFileTransferProfilesByFragmentJsonPath("webdav.name", name);
+    }
+
+    public List<DBItemInventoryConfiguration> getUsedFileTransferProfilesByFragmentJsonPath(String jsonPathFromFragment, String value)
+            throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+        hql.append(" where type = :type and (");
+        hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "jsonContent", "$.profile.source.fragment." + jsonPathFromFragment));
+        hql.append("=:value");
+        hql.append(" or ");
+        hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "jsonContent", "$.profile.target.fragment." + jsonPathFromFragment));
+        hql.append("=:value");
+        hql.append(")");
+
+        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+        query.setParameter("type", ConfigurationType.FT_PROFILE_JOBRESOURCE.intValue());
+        query.setParameter("value", value);
         return getSession().getResultList(query);
     }
 
