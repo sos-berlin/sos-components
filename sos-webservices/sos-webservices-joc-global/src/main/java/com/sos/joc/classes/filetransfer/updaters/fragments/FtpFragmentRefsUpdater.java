@@ -12,7 +12,7 @@ import com.sos.joc.classes.filetransfer.FileTransferHelper;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 
-public class FtpFragmentRefsUpdater extends AProtocolOrProfileFragmentReferencesUpdater<FtpFragment, FtpFragmentRef> {
+public class FtpFragmentRefsUpdater extends AProtocolOrProfileFragmentRefsUpdater<FtpFragment, FtpFragmentRef> {
 
     @Override
     protected String getLogPrefix() {
@@ -50,32 +50,32 @@ public class FtpFragmentRefsUpdater extends AProtocolOrProfileFragmentReferences
     }
 
     @Override
-    protected boolean isSourceFragment(Source source) {
+    protected boolean hasSourceFragmentRef(Source source) {
         return FileTransferHelper.isSourceFragmentFtp(source);
     }
 
     @Override
-    protected boolean isTargetFragment(Target target) {
+    protected boolean hasTargetFragmentRef(Target target) {
         return FileTransferHelper.isTargetFragmentFtp(target);
     }
 
     @Override
-    protected FtpFragmentRef getSourceFragment(Source source) {
+    protected FtpFragmentRef getSourceFragmentRef(Source source) {
         return source.getFragment().getFtp();
     }
 
     @Override
-    protected FtpFragmentRef getTargetFragment(Target target) {
+    protected FtpFragmentRef getTargetFragmentRef(Target target) {
         return target.getFragment().getFtp();
     }
 
     @Override
-    protected String getFragmentName(FtpFragmentRef f) {
+    protected String getRefName(FtpFragmentRef f) {
         return f.getName();
     }
 
     @Override
-    protected void setFragmentName(FtpFragmentRef f, String newName) {
+    protected void setRefName(FtpFragmentRef f, String newName) {
         f.setName(newName);
     }
 }

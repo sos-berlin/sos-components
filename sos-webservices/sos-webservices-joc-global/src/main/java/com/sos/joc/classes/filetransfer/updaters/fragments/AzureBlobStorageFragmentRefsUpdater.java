@@ -13,7 +13,7 @@ import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 
 public class AzureBlobStorageFragmentRefsUpdater extends
-        AProtocolOrProfileFragmentReferencesUpdater<AzureBlobStorageFragment, AzureBlobStorageFragmentRef> {
+        AProtocolOrProfileFragmentRefsUpdater<AzureBlobStorageFragment, AzureBlobStorageFragmentRef> {
 
     @Override
     protected String getLogPrefix() {
@@ -51,32 +51,32 @@ public class AzureBlobStorageFragmentRefsUpdater extends
     }
 
     @Override
-    protected boolean isSourceFragment(Source source) {
+    protected boolean hasSourceFragmentRef(Source source) {
         return FileTransferHelper.isSourceFragmentAzureBlobStorage(source);
     }
 
     @Override
-    protected boolean isTargetFragment(Target target) {
+    protected boolean hasTargetFragmentRef(Target target) {
         return FileTransferHelper.isTargetFragmentAzureBlobStorage(target);
     }
 
     @Override
-    protected AzureBlobStorageFragmentRef getSourceFragment(Source source) {
+    protected AzureBlobStorageFragmentRef getSourceFragmentRef(Source source) {
         return source.getFragment().getAzureBlobStorage();
     }
 
     @Override
-    protected AzureBlobStorageFragmentRef getTargetFragment(Target target) {
+    protected AzureBlobStorageFragmentRef getTargetFragmentRef(Target target) {
         return target.getFragment().getAzureBlobStorage();
     }
 
     @Override
-    protected String getFragmentName(AzureBlobStorageFragmentRef f) {
+    protected String getRefName(AzureBlobStorageFragmentRef f) {
         return f.getName();
     }
 
     @Override
-    protected void setFragmentName(AzureBlobStorageFragmentRef f, String newName) {
+    protected void setRefName(AzureBlobStorageFragmentRef f, String newName) {
         f.setName(newName);
     }
 }

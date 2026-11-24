@@ -12,7 +12,7 @@ import com.sos.joc.classes.filetransfer.FileTransferHelper;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 
-public class WebdavFragmentRefsUpdater extends AProtocolOrProfileFragmentReferencesUpdater<WebdavFragment, WebdavFragmentRef> {
+public class WebdavFragmentRefsUpdater extends AProtocolOrProfileFragmentRefsUpdater<WebdavFragment, WebdavFragmentRef> {
 
     @Override
     protected String getLogPrefix() {
@@ -50,32 +50,32 @@ public class WebdavFragmentRefsUpdater extends AProtocolOrProfileFragmentReferen
     }
 
     @Override
-    protected boolean isSourceFragment(Source source) {
+    protected boolean hasSourceFragmentRef(Source source) {
         return FileTransferHelper.isSourceFragmentWebdav(source);
     }
 
     @Override
-    protected boolean isTargetFragment(Target target) {
+    protected boolean hasTargetFragmentRef(Target target) {
         return FileTransferHelper.isTargetFragmentWebdav(target);
     }
 
     @Override
-    protected WebdavFragmentRef getSourceFragment(Source source) {
+    protected WebdavFragmentRef getSourceFragmentRef(Source source) {
         return source.getFragment().getWebdav();
     }
 
     @Override
-    protected WebdavFragmentRef getTargetFragment(Target target) {
+    protected WebdavFragmentRef getTargetFragmentRef(Target target) {
         return target.getFragment().getWebdav();
     }
 
     @Override
-    protected String getFragmentName(WebdavFragmentRef f) {
+    protected String getRefName(WebdavFragmentRef f) {
         return f.getName();
     }
 
     @Override
-    protected void setFragmentName(WebdavFragmentRef f, String newName) {
+    protected void setRefName(WebdavFragmentRef f, String newName) {
         f.setName(newName);
     }
 }

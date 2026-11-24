@@ -10,7 +10,7 @@ import com.sos.inventory.model.filetransfer.fragments.protocol.SftpFragment;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 
-public class SocksProxyFragmentRefsUpdater extends ACommonFragmentReferencesUpdater {
+public class SocksProxyFragmentRefsUpdater extends ACommonFragmentRefsUpdater {
 
     @Override
     protected String getLogPrefix() {

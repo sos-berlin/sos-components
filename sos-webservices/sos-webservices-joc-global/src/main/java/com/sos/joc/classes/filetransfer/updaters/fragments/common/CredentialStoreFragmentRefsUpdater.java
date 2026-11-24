@@ -7,7 +7,7 @@ import com.sos.inventory.model.filetransfer.fragments.protocol.AProtocolFragment
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 
-public class CredentialStoreFragmentRefsUpdater extends ACommonFragmentReferencesUpdater {
+public class CredentialStoreFragmentRefsUpdater extends ACommonFragmentRefsUpdater {
 
     @Override
     protected String getLogPrefix() {

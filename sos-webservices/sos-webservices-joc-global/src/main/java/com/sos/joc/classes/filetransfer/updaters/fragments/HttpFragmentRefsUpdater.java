@@ -12,7 +12,7 @@ import com.sos.joc.classes.filetransfer.FileTransferHelper;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 
-public class HttpFragmentRefsUpdater extends AProtocolOrProfileFragmentReferencesUpdater<HttpFragment, HttpFragmentRef> {
+public class HttpFragmentRefsUpdater extends AProtocolOrProfileFragmentRefsUpdater<HttpFragment, HttpFragmentRef> {
 
     @Override
     protected String getLogPrefix() {
@@ -50,32 +50,32 @@ public class HttpFragmentRefsUpdater extends AProtocolOrProfileFragmentReference
     }
 
     @Override
-    protected boolean isSourceFragment(Source source) {
+    protected boolean hasSourceFragmentRef(Source source) {
         return FileTransferHelper.isSourceFragmentHttp(source);
     }
 
     @Override
-    protected boolean isTargetFragment(Target target) {
+    protected boolean hasTargetFragmentRef(Target target) {
         return FileTransferHelper.isTargetFragmentHttp(target);
     }
 
     @Override
-    protected HttpFragmentRef getSourceFragment(Source source) {
+    protected HttpFragmentRef getSourceFragmentRef(Source source) {
         return source.getFragment().getHttp();
     }
 
     @Override
-    protected HttpFragmentRef getTargetFragment(Target target) {
+    protected HttpFragmentRef getTargetFragmentRef(Target target) {
         return target.getFragment().getHttp();
     }
 
     @Override
-    protected String getFragmentName(HttpFragmentRef f) {
+    protected String getRefName(HttpFragmentRef f) {
         return f.getName();
     }
 
     @Override
-    protected void setFragmentName(HttpFragmentRef f, String newName) {
+    protected void setRefName(HttpFragmentRef f, String newName) {
         f.setName(newName);
     }
 }

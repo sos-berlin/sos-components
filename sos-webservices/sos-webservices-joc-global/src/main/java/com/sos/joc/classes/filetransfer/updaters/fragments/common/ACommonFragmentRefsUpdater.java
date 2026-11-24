@@ -20,9 +20,9 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 
-public abstract class ACommonFragmentReferencesUpdater {
+public abstract class ACommonFragmentRefsUpdater {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ACommonFragmentReferencesUpdater.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ACommonFragmentRefsUpdater.class);
 
     protected abstract String getLogPrefix();
 

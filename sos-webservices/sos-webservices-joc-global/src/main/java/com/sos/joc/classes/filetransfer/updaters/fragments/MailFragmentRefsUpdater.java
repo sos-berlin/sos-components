@@ -9,7 +9,7 @@ import com.sos.inventory.model.filetransfer.profile.Target;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 
-public class MailFragmentRefsUpdater extends AProtocolOrProfileFragmentReferencesUpdater<MailFragment, String> {
+public class MailFragmentRefsUpdater extends AProtocolOrProfileFragmentRefsUpdater<MailFragment, String> {
 
     @Override
     protected String getLogPrefix() {
@@ -52,32 +52,32 @@ public class MailFragmentRefsUpdater extends AProtocolOrProfileFragmentReference
     }
 
     @Override
-    protected boolean isSourceFragment(Source source) {
+    protected boolean hasSourceFragmentRef(Source source) {
         return false;
     }
 
     @Override
-    protected boolean isTargetFragment(Target target) {
+    protected boolean hasTargetFragmentRef(Target target) {
         return false;
     }
 
     @Override
-    protected String getSourceFragment(Source source) {
+    protected String getSourceFragmentRef(Source source) {
         return null;
     }
 
     @Override
-    protected String getTargetFragment(Target target) {
+    protected String getTargetFragmentRef(Target target) {
         return null;
     }
 
     @Override
-    protected String getFragmentName(String f) {
-        return f;
+    protected String getRefName(String f) {
+        return null;
     }
 
     @Override
-    protected void setFragmentName(String f, String newName) {
+    protected void setRefName(String f, String newName) {
 
     }
 }

@@ -12,7 +12,7 @@ import com.sos.joc.classes.filetransfer.FileTransferHelper;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 
-public class SftpFragmentRefsUpdater extends AProtocolOrProfileFragmentReferencesUpdater<SftpFragment, SftpFragmentRef> {
+public class SftpFragmentRefsUpdater extends AProtocolOrProfileFragmentRefsUpdater<SftpFragment, SftpFragmentRef> {
 
     @Override
     protected String getLogPrefix() {
@@ -50,32 +50,32 @@ public class SftpFragmentRefsUpdater extends AProtocolOrProfileFragmentReference
     }
 
     @Override
-    protected boolean isSourceFragment(Source source) {
+    protected boolean hasSourceFragmentRef(Source source) {
         return FileTransferHelper.isSourceFragmentSftp(source);
     }
 
     @Override
-    protected boolean isTargetFragment(Target target) {
+    protected boolean hasTargetFragmentRef(Target target) {
         return FileTransferHelper.isTargetFragmentSftp(target);
     }
 
     @Override
-    protected SftpFragmentRef getSourceFragment(Source source) {
+    protected SftpFragmentRef getSourceFragmentRef(Source source) {
         return source.getFragment().getSftp();
     }
 
     @Override
-    protected SftpFragmentRef getTargetFragment(Target target) {
+    protected SftpFragmentRef getTargetFragmentRef(Target target) {
         return target.getFragment().getSftp();
     }
 
     @Override
-    protected String getFragmentName(SftpFragmentRef f) {
+    protected String getRefName(SftpFragmentRef f) {
         return f.getName();
     }
 
     @Override
-    protected void setFragmentName(SftpFragmentRef f, String newName) {
+    protected void setRefName(SftpFragmentRef f, String newName) {
         f.setName(newName);
     }
 }

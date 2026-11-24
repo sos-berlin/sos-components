@@ -10,7 +10,7 @@ import com.sos.joc.classes.filetransfer.FileTransferJobResourceHandler;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 
-public class ProfileRefsUpdater extends AProtocolOrProfileFragmentReferencesUpdater<FileTransferJobResource, String> {
+public class ProfileRefsUpdater extends AProtocolOrProfileFragmentRefsUpdater<FileTransferJobResource, String> {
 
     @Override
     protected String getLogPrefix() {
@@ -54,31 +54,31 @@ public class ProfileRefsUpdater extends AProtocolOrProfileFragmentReferencesUpda
     }
 
     @Override
-    protected boolean isSourceFragment(Source source) {
+    protected boolean hasSourceFragmentRef(Source source) {
         return false;
     }
 
     @Override
-    protected boolean isTargetFragment(Target target) {
+    protected boolean hasTargetFragmentRef(Target target) {
         return false;
     }
 
     @Override
-    protected String getSourceFragment(Source source) {
+    protected String getSourceFragmentRef(Source source) {
         return null;
     }
 
     @Override
-    protected String getTargetFragment(Target target) {
+    protected String getTargetFragmentRef(Target target) {
         return null;
     }
 
     @Override
-    protected String getFragmentName(String f) {
+    protected String getRefName(String f) {
         return null;
     }
 
     @Override
-    protected void setFragmentName(String f, String newName) {
+    protected void setRefName(String f, String newName) {
     }
 }

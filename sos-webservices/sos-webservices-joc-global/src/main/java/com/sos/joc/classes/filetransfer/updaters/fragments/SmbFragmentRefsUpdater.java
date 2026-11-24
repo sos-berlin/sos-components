@@ -12,7 +12,7 @@ import com.sos.joc.classes.filetransfer.FileTransferHelper;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 
-public class SmbFragmentRefsUpdater extends AProtocolOrProfileFragmentReferencesUpdater<SmbFragment, SmbFragmentRef> {
+public class SmbFragmentRefsUpdater extends AProtocolOrProfileFragmentRefsUpdater<SmbFragment, SmbFragmentRef> {
 
     @Override
     protected String getLogPrefix() {
@@ -50,32 +50,32 @@ public class SmbFragmentRefsUpdater extends AProtocolOrProfileFragmentReferences
     }
 
     @Override
-    protected boolean isSourceFragment(Source source) {
+    protected boolean hasSourceFragmentRef(Source source) {
         return FileTransferHelper.isSourceFragmentSmb(source);
     }
 
     @Override
-    protected boolean isTargetFragment(Target target) {
+    protected boolean hasTargetFragmentRef(Target target) {
         return FileTransferHelper.isTargetFragmentSmb(target);
     }
 
     @Override
-    protected SmbFragmentRef getSourceFragment(Source source) {
+    protected SmbFragmentRef getSourceFragmentRef(Source source) {
         return source.getFragment().getSmb();
     }
 
     @Override
-    protected SmbFragmentRef getTargetFragment(Target target) {
+    protected SmbFragmentRef getTargetFragmentRef(Target target) {
         return target.getFragment().getSmb();
     }
 
     @Override
-    protected String getFragmentName(SmbFragmentRef f) {
+    protected String getRefName(SmbFragmentRef f) {
         return f.getName();
     }
 
     @Override
-    protected void setFragmentName(SmbFragmentRef f, String newName) {
+    protected void setRefName(SmbFragmentRef f, String newName) {
         f.setName(newName);
     }
 }

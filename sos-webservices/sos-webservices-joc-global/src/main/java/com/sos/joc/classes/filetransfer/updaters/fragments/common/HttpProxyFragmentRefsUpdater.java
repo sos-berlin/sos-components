@@ -13,7 +13,7 @@ import com.sos.inventory.model.filetransfer.fragments.protocol.WebdavFragment;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 
-public class HttpProxyFragmentRefsUpdater extends ACommonFragmentReferencesUpdater {
+public class HttpProxyFragmentRefsUpdater extends ACommonFragmentRefsUpdater {
 
     @Override
     protected String getLogPrefix() {

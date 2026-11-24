@@ -107,7 +107,7 @@ public class FileTransferHelper {
     }
 
     public static boolean isAzureBlobStorage(Fragment f) {
-        return f != null && f.getLocal() != null;
+        return f != null && f.getAzureBlobStorage() != null;
     }
 
     public static boolean isFtp(Fragment f) {
