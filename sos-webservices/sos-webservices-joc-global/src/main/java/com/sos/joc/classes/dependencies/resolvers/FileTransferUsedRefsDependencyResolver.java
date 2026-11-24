@@ -5,6 +5,9 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.filetransfer.FileTransferJobResource;
 import com.sos.inventory.model.filetransfer.fragments.protocol.AProtocolFragment;
@@ -17,8 +20,6 @@ import com.sos.inventory.model.filetransfer.fragments.protocol.SmbFragment;
 import com.sos.inventory.model.filetransfer.fragments.protocol.WebdavFragment;
 import com.sos.inventory.model.filetransfer.profile.Profile;
 import com.sos.inventory.model.filetransfer.profile.fragments.Fragment;
-import com.sos.inventory.model.jobresource.JobResource;
-import com.sos.joc.Globals;
 import com.sos.joc.classes.dependencies.items.ReferencedDbItem;
 import com.sos.joc.classes.filetransfer.FileTransferHelper;
 import com.sos.joc.classes.filetransfer.FileTransferJobResourceHandler;
@@ -28,7 +29,10 @@ import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 
-public class FileTransferReferencesResolver {
+/** Resolves references that the object itself holds (references pointing to other objects). */
+public class FileTransferUsedRefsDependencyResolver {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(FileTransferUsedRefsDependencyResolver.class);
 
     /** Currently nothing to do, contains no references. May be extended later.
      * 
@@ -88,78 +92,93 @@ public class FileTransferReferencesResolver {
         AzureBlobStorageFragment f = (AzureBlobStorageFragment) JocInventory.content2IJSObject(item.getReferencedItem().getContent(),
                 ConfigurationType.FT_FRAGMENT_AZURE_BLOB_STORAGE);
 
+        String name = "azureBlobStorage";
         // 1) Fragment references
-        resolveCommonProtocolFragmentNames(dbLayer, item, allItemsGrouped, f);
-        resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_JUMP, f.getJumpFragmentName());
-        resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_HTTP_PROXY, f.getHttpProxyFragmentName());
+        resolveCommonProtocolFragmentNames(dbLayer, item, allItemsGrouped, f, name);
+        resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_JUMP, f.getJumpFragmentName(), name + ".jumpFragmentName");
+        resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_HTTP_PROXY, f.getHttpProxyFragmentName(), name
+                + ".httpProxyFragmentName");
 
         // 2) Alternative name
-        resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_AZURE_BLOB_STORAGE, f.getAlternativeAzureBlobStorageFragmentName());
+        resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_AZURE_BLOB_STORAGE, f.getAlternativeAzureBlobStorageFragmentName(),
+                name + ".alternative");
     }
 
     public static void resolveFtpFragment(InventoryDBLayer dbLayer, ReferencedDbItem item,
             Map<ConfigurationType, Set<DBItemInventoryConfiguration>> allItemsGrouped) throws IOException {
         FtpFragment f = (FtpFragment) JocInventory.content2IJSObject(item.getReferencedItem().getContent(), ConfigurationType.FT_FRAGMENT_FTP);
 
+        String name = "ftp";
         // 1) Fragment references
-        resolveCommonProtocolFragmentNames(dbLayer, item, allItemsGrouped, f);
-        resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_JUMP, f.getJumpFragmentName());
-        resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_HTTP_PROXY, f.getHttpProxyFragmentName());
-        resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_SOCKS_PROXY, f.getSocksProxyFragmentName());
+        resolveCommonProtocolFragmentNames(dbLayer, item, allItemsGrouped, f, name);
+        resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_JUMP, f.getJumpFragmentName(), name + ".jumpFragmentName");
+        resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_HTTP_PROXY, f.getHttpProxyFragmentName(), name
+                + ".httpProxyFragmentName");
+        resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_SOCKS_PROXY, f.getSocksProxyFragmentName(), name
+                + ".socksProxyFragmentName");
 
         // 2) Alternative name
-        resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_FTP, f.getAlternativeFtpFragmentName());
+        resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_FTP, f.getAlternativeFtpFragmentName(), "Ftp.alternative");
     }
 
     public static void resolveHttpFragment(InventoryDBLayer dbLayer, ReferencedDbItem item,
             Map<ConfigurationType, Set<DBItemInventoryConfiguration>> allItemsGrouped) throws IOException {
         HttpFragment f = (HttpFragment) JocInventory.content2IJSObject(item.getReferencedItem().getContent(), ConfigurationType.FT_FRAGMENT_HTTP);
 
+        String name = "http";
         // 1) Fragment references
-        resolveCommonProtocolFragmentNames(dbLayer, item, allItemsGrouped, f);
-        resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_JUMP, f.getJumpFragmentName());
-        resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_HTTP_PROXY, f.getHttpProxyFragmentName());
+        resolveCommonProtocolFragmentNames(dbLayer, item, allItemsGrouped, f, name);
+        resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_JUMP, f.getJumpFragmentName(), name + ".jumpFragmentName");
+        resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_HTTP_PROXY, f.getHttpProxyFragmentName(), name
+                + ".httpProxyFragmentName");
 
         // 2) Alternative name
-        resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_HTTP, f.getAlternativeHttpFragmentName());
+        resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_HTTP, f.getAlternativeHttpFragmentName(), "Http.alternative");
     }
 
     public static void resolveJumpFragment(InventoryDBLayer dbLayer, ReferencedDbItem item,
             Map<ConfigurationType, Set<DBItemInventoryConfiguration>> allItemsGrouped) throws IOException {
         JumpFragment f = (JumpFragment) JocInventory.content2IJSObject(item.getReferencedItem().getContent(), ConfigurationType.FT_FRAGMENT_JUMP);
 
+        String name = "jump";
         // 1) Fragment references
-        resolveCommonProtocolFragmentNames(dbLayer, item, allItemsGrouped, f);
-        resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_HTTP_PROXY, f.getHttpProxyFragmentName());
-        resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_SOCKS_PROXY, f.getSocksProxyFragmentName());
+        resolveCommonProtocolFragmentNames(dbLayer, item, allItemsGrouped, f, name);
+        resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_HTTP_PROXY, f.getHttpProxyFragmentName(), name
+                + ".httpProxyFragmentName");
+        resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_SOCKS_PROXY, f.getSocksProxyFragmentName(), name
+                + ".socksProxyFragmentName");
 
         // 2) Alternative name
-        resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_JUMP, f.getAlternativeJumpFragmentName());
+        resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_JUMP, f.getAlternativeJumpFragmentName(), "Jump.alternative");
     }
 
     public static void resolveSftpFragment(InventoryDBLayer dbLayer, ReferencedDbItem item,
             Map<ConfigurationType, Set<DBItemInventoryConfiguration>> allItemsGrouped) throws IOException {
         SftpFragment f = (SftpFragment) JocInventory.content2IJSObject(item.getReferencedItem().getContent(), ConfigurationType.FT_FRAGMENT_SFTP);
 
+        String name = "sftp";
         // 1) Fragment references
-        resolveCommonProtocolFragmentNames(dbLayer, item, allItemsGrouped, f);
-        resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_JUMP, f.getJumpFragmentName());
-        resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_HTTP_PROXY, f.getHttpProxyFragmentName());
-        resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_SOCKS_PROXY, f.getSocksProxyFragmentName());
+        resolveCommonProtocolFragmentNames(dbLayer, item, allItemsGrouped, f, name);
+        resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_JUMP, f.getJumpFragmentName(), "Sftp.jumpFragmentName");
+        resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_HTTP_PROXY, f.getHttpProxyFragmentName(), name
+                + ".httpProxyFragmentName");
+        resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_SOCKS_PROXY, f.getSocksProxyFragmentName(), name
+                + ".socksProxyFragmentName");
 
         // 2) Alternative name
-        resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_SFTP, f.getAlternativeSftpFragmentName());
+        resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_SFTP, f.getAlternativeSftpFragmentName(), "Sftp.alternative");
     }
 
     public static void resolveSmbFragment(InventoryDBLayer dbLayer, ReferencedDbItem item,
             Map<ConfigurationType, Set<DBItemInventoryConfiguration>> allItemsGrouped) throws IOException {
         SmbFragment f = (SmbFragment) JocInventory.content2IJSObject(item.getReferencedItem().getContent(), ConfigurationType.FT_FRAGMENT_SMB);
 
+        String name = "smb";
         // 1) Fragment references
-        resolveCommonProtocolFragmentNames(dbLayer, item, allItemsGrouped, f);
+        resolveCommonProtocolFragmentNames(dbLayer, item, allItemsGrouped, f, name);
 
         // 2) Alternative name
-        resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_SMB, f.getAlternativeSmbFragmentName());
+        resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_SMB, f.getAlternativeSmbFragmentName(), name + ".alternative");
     }
 
     public static void resolveWebdavFragment(InventoryDBLayer dbLayer, ReferencedDbItem item,
@@ -167,92 +186,110 @@ public class FileTransferReferencesResolver {
         WebdavFragment f = (WebdavFragment) JocInventory.content2IJSObject(item.getReferencedItem().getContent(),
                 ConfigurationType.FT_FRAGMENT_WEBDAV);
 
+        String name = "webdav";
         // 1) Fragment references
-        resolveCommonProtocolFragmentNames(dbLayer, item, allItemsGrouped, f);
-        resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_JUMP, f.getJumpFragmentName());
-        resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_HTTP_PROXY, f.getHttpProxyFragmentName());
+        resolveCommonProtocolFragmentNames(dbLayer, item, allItemsGrouped, f, name);
+        resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_JUMP, f.getJumpFragmentName(), name + ".jumpFragmentName");
+        resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_HTTP_PROXY, f.getHttpProxyFragmentName(), name
+                + ".httpProxyFragmentName");
 
         // 2) Alternative name
-        resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_WEBDAV, f.getAlternativeWebdavFragmentName());
+        resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_WEBDAV, f.getAlternativeWebdavFragmentName(), "Webdav.alternative");
     }
 
-    public static void resolveJobResource(InventoryDBLayer dbLayer, ReferencedDbItem item,
+    public static void resolveProfileJobResource(InventoryDBLayer dbLayer, ReferencedDbItem item,
             Map<ConfigurationType, Set<DBItemInventoryConfiguration>> allItemsGrouped) throws IOException {
 
-        JobResource jr = (JobResource) JocInventory.content2IJSObject(item.getReferencedItem().getContent(), ConfigurationType.JOBRESOURCE);
-        FileTransferJobResource ftjr = null;
-        if (jr.getArguments() == null) {
-            ftjr = Globals.objectMapper.readValue(item.getReferencedItem().getContent(), FileTransferJobResource.class);
-        } else {
-            ftjr = FileTransferJobResourceHandler.toFileTransferJobResource(jr);
-        }
+        FileTransferJobResource ftjr = FileTransferJobResourceHandler.toFileTransferJobResource(item.getReferencedItem().getContent());
 
         Profile p = ftjr.getProfile();
 
+        String name = "profile";
         // 1) Alternative profile name
-        resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_PROFILE_JOBRESOURCE, p.getAlternativeProfileName());
+        resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_PROFILE_JOBRESOURCE, p.getAlternativeProfileName(), name + ".alternative");
 
         // 2) Source
         if (p.getSource() != null) {
-            resolveProfileFragment(dbLayer, item, allItemsGrouped, p.getSource().getFragment());
+            resolveProfileFragment(dbLayer, item, allItemsGrouped, p.getSource().getFragment(), name + ".source");
         }
 
         // 3) Target
         if (p.getTarget() != null) {
-            resolveProfileFragment(dbLayer, item, allItemsGrouped, p.getTarget().getFragment());
+            resolveProfileFragment(dbLayer, item, allItemsGrouped, p.getTarget().getFragment(), name + ".target");
         }
 
         // 4) Notification triggers
         if (p.getNotificationTriggers() != null) {
             if (p.getNotificationTriggers().getOnError() != null) {
                 resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_MAIL, p.getNotificationTriggers().getOnError()
-                        .getMailFragmentName());
+                        .getMailFragmentName(), name + ".notificationTriggers.onError.mailFragmentName");
             }
             if (p.getNotificationTriggers().getOnSuccess() != null) {
                 resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_MAIL, p.getNotificationTriggers().getOnSuccess()
-                        .getMailFragmentName());
+                        .getMailFragmentName(), name + ".notificationTriggers.onSuccess.mailFragmentName");
             }
             if (p.getNotificationTriggers().getOnEmptyFiles() != null) {
                 resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_MAIL, p.getNotificationTriggers().getOnEmptyFiles()
-                        .getMailFragmentName());
+                        .getMailFragmentName(), name + ".notificationTriggers.onEmtyFiles.mailFragmentName");
             }
         }
     }
 
     private static void resolveCommonProtocolFragmentNames(InventoryDBLayer dbLayer, ReferencedDbItem item,
-            Map<ConfigurationType, Set<DBItemInventoryConfiguration>> allItemsGrouped, AProtocolFragment f) {
-        resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_CREDENTIAL_STORE, f.getCredentialStoreFragmentName());
-        resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_DECRYPTION, f.getDecryptionFragmentName());
+            Map<ConfigurationType, Set<DBItemInventoryConfiguration>> allItemsGrouped, AProtocolFragment f, String fragmentTypeForLog) {
+        resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_CREDENTIAL_STORE, f.getCredentialStoreFragmentName(),
+                fragmentTypeForLog + ".credentialStoreFragmentName");
+        resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_DECRYPTION, f.getDecryptionFragmentName(), fragmentTypeForLog
+                + ".decryptionFragmentName");
     }
 
     private static void resolveProfileFragment(InventoryDBLayer dbLayer, ReferencedDbItem item,
-            Map<ConfigurationType, Set<DBItemInventoryConfiguration>> allItemsGrouped, Fragment f) throws JocConfigurationException {
+            Map<ConfigurationType, Set<DBItemInventoryConfiguration>> allItemsGrouped, Fragment f, String sourceOrTargetForLog)
+            throws JocConfigurationException {
         // Referenced protocol fragments
         if (FileTransferHelper.isSftp(f)) {
-            resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_SFTP, f.getSftp().getName());
+            resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_SFTP, f.getSftp().getName(), sourceOrTargetForLog
+                    + ".sftp.name");
         } else if (FileTransferHelper.isSmb(f)) {
-            resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_SMB, f.getSmb().getName());
+            resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_SMB, f.getSmb().getName(), sourceOrTargetForLog + ".smb.name");
         } else if (FileTransferHelper.isFtp(f)) {
-            resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_FTP, f.getFtp().getName());
+            resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_FTP, f.getFtp().getName(), sourceOrTargetForLog + ".ftp.name");
         } else if (FileTransferHelper.isWebdav(f)) {
-            resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_WEBDAV, f.getWebdav().getName());
+            resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_WEBDAV, f.getWebdav().getName(), sourceOrTargetForLog
+                    + ".webdav.name");
         } else if (FileTransferHelper.isHttp(f)) {
-            resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_HTTP, f.getHttp().getName());
+            resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_HTTP, f.getHttp().getName(), sourceOrTargetForLog
+                    + ".http.name");
         } else if (FileTransferHelper.isAzureBlobStorage(f)) {
-            resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_AZURE_BLOB_STORAGE, f.getAzureBlobStorage().getName());
+            resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_AZURE_BLOB_STORAGE, f.getAzureBlobStorage().getName(),
+                    sourceOrTargetForLog + ".azureBlobStorage.name");
         }
     }
 
     private static void resolveName(InventoryDBLayer dbLayer, ReferencedDbItem item,
-            Map<ConfigurationType, Set<DBItemInventoryConfiguration>> allItemsGrouped, ConfigurationType type, String name) {
+            Map<ConfigurationType, Set<DBItemInventoryConfiguration>> allItemsGrouped, ConfigurationType type, String name,
+            String propertyNameForLog) {
         if (SOSString.isEmpty(name) || name.startsWith("${")) {
             // Empty or variable reference: skip lookup.
+            if (LOGGER.isDebugEnabled()) {
+                if (SOSString.isEmpty(name)) {
+                    LOGGER.trace(String.format("[resolveName][%s][%s][skip]name=%s", propertyNameForLog, type, name));
+                } else {
+                    LOGGER.debug(String.format("[resolveName][%s][%s][skip]name=%s", propertyNameForLog, type, name));
+                }
+            }
             return;
         }
 
         if (allItemsGrouped.isEmpty()) {
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug(String.format("[resolveName][%s=%s][%s]select from db ...", propertyNameForLog, name, type));
+            }
             item.getReferences().addAll(dbLayer.getConfigurationByName(name, type.intValue()));
         } else {
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug(String.format("[resolveName][%s=%s][%s]use allItemsGrouped ...", propertyNameForLog, name, type));
+            }
             allItemsGrouped.getOrDefault(type, Collections.emptySet()).stream().filter(cfg -> name.equals(cfg.getName())).forEach(item
                     .getReferences()::add);
         }

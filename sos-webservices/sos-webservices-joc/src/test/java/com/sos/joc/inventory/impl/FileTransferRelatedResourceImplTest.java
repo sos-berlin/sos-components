@@ -1,5 +1,7 @@
 package com.sos.joc.inventory.impl;
 
+import java.nio.file.Paths;
+
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -63,6 +65,38 @@ public class FileTransferRelatedResourceImplTest {
             h.init();
 
             h.post("store", in);
+        } catch (Throwable e) {
+            LOGGER.error(e.toString(), e);
+        } finally {
+            h.destroy();
+        }
+    }
+
+    @Ignore
+    @Test
+    public void testStoreWorkflow() throws Exception {
+        UnitTestSimpleWSImplHelper h = new UnitTestSimpleWSImplHelper(new StoreConfigurationResourceImpl());
+        h.setHibernateConfigurationFileFromWebservicesGlobal("hibernate.cfg.mysql.xml");
+        try {
+            h.init();
+
+            h.post("store", Paths.get("src/test/resources/ws/inventory/impl/filetransfer/request-StoreResourceImpl-workflow.json"));
+        } catch (Throwable e) {
+            LOGGER.error(e.toString(), e);
+        } finally {
+            h.destroy();
+        }
+    }
+
+    @Ignore
+    @Test
+    public void testStoreFileOrderSource() throws Exception {
+        UnitTestSimpleWSImplHelper h = new UnitTestSimpleWSImplHelper(new StoreConfigurationResourceImpl());
+        h.setHibernateConfigurationFileFromWebservicesGlobal("hibernate.cfg.mysql.xml");
+        try {
+            h.init();
+
+            h.post("store", Paths.get("src/test/resources/ws/inventory/impl/filetransfer/request-StoreResourceImpl-fos.json"));
         } catch (Throwable e) {
             LOGGER.error(e.toString(), e);
         } finally {

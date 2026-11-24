@@ -208,8 +208,11 @@ public class FileTransferValidator {
     }
 
     private static void checkProfileFragment(InventoryDBLayer dbLayer, String sourceOrTarget, Fragment f) throws JocConfigurationException {
+        if (FileTransferHelper.isLocal(f)) {
+
+        }
         // Referenced protocol fragments
-        if (FileTransferHelper.isSftp(f)) {
+        else if (FileTransferHelper.isSftp(f)) {
             checkName(dbLayer, ConfigurationType.FT_FRAGMENT_SFTP, sourceOrTarget + " " + PROPERTY_NAME_FRAGMENT_SFTP, f.getSftp().getName());
         } else if (FileTransferHelper.isSmb(f)) {
             checkName(dbLayer, ConfigurationType.FT_FRAGMENT_SMB, sourceOrTarget + " " + PROPERTY_NAME_FRAGMENT_SMB, f.getSmb().getName());
