@@ -194,7 +194,6 @@ public class PojosTestFileTransfer {
             Fragment ref = new Fragment();
 
             Local l = new Local();
-            l.setCredentialStoreFragmentName("cs ref");
             Processing pg = new Processing();
             PostProcessing pp = new PostProcessing();
             pp.setCommandAfterFile("command after file");
@@ -241,7 +240,6 @@ public class PojosTestFileTransfer {
             Fragment ref = new Fragment();
 
             Local l = new Local();
-            l.setCredentialStoreFragmentName("cs ref");
             Processing pg = new Processing();
             PostProcessing pp = new PostProcessing();
             pp.setCommandAfterFile("command after file");
@@ -256,8 +254,7 @@ public class PojosTestFileTransfer {
             sfs.setFileSpec(".*");
             sel.setFileSpec(sfs);
             s.setSelection(sel);
-            
-            
+
             SourceOptions so = new SourceOptions();
             s.setOptions(so);
             p.setSource(s);
@@ -275,13 +272,12 @@ public class PojosTestFileTransfer {
             t.setFragment(ref);
 
             p.setTarget(t);
-            
+
             FileTransferJobResource jr = new FileTransferJobResource();
             jr.setProfile(p);
-            
+
             LOGGER.info(objectMapper.writeValueAsString(jr));
 
-            
             URI uri = createFromClasspath("profile/profile-schema.json");
             uri = createFromInventorySchemaResources("filetransferJobResource-schema.json");
 

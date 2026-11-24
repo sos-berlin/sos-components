@@ -189,10 +189,7 @@ public class FileTransferJobResourceHandler {
     }
 
     private static void setSettingsFragment(InventoryDBLayer dbLayer, Settings s, Fragment f) throws Exception {
-        if (FileTransferHelper.isLocal(f)) {
-            resolveCredentialStoreFragment(dbLayer, s, f.getLocal().getCredentialStoreFragmentName());
-            resolveDecryptionFragment(dbLayer, s, f.getLocal().getDecryptionFragmentName());
-        } else if (FileTransferHelper.isSftp(f)) {
+        if (FileTransferHelper.isSftp(f)) {
             resolveSftpFragment(dbLayer, s, f.getSftp().getName());
         } else if (FileTransferHelper.isSmb(f)) {
             resolveSmbFragment(dbLayer, s, f.getSmb().getName());

@@ -227,13 +227,8 @@ public class FileTransferReferencesResolver {
 
     private static void resolveProfileFragment(InventoryDBLayer dbLayer, ReferencedDbItem item,
             Map<ConfigurationType, Set<DBItemInventoryConfiguration>> allItemsGrouped, Fragment f) throws JocConfigurationException {
-        if (FileTransferHelper.isLocal(f)) {
-            resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_CREDENTIAL_STORE, f.getLocal()
-                    .getCredentialStoreFragmentName());
-            resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_DECRYPTION, f.getLocal().getDecryptionFragmentName());
-        }
         // Referenced protocol fragments
-        else if (FileTransferHelper.isSftp(f)) {
+        if (FileTransferHelper.isSftp(f)) {
             resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_SFTP, f.getSftp().getName());
         } else if (FileTransferHelper.isSmb(f)) {
             resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_FRAGMENT_SMB, f.getSmb().getName());

@@ -11,6 +11,7 @@ import com.sos.joc.model.inventory.common.ConfigurationType;
 
 public class FileTransferHelper {
 
+    private static final String PROPERY_NAME_ALTERNATIVE_PROFILE = "alternativeProfileName";
     private static final String PROPERY_NAME_ALTERNATIVE_AZURE_BLOB_STORAGE = "alternativeAzureBlobStorageFragmentName";
     private static final String PROPERY_NAME_ALTERNATIVE_FTP = "alternativeFtpFragmentName";
     private static final String PROPERY_NAME_ALTERNATIVE_HTTP = "alternativeHttpFragmentName";
@@ -19,8 +20,10 @@ public class FileTransferHelper {
     private static final String PROPERY_NAME_ALTERNATIVE_SMB = "alternativeSmbFragmentName";
     private static final String PROPERY_NAME_ALTERNATIVE_WEBDAV = "alternativeWebdavFragmentName";
 
-    public static String getAlternativeProtocolFragmentPropertyName(ConfigurationType fileTransferType) throws SOSHibernateException {
+    public static String getPropertyNameAlternative(ConfigurationType fileTransferType) throws SOSHibernateException {
         switch (fileTransferType) {
+        case FT_PROFILE_JOBRESOURCE:
+            return PROPERY_NAME_ALTERNATIVE_PROFILE;
         case FT_FRAGMENT_SFTP:
             return PROPERY_NAME_ALTERNATIVE_SFTP;
         case FT_FRAGMENT_JUMP:
@@ -134,5 +137,34 @@ public class FileTransferHelper {
     public static List<ConfigurationType> getOtherFragmentsUsingJump() {
         return Arrays.asList(ConfigurationType.FT_FRAGMENT_AZURE_BLOB_STORAGE, ConfigurationType.FT_FRAGMENT_FTP, ConfigurationType.FT_FRAGMENT_SFTP,
                 ConfigurationType.FT_FRAGMENT_HTTP, ConfigurationType.FT_FRAGMENT_WEBDAV);
+    }
+
+    /** Returns the fragment types that can reference a credential store fragment.<br />
+     *
+     * @return list of configuration types that may reference a credential store fragment */
+    public static List<ConfigurationType> getFragmentsUsingCredentialStore() {
+        return Arrays.asList(ConfigurationType.FT_FRAGMENT_JUMP, ConfigurationType.FT_FRAGMENT_AZURE_BLOB_STORAGE, ConfigurationType.FT_FRAGMENT_FTP,
+                ConfigurationType.FT_FRAGMENT_SFTP, ConfigurationType.FT_FRAGMENT_HTTP, ConfigurationType.FT_FRAGMENT_WEBDAV);
+    }
+
+    /** Returns the fragment types that can reference a decryption fragment.<br />
+     *
+     * @return list of configuration types that may reference a decryption fragment */
+    public static List<ConfigurationType> getFragmentsUsingDecryption() {
+        return getFragmentsUsingCredentialStore();
+    }
+
+    /** Returns the fragment types that can reference a HTTP proxy fragment.<br />
+     *
+     * @return list of configuration types that may reference a HTTP proxy fragment */
+    public static List<ConfigurationType> getFragmentsUsingHttpProxy() {
+        return getFragmentsUsingCredentialStore();
+    }
+
+    /** Returns the fragment types that can reference a SOCKS proxy fragment.<br />
+     *
+     * @return list of configuration types that may reference a SOCKS proxy fragment */
+    public static List<ConfigurationType> getFragmentsUsingSocksProxy() {
+        return Arrays.asList(ConfigurationType.FT_FRAGMENT_JUMP, ConfigurationType.FT_FRAGMENT_FTP, ConfigurationType.FT_FRAGMENT_SFTP);
     }
 }

@@ -1,4 +1,4 @@
-package com.sos.joc.classes.filetransfer.updaters.fragments.protocol;
+package com.sos.joc.classes.filetransfer.updaters.fragments;
 
 import java.util.List;
 
@@ -12,20 +12,20 @@ import com.sos.joc.classes.filetransfer.FileTransferHelper;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 
-public class SmbFragmentUpdater extends AProtocolFragmentUpdater<SmbFragment, SmbFragmentRef> {
+public class SmbFragmentRefsUpdater extends AProtocolOrProfileFragmentReferencesUpdater<SmbFragment, SmbFragmentRef> {
 
     @Override
     protected String getLogPrefix() {
-        return "updateSmbConfiguration";
+        return "updateSmbRefs";
     }
 
     @Override
-    protected String getFragmentLogName() {
+    protected String getLogObjectName() {
         return "smbFragment";
     }
 
     @Override
-    protected SmbFragment readFragment(DBItemInventoryConfiguration c) throws Exception {
+    protected SmbFragment readAlternativeFragment(DBItemInventoryConfiguration c) throws Exception {
         return Globals.objectMapper.readValue(c.getContent(), SmbFragment.class);
     }
 
@@ -40,7 +40,7 @@ public class SmbFragmentUpdater extends AProtocolFragmentUpdater<SmbFragment, Sm
     }
 
     @Override
-    protected List<DBItemInventoryConfiguration> getAlternativeFragments(InventoryDBLayer dbLayer, String name) throws SOSHibernateException {
+    protected List<DBItemInventoryConfiguration> getAlternatives(InventoryDBLayer dbLayer, String name) throws SOSHibernateException {
         return dbLayer.getUsedFileTransferSmbFragmentAlternatives(name);
     }
 

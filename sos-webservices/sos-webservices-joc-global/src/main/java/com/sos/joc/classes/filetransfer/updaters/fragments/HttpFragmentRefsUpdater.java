@@ -1,4 +1,4 @@
-package com.sos.joc.classes.filetransfer.updaters.fragments.protocol;
+package com.sos.joc.classes.filetransfer.updaters.fragments;
 
 import java.util.List;
 
@@ -12,20 +12,20 @@ import com.sos.joc.classes.filetransfer.FileTransferHelper;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 
-public class HttpFragmentUpdater extends AProtocolFragmentUpdater<HttpFragment, HttpFragmentRef> {
+public class HttpFragmentRefsUpdater extends AProtocolOrProfileFragmentReferencesUpdater<HttpFragment, HttpFragmentRef> {
 
     @Override
     protected String getLogPrefix() {
-        return "updateHttpConfiguration";
+        return "updateHttpRefs";
     }
 
     @Override
-    protected String getFragmentLogName() {
+    protected String getLogObjectName() {
         return "httpFragment";
     }
 
     @Override
-    protected HttpFragment readFragment(DBItemInventoryConfiguration c) throws Exception {
+    protected HttpFragment readAlternativeFragment(DBItemInventoryConfiguration c) throws Exception {
         return Globals.objectMapper.readValue(c.getContent(), HttpFragment.class);
     }
 
@@ -40,7 +40,7 @@ public class HttpFragmentUpdater extends AProtocolFragmentUpdater<HttpFragment, 
     }
 
     @Override
-    protected List<DBItemInventoryConfiguration> getAlternativeFragments(InventoryDBLayer dbLayer, String name) throws SOSHibernateException {
+    protected List<DBItemInventoryConfiguration> getAlternatives(InventoryDBLayer dbLayer, String name) throws SOSHibernateException {
         return dbLayer.getUsedFileTransferHttpFragmentAlternatives(name);
     }
 

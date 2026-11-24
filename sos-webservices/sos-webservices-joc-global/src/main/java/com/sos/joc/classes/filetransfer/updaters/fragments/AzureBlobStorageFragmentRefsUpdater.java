@@ -1,4 +1,4 @@
-package com.sos.joc.classes.filetransfer.updaters.fragments.protocol;
+package com.sos.joc.classes.filetransfer.updaters.fragments;
 
 import java.util.List;
 
@@ -12,20 +12,21 @@ import com.sos.joc.classes.filetransfer.FileTransferHelper;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 
-public class AzureBlobStorageFragmentUpdater extends AProtocolFragmentUpdater<AzureBlobStorageFragment, AzureBlobStorageFragmentRef> {
+public class AzureBlobStorageFragmentRefsUpdater extends
+        AProtocolOrProfileFragmentReferencesUpdater<AzureBlobStorageFragment, AzureBlobStorageFragmentRef> {
 
     @Override
     protected String getLogPrefix() {
-        return "updateAzureBlobStorageConfiguration";
+        return "updateAzureBlobStorageRefs";
     }
 
     @Override
-    protected String getFragmentLogName() {
+    protected String getLogObjectName() {
         return "azureBlobStorageFragment";
     }
 
     @Override
-    protected AzureBlobStorageFragment readFragment(DBItemInventoryConfiguration c) throws Exception {
+    protected AzureBlobStorageFragment readAlternativeFragment(DBItemInventoryConfiguration c) throws Exception {
         return Globals.objectMapper.readValue(c.getContent(), AzureBlobStorageFragment.class);
     }
 
@@ -40,7 +41,7 @@ public class AzureBlobStorageFragmentUpdater extends AProtocolFragmentUpdater<Az
     }
 
     @Override
-    protected List<DBItemInventoryConfiguration> getAlternativeFragments(InventoryDBLayer dbLayer, String name) throws SOSHibernateException {
+    protected List<DBItemInventoryConfiguration> getAlternatives(InventoryDBLayer dbLayer, String name) throws SOSHibernateException {
         return dbLayer.getUsedFileTransferAzureBlobStorageFragmentAlternatives(name);
     }
 

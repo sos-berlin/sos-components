@@ -1,55 +1,53 @@
-package com.sos.joc.classes.filetransfer.updaters.fragments.protocol;
+package com.sos.joc.classes.filetransfer.updaters.fragments;
 
 import java.util.List;
 
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.inventory.model.filetransfer.fragments.protocol.JumpFragment;
+import com.sos.inventory.model.filetransfer.fragments.mail.MailFragment;
 import com.sos.inventory.model.filetransfer.profile.Source;
 import com.sos.inventory.model.filetransfer.profile.Target;
-import com.sos.joc.Globals;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 
-public class JumpFragmentUpdater extends AProtocolFragmentUpdater<JumpFragment, String> {
+public class MailFragmentRefsUpdater extends AProtocolOrProfileFragmentReferencesUpdater<MailFragment, String> {
 
     @Override
     protected String getLogPrefix() {
-        return "updateJumpConfiguration";
+        return "updateMailRefs";
     }
 
     @Override
-    protected String getFragmentLogName() {
-        return "jumpFragment";
+    protected String getLogObjectName() {
+        return "mailFragment";
     }
 
     @Override
-    protected JumpFragment readFragment(DBItemInventoryConfiguration c) throws Exception {
-        return Globals.objectMapper.readValue(c.getContent(), JumpFragment.class);
+    protected MailFragment readAlternativeFragment(DBItemInventoryConfiguration c) throws Exception {
+        return null;
     }
 
     @Override
-    protected String getAlternativeName(JumpFragment f) {
-        return f.getAlternativeJumpFragmentName();
+    protected String getAlternativeName(MailFragment f) {
+        return null;
     }
 
     @Override
-    protected void setAlternativeName(JumpFragment f, String newName) {
-        f.setAlternativeJumpFragmentName(newName);
+    protected void setAlternativeName(MailFragment f, String newName) {
     }
 
     @Override
-    protected List<DBItemInventoryConfiguration> getAlternativeFragments(InventoryDBLayer dbLayer, String name) throws SOSHibernateException {
-        return dbLayer.getUsedFileTransferJumpFragmentAlternatives(name);
+    protected List<DBItemInventoryConfiguration> getAlternatives(InventoryDBLayer dbLayer, String name) throws SOSHibernateException {
+        return null;
     }
 
     @Override
     protected List<DBItemInventoryConfiguration> getReferencedIn(InventoryDBLayer dbLayer, String name) throws SOSHibernateException {
-        return dbLayer.getUsedFileTransferFragmentsByJumpExcludingSelf(name);
+        return dbLayer.getUsedFileTransferProfilesByMailFragmentName(name);
     }
 
     @Override
     /** @return <code>true</code> */
-    public boolean isJump() {
+    public boolean isMail() {
         return true;
     }
 

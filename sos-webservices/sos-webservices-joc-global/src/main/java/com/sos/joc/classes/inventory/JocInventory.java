@@ -1642,24 +1642,43 @@ public class JocInventory {
             }
             break;
         // FileTransfer
+        case FT_FRAGMENT_CREDENTIAL_STORE:
+            FileTransferUpdateConfigurationHelper.updateCredentialStoreRefs(dbLayer, config, newName, items, events);
+            break;
+        case FT_FRAGMENT_DECRYPTION:
+            FileTransferUpdateConfigurationHelper.updateDecryptionRefs(dbLayer, config, newName, items, events);
+            break;
+        case FT_FRAGMENT_MAIL:
+            FileTransferUpdateConfigurationHelper.updateMailRefs(dbLayer, config, newName, items, events);
+            break;
+        case FT_FRAGMENT_HTTP_PROXY:
+            FileTransferUpdateConfigurationHelper.updateHttpProxyRefs(dbLayer, config, newName, items, events);
+            break;
+        case FT_FRAGMENT_SOCKS_PROXY:
+            FileTransferUpdateConfigurationHelper.updateSocksProxyRefs(dbLayer, config, newName, items, events);
+            break;
+        // FileTransfer - profile    
+        case FT_PROFILE_JOBRESOURCE:
+            FileTransferUpdateConfigurationHelper.updateProfileRefs(dbLayer, config, newName, items, events);
+            break;
         // FileTransfer - protocol fragments
         case FT_FRAGMENT_SFTP:
-            FileTransferUpdateConfigurationHelper.updateSftpConfiguration(dbLayer, config, newName, items, events);
+            FileTransferUpdateConfigurationHelper.updateSftpRefs(dbLayer, config, newName, items, events);
             break;
         case FT_FRAGMENT_FTP:
-            FileTransferUpdateConfigurationHelper.updateFtpConfiguration(dbLayer, config, newName, items, events);
+            FileTransferUpdateConfigurationHelper.updateFtpRefs(dbLayer, config, newName, items, events);
             break;
         case FT_FRAGMENT_SMB:
-            FileTransferUpdateConfigurationHelper.updateSmbConfiguration(dbLayer, config, newName, items, events);
+            FileTransferUpdateConfigurationHelper.updateSmbRefs(dbLayer, config, newName, items, events);
             break;
         case FT_FRAGMENT_WEBDAV:
-            FileTransferUpdateConfigurationHelper.updateWebdavConfiguration(dbLayer, config, newName, items, events);
+            FileTransferUpdateConfigurationHelper.updateWebdavRefs(dbLayer, config, newName, items, events);
             break;
         case FT_FRAGMENT_HTTP:
-            FileTransferUpdateConfigurationHelper.updateHttpConfiguration(dbLayer, config, newName, items, events);
+            FileTransferUpdateConfigurationHelper.updateHttpRefs(dbLayer, config, newName, items, events);
             break;
         case FT_FRAGMENT_AZURE_BLOB_STORAGE:
-            FileTransferUpdateConfigurationHelper.updateAzureBlobStorageConfiguration(dbLayer, config, newName, items, events);
+            FileTransferUpdateConfigurationHelper.updateAzureBlobStorageRefs(dbLayer, config, newName, items, events);
             break;
         default:
             break;

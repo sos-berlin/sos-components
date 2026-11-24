@@ -1,4 +1,4 @@
-package com.sos.joc.classes.filetransfer.updaters.fragments.protocol;
+package com.sos.joc.classes.filetransfer.updaters.fragments;
 
 import java.util.List;
 import java.util.Set;
@@ -15,29 +15,30 @@ import com.sos.inventory.model.filetransfer.fragments.protocol.FtpFragment;
 import com.sos.inventory.model.filetransfer.fragments.protocol.HttpFragment;
 import com.sos.inventory.model.filetransfer.fragments.protocol.SftpFragment;
 import com.sos.inventory.model.filetransfer.fragments.protocol.WebdavFragment;
+import com.sos.inventory.model.filetransfer.profile.NotificationTriggers;
 import com.sos.inventory.model.filetransfer.profile.Source;
 import com.sos.inventory.model.filetransfer.profile.Target;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.filetransfer.FileTransferJobResourceHandler;
-import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.classes.filetransfer.updaters.fragments.common.ACommonFragmentReferencesUpdater;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 
-public abstract class AProtocolFragmentUpdater<F, R> {
+public abstract class AProtocolOrProfileFragmentReferencesUpdater<F, R> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(AProtocolFragmentUpdater.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AProtocolOrProfileFragmentReferencesUpdater.class);
 
     protected abstract String getLogPrefix();
 
-    protected abstract String getFragmentLogName();
+    protected abstract String getLogObjectName();
 
-    protected abstract F readFragment(DBItemInventoryConfiguration c) throws Exception;
+    protected abstract F readAlternativeFragment(DBItemInventoryConfiguration c) throws Exception;
 
     protected abstract String getAlternativeName(F f);
 
     protected abstract void setAlternativeName(F f, String newName);
 
-    protected abstract List<DBItemInventoryConfiguration> getAlternativeFragments(InventoryDBLayer dbLayer, String name) throws SOSHibernateException;
+    protected abstract List<DBItemInventoryConfiguration> getAlternatives(InventoryDBLayer dbLayer, String name) throws SOSHibernateException;
 
     protected abstract List<DBItemInventoryConfiguration> getReferencedIn(InventoryDBLayer dbLayer, String name) throws SOSHibernateException;
 
@@ -58,13 +59,13 @@ public abstract class AProtocolFragmentUpdater<F, R> {
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
 
         // 1) other protocol fragments with the referenced alternative name
-        List<DBItemInventoryConfiguration> alternatives = getAlternativeFragments(dbLayer, config.getName());
+        List<DBItemInventoryConfiguration> alternatives = getAlternatives(dbLayer, config.getName());
         if (!SOSCollection.isEmpty(alternatives)) {
             for (DBItemInventoryConfiguration c : alternatives) {
-                F f = readFragment(c);
+                F f = readAlternativeFragment(c);
                 if (isDebugEnabled) {
                     LOGGER.debug(String.format("[%s][%s][%s=%s, alternativeName=%s]new name=%s", getLogPrefix(), config.getTypeAsEnum(),
-                            getFragmentLogName(), c.getPath(), getAlternativeName(f), newName));
+                            getLogObjectName(), c.getPath(), getAlternativeName(f), newName));
                 }
 
                 if (SOSString.isEmpty(getAlternativeName(f)) || newName.equalsIgnoreCase(getAlternativeName(f))) {
@@ -74,16 +75,18 @@ public abstract class AProtocolFragmentUpdater<F, R> {
                 setAlternativeName(f, newName);
                 c.setContent(Globals.objectMapper.writeValueAsString(f));
                 c.setReleased(false);
-                applyChange(dbLayer, c, items, events);
+                ACommonFragmentReferencesUpdater.applyChange(dbLayer, c, items, events);
             }
         }
 
-        // 2) profiles
+        // 2) protocol fragments using jump or profiles
         List<DBItemInventoryConfiguration> referencedIn = getReferencedIn(dbLayer, config.getName());
         if (!SOSCollection.isEmpty(referencedIn)) {
             for (DBItemInventoryConfiguration c : referencedIn) {
                 if (isJump()) {
                     handleJump(dbLayer, config, c, newName, items, events, isDebugEnabled);
+                } else if (isMail()) {
+                    handleMail(dbLayer, config, c, newName, items, events, isDebugEnabled);
                 } else {
                     handleProfile(dbLayer, config, c, newName, items, events, isDebugEnabled);
                 }
@@ -98,6 +101,13 @@ public abstract class AProtocolFragmentUpdater<F, R> {
         return false;
     }
 
+    /** see {@link MailFragmentUpdater#isMail()}
+     * 
+     * @return */
+    public boolean isMail() {
+        return false;
+    }
+
     private void handleJump(InventoryDBLayer dbLayer, DBItemInventoryConfiguration config, DBItemInventoryConfiguration referencedIn, String newName,
             List<DBItemInventoryConfiguration> items, Set<String> events, boolean isDebugEnabled) throws Exception {
 
@@ -105,7 +115,7 @@ public abstract class AProtocolFragmentUpdater<F, R> {
         switch (referencedIn.getTypeAsEnum()) {
         case FT_FRAGMENT_SFTP:
             SftpFragment sftp = Globals.objectMapper.readValue(referencedIn.getContent(), SftpFragment.class);
-            if (config.getName().equalsIgnoreCase(sftp.getJumpFragmentName())) {
+            if (ACommonFragmentReferencesUpdater.refNameEquals(config, sftp.getJumpFragmentName())) {
                 sftp.setJumpFragmentName(newName);
                 o = sftp;
             }
@@ -113,7 +123,7 @@ public abstract class AProtocolFragmentUpdater<F, R> {
 
         case FT_FRAGMENT_FTP:
             FtpFragment ftp = Globals.objectMapper.readValue(referencedIn.getContent(), FtpFragment.class);
-            if (refNameEquals(config, ftp.getJumpFragmentName())) {
+            if (ACommonFragmentReferencesUpdater.refNameEquals(config, ftp.getJumpFragmentName())) {
                 ftp.setJumpFragmentName(newName);
                 o = ftp;
             }
@@ -121,7 +131,7 @@ public abstract class AProtocolFragmentUpdater<F, R> {
 
         case FT_FRAGMENT_WEBDAV:
             WebdavFragment webdav = Globals.objectMapper.readValue(referencedIn.getContent(), WebdavFragment.class);
-            if (refNameEquals(config, webdav.getJumpFragmentName())) {
+            if (ACommonFragmentReferencesUpdater.refNameEquals(config, webdav.getJumpFragmentName())) {
                 webdav.setJumpFragmentName(newName);
                 o = webdav;
             }
@@ -129,7 +139,7 @@ public abstract class AProtocolFragmentUpdater<F, R> {
 
         case FT_FRAGMENT_HTTP:
             HttpFragment http = Globals.objectMapper.readValue(referencedIn.getContent(), HttpFragment.class);
-            if (refNameEquals(config, http.getJumpFragmentName())) {
+            if (ACommonFragmentReferencesUpdater.refNameEquals(config, http.getJumpFragmentName())) {
                 http.setJumpFragmentName(newName);
                 o = http;
             }
@@ -137,7 +147,7 @@ public abstract class AProtocolFragmentUpdater<F, R> {
 
         case FT_FRAGMENT_AZURE_BLOB_STORAGE:
             AzureBlobStorageFragment azure = Globals.objectMapper.readValue(referencedIn.getContent(), AzureBlobStorageFragment.class);
-            if (refNameEquals(config, azure.getJumpFragmentName())) {
+            if (ACommonFragmentReferencesUpdater.refNameEquals(config, azure.getJumpFragmentName())) {
                 azure.setJumpFragmentName(newName);
                 o = azure;
             }
@@ -153,7 +163,7 @@ public abstract class AProtocolFragmentUpdater<F, R> {
 
         referencedIn.setContent(Globals.objectMapper.writeValueAsString(o));
         referencedIn.setReleased(false);
-        applyChange(dbLayer, referencedIn, items, events);
+        ACommonFragmentReferencesUpdater.applyChange(dbLayer, referencedIn, items, events);
     }
 
     private void handleProfile(InventoryDBLayer dbLayer, DBItemInventoryConfiguration config, DBItemInventoryConfiguration referencedIn,
@@ -168,7 +178,7 @@ public abstract class AProtocolFragmentUpdater<F, R> {
 
         if (source != null && isSourceFragment(source)) {
             R srcFragment = getSourceFragment(source);
-            if (config.getName().equalsIgnoreCase(getFragmentName(srcFragment))) {
+            if (ACommonFragmentReferencesUpdater.refNameEquals(config, getFragmentName(srcFragment))) {
                 if (isDebugEnabled) {
                     LOGGER.debug(String.format("[%s][%s][profile=%s][source.fragment.name=%s]new name=%s", getLogPrefix(), config.getTypeAsEnum(),
                             referencedIn.getPath(), getFragmentName(srcFragment), newName));
@@ -180,7 +190,7 @@ public abstract class AProtocolFragmentUpdater<F, R> {
 
         if (target != null && isTargetFragment(target)) {
             R tgtFragment = getTargetFragment(target);
-            if (refNameEquals(config, getFragmentName(tgtFragment))) {
+            if (ACommonFragmentReferencesUpdater.refNameEquals(config, getFragmentName(tgtFragment))) {
                 if (isDebugEnabled) {
                     LOGGER.debug(String.format("[%s][%s][profile=%s][target.fragment.name=%s]new name=%s", getLogPrefix(), config.getTypeAsEnum(),
                             referencedIn.getPath(), getFragmentName(tgtFragment), newName));
@@ -196,22 +206,59 @@ public abstract class AProtocolFragmentUpdater<F, R> {
 
         referencedIn.setContent(Globals.objectMapper.writeValueAsString(jr));
         referencedIn.setDeployed(false);
-        applyChange(dbLayer, referencedIn, items, events);
+        ACommonFragmentReferencesUpdater.applyChange(dbLayer, referencedIn, items, events);
     }
 
-    private void applyChange(InventoryDBLayer dbLayer, DBItemInventoryConfiguration c, List<DBItemInventoryConfiguration> items, Set<String> events)
-            throws Exception {
-        int i = items.indexOf(c);
-        if (i != -1) {
-            items.get(i).setContent(c.getContent());
-            items.get(i).setReleased(false);
-        } else {
-            JocInventory.updateConfiguration(dbLayer, c);
-            events.add(c.getFolder());
+    private void handleMail(InventoryDBLayer dbLayer, DBItemInventoryConfiguration config, DBItemInventoryConfiguration referencedIn, String newName,
+            List<DBItemInventoryConfiguration> items, Set<String> events, boolean isDebugEnabled) throws Exception {
+        FileTransferJobResource jr = FileTransferJobResourceHandler.toFileTransferJobResource(referencedIn.getContent());
+        if (jr.getProfile() == null) {
+            return;
         }
-    }
+        boolean changed = false;
+        NotificationTriggers triggers = jr.getProfile().getNotificationTriggers();
+        if (triggers == null) {
+            return;
+        }
 
-    private boolean refNameEquals(DBItemInventoryConfiguration config, String referencedInName) {
-        return config.getName().equalsIgnoreCase(referencedInName);
+        if (triggers.getOnError() != null) {
+            if (ACommonFragmentReferencesUpdater.refNameEquals(config, triggers.getOnError().getMailFragmentName())) {
+                if (isDebugEnabled) {
+                    LOGGER.debug(String.format("[%s][%s][profile=%s][notificationTriggers.onError.mailFragmentName=%s]new name=%s", getLogPrefix(),
+                            config.getTypeAsEnum(), referencedIn.getPath(), triggers.getOnError().getMailFragmentName(), newName));
+                }
+                triggers.getOnError().setMailFragmentName(newName);
+                changed = true;
+            }
+        }
+        if (triggers.getOnSuccess() != null) {
+            if (ACommonFragmentReferencesUpdater.refNameEquals(config, triggers.getOnSuccess().getMailFragmentName())) {
+                if (isDebugEnabled) {
+                    LOGGER.debug(String.format("[%s][%s][profile=%s][notificationTriggers.onSuccess.mailFragmentName=%s]new name=%s", getLogPrefix(),
+                            config.getTypeAsEnum(), referencedIn.getPath(), triggers.getOnSuccess().getMailFragmentName(), newName));
+                }
+                triggers.getOnSuccess().setMailFragmentName(newName);
+                changed = true;
+            }
+        }
+        if (triggers.getOnEmptyFiles() != null) {
+            if (ACommonFragmentReferencesUpdater.refNameEquals(config, triggers.getOnEmptyFiles().getMailFragmentName())) {
+                if (isDebugEnabled) {
+                    LOGGER.debug(String.format("[%s][%s][profile=%s][notificationTriggers.onEmptyFiles.mailFragmentName=%s]new name=%s",
+                            getLogPrefix(), config.getTypeAsEnum(), referencedIn.getPath(), triggers.getOnEmptyFiles().getMailFragmentName(),
+                            newName));
+                }
+                triggers.getOnEmptyFiles().setMailFragmentName(newName);
+                changed = true;
+            }
+        }
+
+        if (!changed) {
+            return;
+        }
+
+        referencedIn.setContent(Globals.objectMapper.writeValueAsString(jr));
+        referencedIn.setDeployed(false);
+        ACommonFragmentReferencesUpdater.applyChange(dbLayer, referencedIn, items, events);
     }
 }

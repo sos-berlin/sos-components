@@ -2191,9 +2191,13 @@ public class InventoryDBLayer extends DBLayer {
         return getUsedFileTransferAlternatives(ConfigurationType.FT_FRAGMENT_WEBDAV, name);
     }
 
+    public List<DBItemInventoryConfiguration> getUsedFileTransferProfileAlternatives(String name) throws SOSHibernateException {
+        return getUsedFileTransferAlternatives(ConfigurationType.FT_PROFILE_JOBRESOURCE, name);
+    }
+
     public List<DBItemInventoryConfiguration> getUsedFileTransferAlternatives(ConfigurationType fileTransferType, String name)
             throws SOSHibernateException {
-        String alternativePropertyName = FileTransferHelper.getAlternativeProtocolFragmentPropertyName(fileTransferType);
+        String alternativePropertyName = FileTransferHelper.getPropertyNameAlternative(fileTransferType);
         if (alternativePropertyName == null) {
             return null;
         }
@@ -2212,7 +2216,8 @@ public class InventoryDBLayer extends DBLayer {
      * @param jumpName
      * @return
      * @throws SOSHibernateException */
-    public List<DBItemInventoryConfiguration> getUsedFileTransferFragmentsByJumpExcludingSelf(String jumpName) throws SOSHibernateException {
+    public List<DBItemInventoryConfiguration> getUsedFileTransferFragmentsByJumpFragmentNameExcludingSelf(String jumpName)
+            throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
         hql.append(" where type in (:types) and ");
         hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "jsonContent", "$.jumpFragmentName")).append("=:name");
@@ -2220,6 +2225,73 @@ public class InventoryDBLayer extends DBLayer {
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
         query.setParameterList("types", FileTransferHelper.getOtherFragmentsUsingJump());
         query.setParameter("name", jumpName);
+        return getSession().getResultList(query);
+    }
+
+    /** List of configuration items that may reference a credential store fragment
+     * 
+     * @param credentialStoreName
+     * @return
+     * @throws SOSHibernateException */
+    public List<DBItemInventoryConfiguration> getUsedFileTransferFragmentsByCredentialStoreFragmentName(String credentialStoreName)
+            throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+        hql.append(" where type in (:types) and ");
+        hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "jsonContent", "$.credentialStoreFragmentName")).append("=:name");
+
+        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+        query.setParameterList("types", FileTransferHelper.getFragmentsUsingCredentialStore());
+        query.setParameter("name", credentialStoreName);
+        return getSession().getResultList(query);
+    }
+
+    /** List of configuration items that may reference a decryption fragment
+     * 
+     * @param decryptionName
+     * @return
+     * @throws SOSHibernateException */
+    public List<DBItemInventoryConfiguration> getUsedFileTransferFragmentsByDecryptionFragmentName(String decryptionName)
+            throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+        hql.append(" where type in (:types) and ");
+        hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "jsonContent", "$.decryptionFragmentName")).append("=:name");
+
+        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+        query.setParameterList("types", FileTransferHelper.getFragmentsUsingDecryption());
+        query.setParameter("name", decryptionName);
+        return getSession().getResultList(query);
+    }
+
+    /** List of configuration items that may reference a HTTP proxy fragment
+     * 
+     * @param httpProxyName
+     * @return
+     * @throws SOSHibernateException */
+    public List<DBItemInventoryConfiguration> getUsedFileTransferFragmentsByHttpProxyFragmentName(String httpProxyName) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+        hql.append(" where type in (:types) and ");
+        hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "jsonContent", "$.httpProxyFragmentName")).append("=:name");
+
+        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+        query.setParameterList("types", FileTransferHelper.getFragmentsUsingHttpProxy());
+        query.setParameter("name", httpProxyName);
+        return getSession().getResultList(query);
+    }
+
+    /** List of configuration items that may reference a SOCKS proxy fragment
+     * 
+     * @param socksProxyName
+     * @return
+     * @throws SOSHibernateException */
+    public List<DBItemInventoryConfiguration> getUsedFileTransferFragmentsBySocksProxyFragmentName(String socksProxyName)
+            throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+        hql.append(" where type in (:types) and ");
+        hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "jsonContent", "$.socksProxyFragmentName")).append("=:name");
+
+        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+        query.setParameterList("types", FileTransferHelper.getFragmentsUsingSocksProxy());
+        query.setParameter("name", socksProxyName);
         return getSession().getResultList(query);
     }
 
@@ -2261,6 +2333,26 @@ public class InventoryDBLayer extends DBLayer {
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
         query.setParameter("type", ConfigurationType.FT_PROFILE_JOBRESOURCE.intValue());
         query.setParameter("value", value);
+        return getSession().getResultList(query);
+    }
+
+    public List<DBItemInventoryConfiguration> getUsedFileTransferProfilesByMailFragmentName(String name) throws SOSHibernateException {
+        String root = "$.profile.notificationTriggers";
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+        hql.append(" where type = :type and (");
+        hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "jsonContent", root + ".onError.mailFragmentName"));
+        hql.append("=:name");
+        hql.append(" or ");
+        hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "jsonContent", root + ".onSuccess.mailFragmentName"));
+        hql.append("=:name");
+        hql.append(" or ");
+        hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "jsonContent", root + ".onEmptyFiles.mailFragmentName"));
+        hql.append("=:name");
+        hql.append(")");
+
+        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+        query.setParameter("type", ConfigurationType.FT_PROFILE_JOBRESOURCE.intValue());
+        query.setParameter("name", name);
         return getSession().getResultList(query);
     }
 

@@ -20,29 +20,11 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
-    "credentialStoreFragmentName",
-    "decryptionFragmentName",
     "processing",
     "rename"
 })
 public class Local {
 
-    /**
-     * Any non-empty string. May contain variable references such as ${VAR} that are resolved at runtime.
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("credentialStoreFragmentName")
-    private String credentialStoreFragmentName;
-    /**
-     * Any non-empty string. May contain variable references such as ${VAR} that are resolved at runtime.
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("decryptionFragmentName")
-    private String decryptionFragmentName;
     /**
      * SSH processing options.
      * <p>
@@ -72,59 +54,11 @@ public class Local {
      * 
      * @param rename
      * @param processing
-     * @param decryptionFragmentName
-     * @param credentialStoreFragmentName
      */
-    public Local(String credentialStoreFragmentName, String decryptionFragmentName, Processing processing, Rename rename) {
+    public Local(Processing processing, Rename rename) {
         super();
-        this.credentialStoreFragmentName = credentialStoreFragmentName;
-        this.decryptionFragmentName = decryptionFragmentName;
         this.processing = processing;
         this.rename = rename;
-    }
-
-    /**
-     * Any non-empty string. May contain variable references such as ${VAR} that are resolved at runtime.
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("credentialStoreFragmentName")
-    public String getCredentialStoreFragmentName() {
-        return credentialStoreFragmentName;
-    }
-
-    /**
-     * Any non-empty string. May contain variable references such as ${VAR} that are resolved at runtime.
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("credentialStoreFragmentName")
-    public void setCredentialStoreFragmentName(String credentialStoreFragmentName) {
-        this.credentialStoreFragmentName = credentialStoreFragmentName;
-    }
-
-    /**
-     * Any non-empty string. May contain variable references such as ${VAR} that are resolved at runtime.
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("decryptionFragmentName")
-    public String getDecryptionFragmentName() {
-        return decryptionFragmentName;
-    }
-
-    /**
-     * Any non-empty string. May contain variable references such as ${VAR} that are resolved at runtime.
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("decryptionFragmentName")
-    public void setDecryptionFragmentName(String decryptionFragmentName) {
-        this.decryptionFragmentName = decryptionFragmentName;
     }
 
     /**
@@ -173,12 +107,12 @@ public class Local {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("credentialStoreFragmentName", credentialStoreFragmentName).append("decryptionFragmentName", decryptionFragmentName).append("processing", processing).append("rename", rename).toString();
+        return new ToStringBuilder(this).append("processing", processing).append("rename", rename).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(processing).append(rename).append(decryptionFragmentName).append(credentialStoreFragmentName).toHashCode();
+        return new HashCodeBuilder().append(processing).append(rename).toHashCode();
     }
 
     @Override
@@ -190,7 +124,7 @@ public class Local {
             return false;
         }
         Local rhs = ((Local) other);
-        return new EqualsBuilder().append(processing, rhs.processing).append(rename, rhs.rename).append(decryptionFragmentName, rhs.decryptionFragmentName).append(credentialStoreFragmentName, rhs.credentialStoreFragmentName).isEquals();
+        return new EqualsBuilder().append(processing, rhs.processing).append(rename, rhs.rename).isEquals();
     }
 
 }
