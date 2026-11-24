@@ -1665,6 +1665,9 @@ public class JocInventory {
         case FT_FRAGMENT_SFTP:
             FileTransferUpdateConfigurationHelper.updateSftpRefs(dbLayer, config, newName, items, events);
             break;
+        case FT_FRAGMENT_JUMP:
+            FileTransferUpdateConfigurationHelper.updateJumpRefs(dbLayer, config, newName, items, events);
+            break;
         case FT_FRAGMENT_FTP:
             FileTransferUpdateConfigurationHelper.updateFtpRefs(dbLayer, config, newName, items, events);
             break;

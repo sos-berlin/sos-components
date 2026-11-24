@@ -6,6 +6,7 @@ import java.util.Set;
 import com.sos.joc.classes.filetransfer.updaters.fragments.AzureBlobStorageFragmentRefsUpdater;
 import com.sos.joc.classes.filetransfer.updaters.fragments.FtpFragmentRefsUpdater;
 import com.sos.joc.classes.filetransfer.updaters.fragments.HttpFragmentRefsUpdater;
+import com.sos.joc.classes.filetransfer.updaters.fragments.JumpFragmentRefsUpdater;
 import com.sos.joc.classes.filetransfer.updaters.fragments.MailFragmentRefsUpdater;
 import com.sos.joc.classes.filetransfer.updaters.fragments.ProfileRefsUpdater;
 import com.sos.joc.classes.filetransfer.updaters.fragments.SftpFragmentRefsUpdater;
@@ -68,6 +69,11 @@ public class FileTransferUpdateConfigurationHelper {
     public static void updateSftpRefs(InventoryDBLayer dbLayer, DBItemInventoryConfiguration config, String newName,
             List<DBItemInventoryConfiguration> items, Set<String> events) throws Exception {
         new SftpFragmentRefsUpdater().update(dbLayer, config, newName, items, events);
+    }
+
+    public static void updateJumpRefs(InventoryDBLayer dbLayer, DBItemInventoryConfiguration config, String newName,
+            List<DBItemInventoryConfiguration> items, Set<String> events) throws Exception {
+        new JumpFragmentRefsUpdater().update(dbLayer, config, newName, items, events);
     }
 
     public static void updateSmbRefs(InventoryDBLayer dbLayer, DBItemInventoryConfiguration config, String newName,
