@@ -8,58 +8,59 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum EventType {
 
-    VersionAdded("VersionAdded"),
-    FileBasedChanged("FileBasedChanged"),
-    ControllerReady("ControllerReady"),
-    AgentReady("AgentReady"),
-    OrderAdded("OrderAdded"),
-    OrderAttachable("OrderAttachable"),
-    OrderAttached("OrderAttached"),
-    OrderStarted("OrderStarted"),
-    OrderTransferredToAgent("OrderTransferredToAgent"),
-    OrderProcessingStarted("OrderProcessingStarted"),
-    OrderStdoutWritten("OrderStdoutWritten"),
-    OrderStderrWritten("OrderStderrWritten"),
-    OrderProcessed("OrderProcessed"),
-    OrderResumed("OrderResumed"),
-    OrderResumeMarked("OrderResumeMarked"),
-    OrderResumptionMarked("OrderResumptionMarked"),
-    OrderForked("OrderForked"),
-    OrderJoined("OrderJoined"),
-    OrderOffered("OrderOffered"),
-    OrderRetrying("OrderRetrying"),
-    OrderAwaiting("OrderAwaiting"),
-    OrderMoved("OrderMoved"),
-    OrderDetachable("OrderDetachable"),
-    OrderDetached("OrderDetached"),
-    OrderOutcomeAdded("OrderOutcomeAdded"),
-    OrderFailedinFork("OrderFailedinFork"),
-    OrderFailed("OrderFailed"),
-    OrderStopped("OrderStopped"),
-    OrderCatched("OrderCatched"),
-    OrderCaught("OrderCaught"),
-    OrderAwoke("OrderAwoke"),
-    OrderSuspended("OrderSuspended"),
-    OrderSuspendMarked("OrderSuspendMarked"),
-    OrderSuspensionMarked("OrderSuspensionMarked"),
-    OrderBroken("OrderBroken"),
-    OrderCancelled("OrderCancelled"),
-    OrderFinished("OrderFinished"),
-    OrderLocksAcquired("OrderLocksAcquired"),
-    OrderLocksQueued("OrderLocksQueued"),
-    OrderLocksReleased("OrderLocksReleased"),
-    OrderNoticesConsumed("OrderNoticesConsumed"),
-    OrderNoticesConsumptionStarted("OrderNoticesConsumptionStarted"),
-    OrderNoticesRead("OrderNoticesRead"),
-    OrderNoticesExpected("OrderNoticesExpected"),
-    OrderNoticePosted("OrderNoticePosted"),
-    OrderPrompted("OrderPrompted"),
-    OrderPromptAnswered("OrderPromptAnswered"),
-    OrderCyclingPrepared("OrderCyclingPrepared"),
-    OrderOrderAdded("OrderOrderAdded"),
-    OrderSleeping("OrderSleeping"),
-    OrderPriorityChanged("OrderPriorityChanged");
+    VersionAdded("VersionAdded", false),
+    FileBasedChanged("FileBasedChanged", false),
+    ControllerReady("ControllerReady", false),
+    AgentReady("AgentReady", false),
+    OrderAdded("OrderAdded", false),
+    OrderAttachable("OrderAttachable", false),
+    OrderAttached("OrderAttached", false),
+    OrderStarted("OrderStarted", false),
+    OrderTransferredToAgent("OrderTransferredToAgent", false),
+    OrderProcessingStarted("OrderProcessingStarted", false),
+    OrderStdoutWritten("OrderStdoutWritten", false),
+    OrderStderrWritten("OrderStderrWritten", false),
+    OrderProcessed("OrderProcessed", false),
+    OrderResumed("OrderResumed", false),
+    OrderResumeMarked("OrderResumeMarked", false),
+    OrderResumptionMarked("OrderResumptionMarked", false),
+    OrderForked("OrderForked", false),
+    OrderJoined("OrderJoined", false),
+    OrderOffered("OrderOffered", false),
+    OrderRetrying("OrderRetrying", false),
+    OrderAwaiting("OrderAwaiting", false),
+    OrderMoved("OrderMoved", false),
+    OrderDetachable("OrderDetachable", false),
+    OrderDetached("OrderDetached", false),
+    OrderOutcomeAdded("OrderOutcomeAdded", false),
+    OrderFailedinFork("OrderFailedinFork", true),
+    OrderFailed("OrderFailed", true),
+    OrderStopped("OrderStopped", true),
+    OrderCatched("OrderCatched", false),
+    OrderCaught("OrderCaught", false),
+    OrderAwoke("OrderAwoke", false),
+    OrderSuspended("OrderSuspended", true),
+    OrderSuspendMarked("OrderSuspendMarked", true),
+    OrderSuspensionMarked("OrderSuspensionMarked", true),
+    OrderBroken("OrderBroken", true),
+    OrderCancelled("OrderCancelled", true),
+    OrderFinished("OrderFinished", false),
+    OrderLocksAcquired("OrderLocksAcquired", false),
+    OrderLocksQueued("OrderLocksQueued", false), //maybe true
+    OrderLocksReleased("OrderLocksReleased", false),
+    OrderNoticesConsumed("OrderNoticesConsumed", false),
+    OrderNoticesConsumptionStarted("OrderNoticesConsumptionStarted", false),
+    OrderNoticesRead("OrderNoticesRead", false),
+    OrderNoticesExpected("OrderNoticesExpected", false),
+    OrderNoticePosted("OrderNoticePosted", false),
+    OrderPrompted("OrderPrompted", false), //maybe true
+    OrderPromptAnswered("OrderPromptAnswered", false),
+    OrderCyclingPrepared("OrderCyclingPrepared", false),
+    OrderOrderAdded("OrderOrderAdded", false),
+    OrderSleeping("OrderSleeping", false),
+    OrderPriorityChanged("OrderPriorityChanged", false);
     private final String value;
+    private final boolean disturbed;
     private final static Map<String, EventType> CONSTANTS = new HashMap<String, EventType>();
 
     static {
@@ -68,8 +69,9 @@ public enum EventType {
         }
     }
 
-    private EventType(String value) {
+    private EventType(String value, boolean disturbed) {
         this.value = value;
+        this.disturbed = disturbed;
     }
 
     @Override
@@ -80,6 +82,10 @@ public enum EventType {
     @JsonValue
     public String value() {
         return this.value;
+    }
+    
+    public Boolean isDisturbed() {
+        return this.disturbed;
     }
 
     @JsonCreator
