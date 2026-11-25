@@ -159,6 +159,8 @@ public class ShowKeyImpl extends JOCResourceImpl implements IShowKey {
                     jocKeyPair.setNotBefore(cert.getNotBefore());
                     jocKeyPair.setFingerprintSHA1(KeyUtil.byteArrayToHexString(cert.getEncoded(), "SHA-1"));
                     jocKeyPair.setFingerprintSHA256(KeyUtil.byteArrayToHexString(cert.getEncoded(), "SHA-256"));
+                    jocKeyPair.setSubject(cert.getSubjectX500Principal().getName());
+                    jocKeyPair.setIssuer(cert.getIssuerX500Principal().getName());
                 }
                 if (jocKeyPair.getValidUntil() == null) {
                     LOGGER.trace("Key does not expire or not readable from key!");

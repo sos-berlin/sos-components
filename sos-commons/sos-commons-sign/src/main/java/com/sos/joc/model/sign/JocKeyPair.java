@@ -28,7 +28,9 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "fingerprintSHA1",
     "fingerprintSHA256",
     "keyType",
-    "keyAlgorithm"
+    "keyAlgorithm",
+    "issuer",
+    "subject"
 })
 public class JocKeyPair {
 
@@ -71,6 +73,10 @@ public class JocKeyPair {
      */
     @JsonProperty("keyAlgorithm")
     private String keyAlgorithm;
+    @JsonProperty("issuer")
+    private String issuer;
+    @JsonProperty("subject")
+    private String subject;
 
     @JsonProperty("privateKey")
     public String getPrivateKey() {
@@ -206,14 +212,34 @@ public class JocKeyPair {
         this.keyAlgorithm = keyAlgorithm;
     }
 
+    @JsonProperty("issuer")
+    public String getIssuer() {
+        return issuer;
+    }
+
+    @JsonProperty("issuer")
+    public void setIssuer(String issuer) {
+        this.issuer = issuer;
+    }
+
+    @JsonProperty("subject")
+    public String getSubject() {
+        return subject;
+    }
+
+    @JsonProperty("subject")
+    public void setSubject(String subject) {
+        this.subject = subject;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("privateKey", privateKey).append("publicKey", publicKey).append("keyID", keyID).append("certificate", certificate).append("validUntil", validUntil).append("notBefore", notBefore).append("fingerprintSHA1", fingerprintSHA1).append("fingerprintSHA256", fingerprintSHA256).append("keyType", keyType).append("keyAlgorithm", keyAlgorithm).toString();
+        return new ToStringBuilder(this).append("keyID", keyID).append("validUntil", validUntil).append("notBefore", notBefore).append("fingerprintSHA1", fingerprintSHA1).append("fingerprintSHA256", fingerprintSHA256).append("keyType", keyType).append("keyAlgorithm", keyAlgorithm).append("issuer", issuer).append("subject", subject).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(privateKey).append(keyAlgorithm).append(fingerprintSHA1).append(certificate).append(keyID).append(validUntil).append(fingerprintSHA256).append(publicKey).append(keyType).append(notBefore).toHashCode();
+        return new HashCodeBuilder().append(keyAlgorithm).append(subject).append(certificate).append(keyID).append(publicKey).append(notBefore).append(issuer).append(privateKey).append(fingerprintSHA1).append(validUntil).append(fingerprintSHA256).append(keyType).toHashCode();
     }
 
     @Override
@@ -225,7 +251,7 @@ public class JocKeyPair {
             return false;
         }
         JocKeyPair rhs = ((JocKeyPair) other);
-        return new EqualsBuilder().append(privateKey, rhs.privateKey).append(keyAlgorithm, rhs.keyAlgorithm).append(fingerprintSHA1, rhs.fingerprintSHA1).append(certificate, rhs.certificate).append(keyID, rhs.keyID).append(validUntil, rhs.validUntil).append(fingerprintSHA256, rhs.fingerprintSHA256).append(publicKey, rhs.publicKey).append(keyType, rhs.keyType).append(notBefore, rhs.notBefore).isEquals();
+        return new EqualsBuilder().append(keyAlgorithm, rhs.keyAlgorithm).append(subject, rhs.subject).append(certificate, rhs.certificate).append(keyID, rhs.keyID).append(publicKey, rhs.publicKey).append(notBefore, rhs.notBefore).append(issuer, rhs.issuer).append(privateKey, rhs.privateKey).append(fingerprintSHA1, rhs.fingerprintSHA1).append(validUntil, rhs.validUntil).append(fingerprintSHA256, rhs.fingerprintSHA256).append(keyType, rhs.keyType).isEquals();
     }
 
 }
