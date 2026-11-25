@@ -1,0 +1,17 @@
+{
+	"controllerIds": [
+		"2.9.x-49990"
+	],
+	"auditLog": {},
+	"includeLate": false,
+	"store": {
+		"draftConfigurations": [
+			{
+				"configuration": {
+					"path": "/filetransfer/ft_jr_normal",
+					"objectType": "JOBRESOURCE"
+				}
+			}
+		]
+	}
+}
