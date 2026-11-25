@@ -11,6 +11,7 @@ import com.sos.commons.util.SOSPathUtils;
 import com.sos.inventory.model.filetransfer.FileTransferJobResource;
 import com.sos.inventory.model.job.Environment;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.filetransfer.FileTransferHelper;
 
 public class FileTransferJobResourceUtils {
 
@@ -23,7 +24,8 @@ public class FileTransferJobResourceUtils {
         com.sos.sign.model.filetransfer.FileTransferJobResource signed = new com.sos.sign.model.filetransfer.FileTransferJobResource();
         signed.setPath(SOSPathUtils.getBaseName(objectPath));
 
-        FileTransferJobResource ft = Globals.objectMapper.readValue(json, FileTransferJobResource.class); // covert only to remove version ...
+        // convert only to remove version ...
+        FileTransferJobResource ft = FileTransferHelper.toFileTransferJobResource(json);
         ft.setVersion(null);
 
         Environment vars = new Environment();

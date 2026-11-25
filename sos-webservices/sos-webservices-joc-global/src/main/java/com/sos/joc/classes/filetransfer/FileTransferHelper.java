@@ -23,6 +23,19 @@ public class FileTransferHelper {
     private static final String PROPERY_NAME_ALTERNATIVE_SMB = "alternativeSmbFragmentName";
     private static final String PROPERY_NAME_ALTERNATIVE_WEBDAV = "alternativeWebdavFragmentName";
 
+    public static final List<ConfigurationType> DEPLOYABLE_OBJECTS = Arrays.asList(ConfigurationType.FT_PROFILE_JOBRESOURCE);
+
+    public static final List<ConfigurationType> RELEASABLE_OBJECTS = Arrays.asList(ConfigurationType.FT_FRAGMENT_CREDENTIAL_STORE,
+            ConfigurationType.FT_FRAGMENT_DECRYPTION, ConfigurationType.FT_FRAGMENT_MAIL, ConfigurationType.FT_FRAGMENT_HTTP_PROXY,
+            ConfigurationType.FT_FRAGMENT_SOCKS_PROXY, ConfigurationType.FT_FRAGMENT_AZURE_BLOB_STORAGE, ConfigurationType.FT_FRAGMENT_FTP,
+            ConfigurationType.FT_FRAGMENT_HTTP, ConfigurationType.FT_FRAGMENT_JUMP, ConfigurationType.FT_FRAGMENT_SFTP,
+            ConfigurationType.FT_FRAGMENT_SMB, ConfigurationType.FT_FRAGMENT_WEBDAV);
+
+    public static final List<Integer> REFERENCING_OBJECTS = Arrays.asList(ConfigurationType.FT_PROFILE_JOBRESOURCE.intValue(),
+            ConfigurationType.FT_FRAGMENT_AZURE_BLOB_STORAGE.intValue(), ConfigurationType.FT_FRAGMENT_FTP.intValue(),
+            ConfigurationType.FT_FRAGMENT_HTTP.intValue(), ConfigurationType.FT_FRAGMENT_JUMP.intValue(), ConfigurationType.FT_FRAGMENT_SFTP
+                    .intValue(), ConfigurationType.FT_FRAGMENT_SMB.intValue(), ConfigurationType.FT_FRAGMENT_WEBDAV.intValue());
+
     public static FileTransferJobResource toFileTransferJobResource(String json) throws JsonProcessingException {
         // return Globals.objectMapper.readValue(extractJson(json), FileTransferJobResource.class);
         return Globals.objectMapper.readValue(json, FileTransferJobResource.class);

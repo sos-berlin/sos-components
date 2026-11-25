@@ -74,6 +74,7 @@ import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
+import com.sos.joc.classes.filetransfer.FileTransferHelper;
 import com.sos.joc.classes.filetransfer.FileTransferUpdateConfigurationHelper;
 import com.sos.joc.classes.inventory.search.WorkflowConverter;
 import com.sos.joc.classes.order.OrderTags;
@@ -245,13 +246,13 @@ public class JocInventory {
         }
     });
 
-    public static final Set<ConfigurationType> DEPLOYABLE_OBJECTS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
-            ConfigurationType.JOBCLASS, ConfigurationType.FILEORDERSOURCE, ConfigurationType.LOCK, ConfigurationType.WORKFLOW,
-            ConfigurationType.JOBRESOURCE, ConfigurationType.NOTICEBOARD)));
+    public static final Set<ConfigurationType> DEPLOYABLE_OBJECTS = Collections.unmodifiableSet(Stream.concat(Stream.of(ConfigurationType.JOBCLASS,
+            ConfigurationType.FILEORDERSOURCE, ConfigurationType.LOCK, ConfigurationType.WORKFLOW, ConfigurationType.JOBRESOURCE,
+            ConfigurationType.NOTICEBOARD), FileTransferHelper.DEPLOYABLE_OBJECTS.stream()).collect(Collectors.toSet()));
 
-    public static final Set<ConfigurationType> RELEASABLE_OBJECTS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
-            ConfigurationType.SCHEDULE, ConfigurationType.INCLUDESCRIPT, ConfigurationType.NONWORKINGDAYSCALENDAR,
-            ConfigurationType.WORKINGDAYSCALENDAR, ConfigurationType.JOBTEMPLATE, ConfigurationType.REPORT)));
+    public static final Set<ConfigurationType> RELEASABLE_OBJECTS = Collections.unmodifiableSet(Stream.concat(Stream.of(ConfigurationType.SCHEDULE,
+            ConfigurationType.INCLUDESCRIPT, ConfigurationType.NONWORKINGDAYSCALENDAR, ConfigurationType.WORKINGDAYSCALENDAR,
+            ConfigurationType.JOBTEMPLATE, ConfigurationType.REPORT), FileTransferHelper.RELEASABLE_OBJECTS.stream()).collect(Collectors.toSet()));
 
     public static String getResourceImplPath(final String path) {
         return String.format("./%s/%s", APPLICATION_PATH, path);
@@ -308,18 +309,17 @@ public class JocInventory {
     }
 
     public static List<Integer> getTypesFromObjectsWithReferences() {
-        return Arrays.asList(ConfigurationType.WORKFLOW.intValue(), ConfigurationType.FILEORDERSOURCE.intValue(), ConfigurationType.SCHEDULE
-                .intValue(), ConfigurationType.JOBTEMPLATE.intValue(), ConfigurationType.WORKINGDAYSCALENDAR.intValue(),
-                ConfigurationType.FT_FRAGMENT_AZURE_BLOB_STORAGE.intValue(), ConfigurationType.FT_FRAGMENT_FTP.intValue(),
-                ConfigurationType.FT_FRAGMENT_HTTP.intValue(), ConfigurationType.FT_FRAGMENT_SFTP.intValue(), ConfigurationType.FT_FRAGMENT_SMB
-                        .intValue(), ConfigurationType.FT_FRAGMENT_JUMP.intValue(), ConfigurationType.FT_FRAGMENT_WEBDAV.intValue(),
-                ConfigurationType.FT_PROFILE_JOBRESOURCE.intValue());
+        List<Integer> l = new ArrayList<>(List.of(ConfigurationType.WORKFLOW.intValue(), ConfigurationType.FILEORDERSOURCE.intValue(),
+                ConfigurationType.SCHEDULE.intValue(), ConfigurationType.JOBTEMPLATE.intValue(), ConfigurationType.WORKINGDAYSCALENDAR.intValue()));
+        l.addAll(FileTransferHelper.REFERENCING_OBJECTS);
+        return l;
+
     }
 
     public static List<Integer> getTypesFromObjectsWithReferencesAndFolders() {
-        return Arrays.asList(ConfigurationType.WORKFLOW.intValue(), ConfigurationType.FILEORDERSOURCE.intValue(), ConfigurationType.SCHEDULE
-                .intValue(), ConfigurationType.JOBTEMPLATE.intValue(), ConfigurationType.WORKINGDAYSCALENDAR.intValue(), ConfigurationType.FOLDER
-                        .intValue());
+        List<Integer> l = getTypesFromObjectsWithReferences();
+        l.add(ConfigurationType.FOLDER.intValue());
+        return l;
     }
 
     public static List<Integer> getJobResourceTypes() {
@@ -1657,7 +1657,7 @@ public class JocInventory {
         case FT_FRAGMENT_SOCKS_PROXY:
             FileTransferUpdateConfigurationHelper.updateSocksProxyRefs(dbLayer, config, newName, items, events);
             break;
-        // FileTransfer - profile    
+        // FileTransfer - profile
         case FT_PROFILE_JOBRESOURCE:
             FileTransferUpdateConfigurationHelper.updateProfileRefs(dbLayer, config, newName, items, events);
             break;

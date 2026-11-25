@@ -63,21 +63,18 @@ public class FileTransferJobResourceUtils {
     // private static final String PROPERTY_NAME_ALTERNATIVE = "alternative";
 
     // TODO remove it
-    private static final boolean testMode = true;
+    private static final boolean testMode = false;
 
-    // throw specific exception
     public static String completeForDeploy(DBItemInventoryConfiguration c, DBLayerDeploy dbLayer) throws Exception {
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("[complete]" + c.getPath());
+            LOGGER.debug("[completeForDeploy]" + c.getPath());
         }
 
         FileTransferJobResource ft = FileTransferHelper.toFileTransferJobResource(c.getContent());
-
-        if (ft.getProfile() == null) {
+        Profile p = ft.getProfile();
+        if (p == null) {
             throw new Exception("Missing profile");
         }
-
-        Profile p = ft.getProfile();
         if (p.getSource() == null) {
             throw new Exception("Missing profile.source");
         }
@@ -91,25 +88,22 @@ public class FileTransferJobResourceUtils {
         return Globals.objectMapper.writeValueAsString(ft);
     }
 
+    // All referenced fragments should already have been released
     private static void resolveProfile(DBLayerDeploy dbLayer, String path, Settings s, Profile p) throws Exception {
-        if (p == null) {
-            return;
-        }
-
         boolean hasAlternativeName = !SOSString.isEmpty(p.getAlternativeProfileName()) && !p.getAlternativeProfileName().equalsIgnoreCase(s
                 .getProfileName());
         boolean hasNotificationTriggers = p.getNotificationTriggers() != null;
         boolean isSourceFragmentLocal = FileTransferHelper.isSourceFragmentLocal(p.getSource());
         boolean isTargetFragmentNullOrLocal = FileTransferHelper.isTargetFragmentNullOrLocal(p.getTarget());
         if (!hasAlternativeName && !hasNotificationTriggers && isSourceFragmentLocal && isTargetFragmentNullOrLocal) {
+            // no references for settings
             return;
         }
 
-        // All fragments should already have been released
-        // 1) Source
+        // 1) Source fragment
         setSettingsFragment(dbLayer, path, s, p.getSource().getFragment());
 
-        // 2) Target
+        // 2) Target fragment
         if (!isTargetFragmentNullOrLocal) {
             setSettingsFragment(dbLayer, path, s, p.getTarget().getFragment());
         }
@@ -180,6 +174,7 @@ public class FileTransferJobResourceUtils {
         }
         CredentialStoreFragment f = getReleasedFragment(dbLayer, path, PROPERTY_NAME_FRAGMENT_CREDENTIAL_STORE, name,
                 ConfigurationType.FT_FRAGMENT_CREDENTIAL_STORE, CredentialStoreFragment.class);
+        f.setVersion(null);
         s.getCredentialStoreFragments().getAdditionalProperties().put(name, f);
     }
 
@@ -197,6 +192,7 @@ public class FileTransferJobResourceUtils {
         }
         DecryptionFragment f = getReleasedFragment(dbLayer, path, PROPERTY_NAME_FRAGMENT_DECRYPTION, name, ConfigurationType.FT_FRAGMENT_DECRYPTION,
                 DecryptionFragment.class);
+        f.setVersion(null);
         s.getDecryptionFragments().getAdditionalProperties().put(name, f);
     }
 
@@ -214,6 +210,7 @@ public class FileTransferJobResourceUtils {
         }
         MailFragment f = getReleasedFragment(dbLayer, path, PROPERTY_NAME_FRAGMENT_MAIL, name, ConfigurationType.FT_FRAGMENT_MAIL,
                 MailFragment.class);
+        f.setVersion(null);
         s.getMailFragments().getAdditionalProperties().put(name, f);
     }
 
@@ -231,6 +228,7 @@ public class FileTransferJobResourceUtils {
         }
         HttpProxyFragment f = getReleasedFragment(dbLayer, path, PROPERTY_NAME_FRAGMENT_HTTP_PROXY, name, ConfigurationType.FT_FRAGMENT_HTTP_PROXY,
                 HttpProxyFragment.class);
+        f.setVersion(null);
         s.getHttpProxyFragments().getAdditionalProperties().put(name, f);
     }
 
@@ -248,6 +246,7 @@ public class FileTransferJobResourceUtils {
         }
         SocksProxyFragment f = getReleasedFragment(dbLayer, path, PROPERTY_NAME_FRAGMENT_SOCKS_PROXY, name, ConfigurationType.FT_FRAGMENT_SOCKS_PROXY,
                 SocksProxyFragment.class);
+        f.setVersion(null);
         s.getSocksProxyFragments().getAdditionalProperties().put(name, f);
     }
 
@@ -265,6 +264,7 @@ public class FileTransferJobResourceUtils {
         }
         JumpFragment f = getReleasedFragment(dbLayer, path, PROPERTY_NAME_FRAGMENT_JUMP, name, ConfigurationType.FT_FRAGMENT_JUMP,
                 JumpFragment.class);
+        f.setVersion(null);
         s.getJumpFragments().getAdditionalProperties().put(name, f);
 
         resolveCommonFragmentReferences(dbLayer, path, s, f);
@@ -287,6 +287,7 @@ public class FileTransferJobResourceUtils {
         }
         AzureBlobStorageFragment f = getReleasedFragment(dbLayer, path, PROPERTY_NAME_FRAGMENT_AZURE_BLOB_STORAGE, name,
                 ConfigurationType.FT_FRAGMENT_AZURE_BLOB_STORAGE, AzureBlobStorageFragment.class);
+        f.setVersion(null);
         s.getAzureBlobStorageFragments().getAdditionalProperties().put(name, f);
 
         resolveCommonFragmentReferences(dbLayer, path, s, f);
@@ -309,6 +310,7 @@ public class FileTransferJobResourceUtils {
             }
         }
         FtpFragment f = getReleasedFragment(dbLayer, path, PROPERTY_NAME_FRAGMENT_FTP, name, ConfigurationType.FT_FRAGMENT_FTP, FtpFragment.class);
+        f.setVersion(null);
         s.getFtpFragments().getAdditionalProperties().put(name, f);
 
         resolveCommonFragmentReferences(dbLayer, path, s, f);
@@ -332,6 +334,7 @@ public class FileTransferJobResourceUtils {
         }
         HttpFragment f = getReleasedFragment(dbLayer, path, PROPERTY_NAME_FRAGMENT_HTTP, name, ConfigurationType.FT_FRAGMENT_HTTP,
                 HttpFragment.class);
+        f.setVersion(null);
         s.getHttpFragments().getAdditionalProperties().put(name, f);
 
         resolveCommonFragmentReferences(dbLayer, path, s, f);
@@ -355,6 +358,7 @@ public class FileTransferJobResourceUtils {
         }
         SftpFragment f = getReleasedFragment(dbLayer, path, PROPERTY_NAME_FRAGMENT_SFTP, name, ConfigurationType.FT_FRAGMENT_SFTP,
                 SftpFragment.class);
+        f.setVersion(null);
         s.getSftpFragments().getAdditionalProperties().put(name, f);
 
         resolveCommonFragmentReferences(dbLayer, path, s, f);
@@ -378,6 +382,7 @@ public class FileTransferJobResourceUtils {
             }
         }
         SmbFragment f = getReleasedFragment(dbLayer, path, PROPERTY_NAME_FRAGMENT_SMB, name, ConfigurationType.FT_FRAGMENT_SMB, SmbFragment.class);
+        f.setVersion(null);
         s.getSmbFragments().getAdditionalProperties().put(name, f);
 
         resolveCommonFragmentReferences(dbLayer, path, s, f);
@@ -399,6 +404,7 @@ public class FileTransferJobResourceUtils {
         }
         WebdavFragment f = getReleasedFragment(dbLayer, path, PROPERTY_NAME_FRAGMENT_WEBDAV, name, ConfigurationType.FT_FRAGMENT_WEBDAV,
                 WebdavFragment.class);
+        f.setVersion(null);
         s.getWebdavFragments().getAdditionalProperties().put(name, f);
 
         resolveCommonFragmentReferences(dbLayer, path, s, f);
