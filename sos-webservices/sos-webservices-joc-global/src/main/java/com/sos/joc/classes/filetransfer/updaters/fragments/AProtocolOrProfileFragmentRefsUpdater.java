@@ -19,7 +19,7 @@ import com.sos.inventory.model.filetransfer.profile.NotificationTriggers;
 import com.sos.inventory.model.filetransfer.profile.Source;
 import com.sos.inventory.model.filetransfer.profile.Target;
 import com.sos.joc.Globals;
-import com.sos.joc.classes.filetransfer.FileTransferJobResourceHandler;
+import com.sos.joc.classes.filetransfer.FileTransferHelper;
 import com.sos.joc.classes.filetransfer.updaters.fragments.common.ACommonFragmentRefsUpdater;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
@@ -168,7 +168,7 @@ public abstract class AProtocolOrProfileFragmentRefsUpdater<F, R> {
 
     private void handleProfile(InventoryDBLayer dbLayer, DBItemInventoryConfiguration config, DBItemInventoryConfiguration referencedIn,
             String newName, List<DBItemInventoryConfiguration> items, Set<String> events, boolean isDebugEnabled) throws Exception {
-        FileTransferJobResource jr = FileTransferJobResourceHandler.toFileTransferJobResource(referencedIn.getContent());
+        FileTransferJobResource jr = FileTransferHelper.toFileTransferJobResource(referencedIn.getContent());
         if (jr.getProfile() == null) {
             return;
         }
@@ -211,7 +211,7 @@ public abstract class AProtocolOrProfileFragmentRefsUpdater<F, R> {
 
     private void handleMail(InventoryDBLayer dbLayer, DBItemInventoryConfiguration config, DBItemInventoryConfiguration referencedIn, String newName,
             List<DBItemInventoryConfiguration> items, Set<String> events, boolean isDebugEnabled) throws Exception {
-        FileTransferJobResource jr = FileTransferJobResourceHandler.toFileTransferJobResource(referencedIn.getContent());
+        FileTransferJobResource jr = FileTransferHelper.toFileTransferJobResource(referencedIn.getContent());
         if (jr.getProfile() == null) {
             return;
         }

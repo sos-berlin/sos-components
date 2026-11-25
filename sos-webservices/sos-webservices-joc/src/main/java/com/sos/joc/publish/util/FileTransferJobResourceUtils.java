@@ -1,12 +1,8 @@
-package com.sos.joc.classes.filetransfer;
-
-import java.util.List;
+package com.sos.joc.publish.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.filetransfer.FileTransferJobResource;
 import com.sos.inventory.model.filetransfer.fragments.AFragment;
@@ -39,18 +35,17 @@ import com.sos.inventory.model.filetransfer.settings.SftpFragments;
 import com.sos.inventory.model.filetransfer.settings.SmbFragments;
 import com.sos.inventory.model.filetransfer.settings.SocksProxyFragments;
 import com.sos.inventory.model.filetransfer.settings.WebdavFragments;
-import com.sos.inventory.model.job.Environment;
-import com.sos.inventory.model.jobresource.JobResource;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.filetransfer.FileTransferHelper;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
-import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.model.inventory.common.ConfigurationType;
+import com.sos.joc.publish.db.DBLayerDeploy;
 
 // TODO alternative profile - source table?
-public class FileTransferJobResourceHandler {
+public class FileTransferJobResourceUtils {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(FileTransferJobResourceHandler.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(FileTransferJobResourceUtils.class);
 
     // TODO - remove duplicate definition - see FileTransferValidator
     private static final String PROPERTY_NAME_FRAGMENT_CREDENTIAL_STORE = "Credential Store Fragment";
@@ -67,74 +62,36 @@ public class FileTransferJobResourceHandler {
     private static final String PROPERTY_NAME_FRAGMENT_WEBDAV = "WebDAV Fragment";
     // private static final String PROPERTY_NAME_ALTERNATIVE = "alternative";
 
-    private static final String JOBRESOURCE_ARG_NAME = "settings";
-
     // TODO remove it
     private static final boolean testMode = true;
 
-    /** Converts a FileTransferJobResource to a JobResource.<br />
-     * The dbLayer argument (null or not null) acts as a flag to include additional information.
-     *
-     * @param ft the file transfer job resource
-     * @param ftJobResourceName Inventory name of the file transfer job resource
-     * @param dbLayer inventory DB layer; if not null, additional information is included
-     * @return the serialized JobResource as JSON string
-     * @throws Exception if serialization fails */
-    public static JobResource toJobResource(FileTransferJobResource ft, String ftJobResourceName, InventoryDBLayer dbLayer) throws Exception {
-        JobResource jr = new JobResource();
-        jr.setTitle(ft.getTitle());
-
-        if (dbLayer != null) { // include additional information, resolve dependencies ...
-            complete(ft, ftJobResourceName, dbLayer);
-        }
-
-        Environment args = new Environment();
-        args.setAdditionalProperty(JOBRESOURCE_ARG_NAME, "toFile( '" + Globals.objectMapper.writeValueAsString(ft) + "', '*.json' )");
-        jr.setArguments(args);
-
-        Environment env = new Environment();
-        env.setAdditionalProperty(JOBRESOURCE_ARG_NAME.toUpperCase(), "$" + JOBRESOURCE_ARG_NAME);
-        jr.setEnv(env);
-
-        return jr;
-    }
-
-    public static FileTransferJobResource toFileTransferJobResource(JobResource jr) throws JsonProcessingException {
-        String val = jr.getArguments().getAdditionalProperties().get(JOBRESOURCE_ARG_NAME);
-        if (val == null) {
-            return null;
-        }
-        return Globals.objectMapper.readValue(extractJson(val), FileTransferJobResource.class);
-    }
-
-    public static FileTransferJobResource toFileTransferJobResource(String val) throws JsonProcessingException {
-        return Globals.objectMapper.readValue(extractJson(val), FileTransferJobResource.class);
-    }
-
     // throw specific exception
-    private static void complete(FileTransferJobResource ft, String ftJobResourceName, InventoryDBLayer dbLayer) throws Exception {
+    public static String completeForDeploy(DBItemInventoryConfiguration c, DBLayerDeploy dbLayer) throws Exception {
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("[complete]" + ftJobResourceName);
+            LOGGER.debug("[complete]" + c.getPath());
         }
+
+        FileTransferJobResource ft = FileTransferHelper.toFileTransferJobResource(c.getContent());
 
         if (ft.getProfile() == null) {
-            return;
+            throw new Exception("Missing profile");
         }
 
         Profile p = ft.getProfile();
         if (p.getSource() == null) {
-            return;
+            throw new Exception("Missing profile.source");
         }
 
         Settings s = new Settings();
-        s.setProfileName(ftJobResourceName);
+        s.setProfileName(c.getName());
 
-        resolveProfile(dbLayer, s, p);
+        resolveProfile(dbLayer, c.getPath(), s, p);
 
         ft.setSettings(s);
+        return Globals.objectMapper.writeValueAsString(ft);
     }
 
-    private static void resolveProfile(InventoryDBLayer dbLayer, Settings s, Profile p) throws Exception {
+    private static void resolveProfile(DBLayerDeploy dbLayer, String path, Settings s, Profile p) throws Exception {
         if (p == null) {
             return;
         }
@@ -150,23 +107,23 @@ public class FileTransferJobResourceHandler {
 
         // All fragments should already have been released
         // 1) Source
-        setSettingsFragment(dbLayer, s, p.getSource().getFragment());
+        setSettingsFragment(dbLayer, path, s, p.getSource().getFragment());
 
         // 2) Target
         if (!isTargetFragmentNullOrLocal) {
-            setSettingsFragment(dbLayer, s, p.getTarget().getFragment());
+            setSettingsFragment(dbLayer, path, s, p.getTarget().getFragment());
         }
 
         // 3) Notification triggers
         if (hasNotificationTriggers) {
             if (p.getNotificationTriggers().getOnError() != null) {
-                resolveMailFragment(dbLayer, s, p.getNotificationTriggers().getOnError().getMailFragmentName());
+                resolveMailFragment(dbLayer, path, s, p.getNotificationTriggers().getOnError().getMailFragmentName());
             }
             if (p.getNotificationTriggers().getOnSuccess() != null) {
-                resolveMailFragment(dbLayer, s, p.getNotificationTriggers().getOnSuccess().getMailFragmentName());
+                resolveMailFragment(dbLayer, path, s, p.getNotificationTriggers().getOnSuccess().getMailFragmentName());
             }
             if (p.getNotificationTriggers().getOnEmptyFiles() != null) {
-                resolveMailFragment(dbLayer, s, p.getNotificationTriggers().getOnSuccess().getMailFragmentName());
+                resolveMailFragment(dbLayer, path, s, p.getNotificationTriggers().getOnSuccess().getMailFragmentName());
             }
         }
 
@@ -188,28 +145,28 @@ public class FileTransferJobResourceHandler {
         }
     }
 
-    private static void setSettingsFragment(InventoryDBLayer dbLayer, Settings s, Fragment f) throws Exception {
+    private static void setSettingsFragment(DBLayerDeploy dbLayer, String path, Settings s, Fragment f) throws Exception {
         if (FileTransferHelper.isSftp(f)) {
-            resolveSftpFragment(dbLayer, s, f.getSftp().getName());
+            resolveSftpFragment(dbLayer, path, s, f.getSftp().getName());
         } else if (FileTransferHelper.isSmb(f)) {
-            resolveSmbFragment(dbLayer, s, f.getSmb().getName());
+            resolveSmbFragment(dbLayer, path, s, f.getSmb().getName());
         } else if (FileTransferHelper.isFtp(f)) {
-            resolveFtpFragment(dbLayer, s, f.getFtp().getName());
+            resolveFtpFragment(dbLayer, path, s, f.getFtp().getName());
         } else if (FileTransferHelper.isWebdav(f)) {
-            resolveWebdavFragment(dbLayer, s, f.getWebdav().getName());
+            resolveWebdavFragment(dbLayer, path, s, f.getWebdav().getName());
         } else if (FileTransferHelper.isHttp(f)) {
-            resolveHttpFragment(dbLayer, s, f.getHttp().getName());
+            resolveHttpFragment(dbLayer, path, s, f.getHttp().getName());
         } else if (FileTransferHelper.isAzureBlobStorage(f)) {
-            resolveAzureBlobStorageFragment(dbLayer, s, f.getAzureBlobStorage().getName());
+            resolveAzureBlobStorageFragment(dbLayer, path, s, f.getAzureBlobStorage().getName());
         }
     }
 
-    private static void resolveCommonFragmentReferences(InventoryDBLayer dbLayer, Settings s, AProtocolFragment f) throws Exception {
-        resolveCredentialStoreFragment(dbLayer, s, f.getCredentialStoreFragmentName());
-        resolveDecryptionFragment(dbLayer, s, f.getDecryptionFragmentName());
+    private static void resolveCommonFragmentReferences(DBLayerDeploy dbLayer, String path, Settings s, AProtocolFragment f) throws Exception {
+        resolveCredentialStoreFragment(dbLayer, path, s, f.getCredentialStoreFragmentName());
+        resolveDecryptionFragment(dbLayer, path, s, f.getDecryptionFragmentName());
     }
 
-    private static void resolveCredentialStoreFragment(InventoryDBLayer dbLayer, Settings s, String name) throws Exception {
+    private static void resolveCredentialStoreFragment(DBLayerDeploy dbLayer, String path, Settings s, String name) throws Exception {
         if (SOSString.isEmpty(name)) {
             return;
         }
@@ -221,12 +178,12 @@ public class FileTransferJobResourceHandler {
                 return;
             }
         }
-        CredentialStoreFragment f = getReleasedFragment(dbLayer, PROPERTY_NAME_FRAGMENT_CREDENTIAL_STORE, name,
+        CredentialStoreFragment f = getReleasedFragment(dbLayer, path, PROPERTY_NAME_FRAGMENT_CREDENTIAL_STORE, name,
                 ConfigurationType.FT_FRAGMENT_CREDENTIAL_STORE, CredentialStoreFragment.class);
         s.getCredentialStoreFragments().getAdditionalProperties().put(name, f);
     }
 
-    private static void resolveDecryptionFragment(InventoryDBLayer dbLayer, Settings s, String name) throws Exception {
+    private static void resolveDecryptionFragment(DBLayerDeploy dbLayer, String path, Settings s, String name) throws Exception {
         if (SOSString.isEmpty(name)) {
             return;
         }
@@ -238,12 +195,12 @@ public class FileTransferJobResourceHandler {
                 return;
             }
         }
-        DecryptionFragment f = getReleasedFragment(dbLayer, PROPERTY_NAME_FRAGMENT_DECRYPTION, name, ConfigurationType.FT_FRAGMENT_DECRYPTION,
+        DecryptionFragment f = getReleasedFragment(dbLayer, path, PROPERTY_NAME_FRAGMENT_DECRYPTION, name, ConfigurationType.FT_FRAGMENT_DECRYPTION,
                 DecryptionFragment.class);
         s.getDecryptionFragments().getAdditionalProperties().put(name, f);
     }
 
-    private static void resolveMailFragment(InventoryDBLayer dbLayer, Settings s, String name) throws Exception {
+    private static void resolveMailFragment(DBLayerDeploy dbLayer, String path, Settings s, String name) throws Exception {
         if (SOSString.isEmpty(name)) {
             return;
         }
@@ -255,11 +212,12 @@ public class FileTransferJobResourceHandler {
                 return;
             }
         }
-        MailFragment f = getReleasedFragment(dbLayer, PROPERTY_NAME_FRAGMENT_MAIL, name, ConfigurationType.FT_FRAGMENT_MAIL, MailFragment.class);
+        MailFragment f = getReleasedFragment(dbLayer, path, PROPERTY_NAME_FRAGMENT_MAIL, name, ConfigurationType.FT_FRAGMENT_MAIL,
+                MailFragment.class);
         s.getMailFragments().getAdditionalProperties().put(name, f);
     }
 
-    private static void resolveHttpProxyFragment(InventoryDBLayer dbLayer, Settings s, String name) throws Exception {
+    private static void resolveHttpProxyFragment(DBLayerDeploy dbLayer, String path, Settings s, String name) throws Exception {
         if (SOSString.isEmpty(name)) {
             return;
         }
@@ -271,12 +229,12 @@ public class FileTransferJobResourceHandler {
                 return;
             }
         }
-        HttpProxyFragment f = getReleasedFragment(dbLayer, PROPERTY_NAME_FRAGMENT_HTTP_PROXY, name, ConfigurationType.FT_FRAGMENT_HTTP_PROXY,
+        HttpProxyFragment f = getReleasedFragment(dbLayer, path, PROPERTY_NAME_FRAGMENT_HTTP_PROXY, name, ConfigurationType.FT_FRAGMENT_HTTP_PROXY,
                 HttpProxyFragment.class);
         s.getHttpProxyFragments().getAdditionalProperties().put(name, f);
     }
 
-    private static void resolveSocksProxyFragment(InventoryDBLayer dbLayer, Settings s, String name) throws Exception {
+    private static void resolveSocksProxyFragment(DBLayerDeploy dbLayer, String path, Settings s, String name) throws Exception {
         if (SOSString.isEmpty(name)) {
             return;
         }
@@ -288,12 +246,12 @@ public class FileTransferJobResourceHandler {
                 return;
             }
         }
-        SocksProxyFragment f = getReleasedFragment(dbLayer, PROPERTY_NAME_FRAGMENT_SOCKS_PROXY, name, ConfigurationType.FT_FRAGMENT_SOCKS_PROXY,
+        SocksProxyFragment f = getReleasedFragment(dbLayer, path, PROPERTY_NAME_FRAGMENT_SOCKS_PROXY, name, ConfigurationType.FT_FRAGMENT_SOCKS_PROXY,
                 SocksProxyFragment.class);
         s.getSocksProxyFragments().getAdditionalProperties().put(name, f);
     }
 
-    private static void resolveJumpFragment(InventoryDBLayer dbLayer, Settings s, String name) throws Exception {
+    private static void resolveJumpFragment(DBLayerDeploy dbLayer, String path, Settings s, String name) throws Exception {
         if (SOSString.isEmpty(name)) {
             return;
         }
@@ -305,16 +263,17 @@ public class FileTransferJobResourceHandler {
                 return;
             }
         }
-        JumpFragment f = getReleasedFragment(dbLayer, PROPERTY_NAME_FRAGMENT_JUMP, name, ConfigurationType.FT_FRAGMENT_JUMP, JumpFragment.class);
+        JumpFragment f = getReleasedFragment(dbLayer, path, PROPERTY_NAME_FRAGMENT_JUMP, name, ConfigurationType.FT_FRAGMENT_JUMP,
+                JumpFragment.class);
         s.getJumpFragments().getAdditionalProperties().put(name, f);
 
-        resolveCommonFragmentReferences(dbLayer, s, f);
-        resolveHttpProxyFragment(dbLayer, s, f.getHttpProxyFragmentName());
-        resolveSocksProxyFragment(dbLayer, s, f.getSocksProxyFragmentName());
-        resolveJumpFragment(dbLayer, s, f.getAlternativeJumpFragmentName());
+        resolveCommonFragmentReferences(dbLayer, path, s, f);
+        resolveHttpProxyFragment(dbLayer, path, s, f.getHttpProxyFragmentName());
+        resolveSocksProxyFragment(dbLayer, path, s, f.getSocksProxyFragmentName());
+        resolveJumpFragment(dbLayer, path, s, f.getAlternativeJumpFragmentName());
     }
 
-    private static void resolveAzureBlobStorageFragment(InventoryDBLayer dbLayer, Settings s, String name) throws Exception {
+    private static void resolveAzureBlobStorageFragment(DBLayerDeploy dbLayer, String path, Settings s, String name) throws Exception {
         if (SOSString.isEmpty(name)) {
             return;
         }
@@ -326,18 +285,18 @@ public class FileTransferJobResourceHandler {
                 return;
             }
         }
-        AzureBlobStorageFragment f = getReleasedFragment(dbLayer, PROPERTY_NAME_FRAGMENT_AZURE_BLOB_STORAGE, name,
+        AzureBlobStorageFragment f = getReleasedFragment(dbLayer, path, PROPERTY_NAME_FRAGMENT_AZURE_BLOB_STORAGE, name,
                 ConfigurationType.FT_FRAGMENT_AZURE_BLOB_STORAGE, AzureBlobStorageFragment.class);
         s.getAzureBlobStorageFragments().getAdditionalProperties().put(name, f);
 
-        resolveCommonFragmentReferences(dbLayer, s, f);
-        resolveHttpProxyFragment(dbLayer, s, f.getHttpProxyFragmentName());
-        resolveJumpFragment(dbLayer, s, f.getJumpFragmentName());
+        resolveCommonFragmentReferences(dbLayer, path, s, f);
+        resolveHttpProxyFragment(dbLayer, path, s, f.getHttpProxyFragmentName());
+        resolveJumpFragment(dbLayer, path, s, f.getJumpFragmentName());
 
-        resolveAzureBlobStorageFragment(dbLayer, s, f.getAlternativeAzureBlobStorageFragmentName());
+        resolveAzureBlobStorageFragment(dbLayer, path, s, f.getAlternativeAzureBlobStorageFragmentName());
     }
 
-    private static void resolveFtpFragment(InventoryDBLayer dbLayer, Settings s, String name) throws Exception {
+    private static void resolveFtpFragment(DBLayerDeploy dbLayer, String path, Settings s, String name) throws Exception {
         if (SOSString.isEmpty(name)) {
             return;
         }
@@ -349,17 +308,17 @@ public class FileTransferJobResourceHandler {
                 return;
             }
         }
-        FtpFragment f = getReleasedFragment(dbLayer, PROPERTY_NAME_FRAGMENT_FTP, name, ConfigurationType.FT_FRAGMENT_FTP, FtpFragment.class);
+        FtpFragment f = getReleasedFragment(dbLayer, path, PROPERTY_NAME_FRAGMENT_FTP, name, ConfigurationType.FT_FRAGMENT_FTP, FtpFragment.class);
         s.getFtpFragments().getAdditionalProperties().put(name, f);
 
-        resolveCommonFragmentReferences(dbLayer, s, f);
-        resolveHttpProxyFragment(dbLayer, s, f.getHttpProxyFragmentName());
-        resolveSocksProxyFragment(dbLayer, s, f.getSocksProxyFragmentName());
+        resolveCommonFragmentReferences(dbLayer, path, s, f);
+        resolveHttpProxyFragment(dbLayer, path, s, f.getHttpProxyFragmentName());
+        resolveSocksProxyFragment(dbLayer, path, s, f.getSocksProxyFragmentName());
 
-        resolveFtpFragment(dbLayer, s, f.getAlternativeFtpFragmentName());
+        resolveFtpFragment(dbLayer, path, s, f.getAlternativeFtpFragmentName());
     }
 
-    private static void resolveHttpFragment(InventoryDBLayer dbLayer, Settings s, String name) throws Exception {
+    private static void resolveHttpFragment(DBLayerDeploy dbLayer, String path, Settings s, String name) throws Exception {
         if (SOSString.isEmpty(name)) {
             return;
         }
@@ -371,17 +330,18 @@ public class FileTransferJobResourceHandler {
                 return;
             }
         }
-        HttpFragment f = getReleasedFragment(dbLayer, PROPERTY_NAME_FRAGMENT_HTTP, name, ConfigurationType.FT_FRAGMENT_HTTP, HttpFragment.class);
+        HttpFragment f = getReleasedFragment(dbLayer, path, PROPERTY_NAME_FRAGMENT_HTTP, name, ConfigurationType.FT_FRAGMENT_HTTP,
+                HttpFragment.class);
         s.getHttpFragments().getAdditionalProperties().put(name, f);
 
-        resolveCommonFragmentReferences(dbLayer, s, f);
-        resolveHttpProxyFragment(dbLayer, s, f.getHttpProxyFragmentName());
-        resolveJumpFragment(dbLayer, s, f.getJumpFragmentName());
+        resolveCommonFragmentReferences(dbLayer, path, s, f);
+        resolveHttpProxyFragment(dbLayer, path, s, f.getHttpProxyFragmentName());
+        resolveJumpFragment(dbLayer, path, s, f.getJumpFragmentName());
 
-        resolveHttpFragment(dbLayer, s, f.getAlternativeHttpFragmentName());
+        resolveHttpFragment(dbLayer, path, s, f.getAlternativeHttpFragmentName());
     }
 
-    private static void resolveSftpFragment(InventoryDBLayer dbLayer, Settings s, String name) throws Exception {
+    private static void resolveSftpFragment(DBLayerDeploy dbLayer, String path, Settings s, String name) throws Exception {
         if (SOSString.isEmpty(name)) {
             return;
         }
@@ -393,18 +353,19 @@ public class FileTransferJobResourceHandler {
                 return;
             }
         }
-        SftpFragment f = getReleasedFragment(dbLayer, PROPERTY_NAME_FRAGMENT_SFTP, name, ConfigurationType.FT_FRAGMENT_SFTP, SftpFragment.class);
+        SftpFragment f = getReleasedFragment(dbLayer, path, PROPERTY_NAME_FRAGMENT_SFTP, name, ConfigurationType.FT_FRAGMENT_SFTP,
+                SftpFragment.class);
         s.getSftpFragments().getAdditionalProperties().put(name, f);
 
-        resolveCommonFragmentReferences(dbLayer, s, f);
-        resolveHttpProxyFragment(dbLayer, s, f.getHttpProxyFragmentName());
-        resolveSocksProxyFragment(dbLayer, s, f.getSocksProxyFragmentName());
-        resolveJumpFragment(dbLayer, s, f.getJumpFragmentName());
+        resolveCommonFragmentReferences(dbLayer, path, s, f);
+        resolveHttpProxyFragment(dbLayer, path, s, f.getHttpProxyFragmentName());
+        resolveSocksProxyFragment(dbLayer, path, s, f.getSocksProxyFragmentName());
+        resolveJumpFragment(dbLayer, path, s, f.getJumpFragmentName());
 
-        resolveSftpFragment(dbLayer, s, f.getAlternativeSftpFragmentName());
+        resolveSftpFragment(dbLayer, path, s, f.getAlternativeSftpFragmentName());
     }
 
-    private static void resolveSmbFragment(InventoryDBLayer dbLayer, Settings s, String name) throws Exception {
+    private static void resolveSmbFragment(DBLayerDeploy dbLayer, String path, Settings s, String name) throws Exception {
         if (SOSString.isEmpty(name)) {
             return;
         }
@@ -416,15 +377,15 @@ public class FileTransferJobResourceHandler {
                 return;
             }
         }
-        SmbFragment f = getReleasedFragment(dbLayer, PROPERTY_NAME_FRAGMENT_SMB, name, ConfigurationType.FT_FRAGMENT_SMB, SmbFragment.class);
+        SmbFragment f = getReleasedFragment(dbLayer, path, PROPERTY_NAME_FRAGMENT_SMB, name, ConfigurationType.FT_FRAGMENT_SMB, SmbFragment.class);
         s.getSmbFragments().getAdditionalProperties().put(name, f);
 
-        resolveCommonFragmentReferences(dbLayer, s, f);
+        resolveCommonFragmentReferences(dbLayer, path, s, f);
 
-        resolveSmbFragment(dbLayer, s, f.getAlternativeSmbFragmentName());
+        resolveSmbFragment(dbLayer, path, s, f.getAlternativeSmbFragmentName());
     }
 
-    private static void resolveWebdavFragment(InventoryDBLayer dbLayer, Settings s, String name) throws Exception {
+    private static void resolveWebdavFragment(DBLayerDeploy dbLayer, String path, Settings s, String name) throws Exception {
         if (SOSString.isEmpty(name)) {
             return;
         }
@@ -436,49 +397,34 @@ public class FileTransferJobResourceHandler {
                 return;
             }
         }
-        WebdavFragment f = getReleasedFragment(dbLayer, PROPERTY_NAME_FRAGMENT_WEBDAV, name, ConfigurationType.FT_FRAGMENT_WEBDAV,
+        WebdavFragment f = getReleasedFragment(dbLayer, path, PROPERTY_NAME_FRAGMENT_WEBDAV, name, ConfigurationType.FT_FRAGMENT_WEBDAV,
                 WebdavFragment.class);
         s.getWebdavFragments().getAdditionalProperties().put(name, f);
 
-        resolveCommonFragmentReferences(dbLayer, s, f);
-        resolveHttpProxyFragment(dbLayer, s, f.getHttpProxyFragmentName());
-        resolveJumpFragment(dbLayer, s, f.getJumpFragmentName());
+        resolveCommonFragmentReferences(dbLayer, path, s, f);
+        resolveHttpProxyFragment(dbLayer, path, s, f.getHttpProxyFragmentName());
+        resolveJumpFragment(dbLayer, path, s, f.getJumpFragmentName());
 
-        resolveWebdavFragment(dbLayer, s, f.getAlternativeWebdavFragmentName());
+        resolveWebdavFragment(dbLayer, path, s, f.getAlternativeWebdavFragmentName());
     }
 
     // TODO remove test
-    private static <T extends AFragment> T getReleasedFragment(InventoryDBLayer dbLayer, String propertyName, String name, ConfigurationType type,
-            Class<T> clazz) throws Exception {
+    private static <T extends AFragment> T getReleasedFragment(DBLayerDeploy dbLayer, String path, String propertyName, String name,
+            ConfigurationType type, Class<T> clazz) throws Exception {
 
         if (testMode) {
-            List<DBItemInventoryConfiguration> l = dbLayer.getConfigurationByName(name, type.intValue());
-            if (SOSCollection.isEmpty(l)) {
-                throw new Exception("The assigned " + propertyName + " name  does not exist: " + name);
-            }
-            return Globals.objectMapper.readValue(l.get(0).getJsonContent(), clazz);
-        } else {
-            DBItemInventoryReleasedConfiguration item = dbLayer.getReleasedConfiguration(name, type.intValue());
+            DBItemInventoryConfiguration item = dbLayer.getConfigurationByName(name, type);
             if (item == null) {
-                throw new Exception("The assigned " + propertyName + " name  does not exist: " + name);
+                throw new Exception("[" + path + "] The assigned " + propertyName + " name  does not exist: " + name);
+            }
+            return Globals.objectMapper.readValue(item.getJsonContent(), clazz);
+        } else {
+            DBItemInventoryReleasedConfiguration item = dbLayer.getReleasedConfiguration(name, type);
+            if (item == null) {
+                throw new Exception("[" + path + "] No released " + propertyName + " found with name: " + name);
             }
             return Globals.objectMapper.readValue(item.getJsonContent(), clazz);
         }
-    }
-
-    // String variableValue = "toFile( '{....}', '*.json' )";
-    private static String extractJson(String variableValue) {
-        if (!variableValue.contains("toFile(")) {
-            return variableValue;
-        }
-        int start = variableValue.indexOf('{'); // first {
-        int quoteEnd = variableValue.lastIndexOf('\''); // last '
-        int end = variableValue.lastIndexOf('}', quoteEnd); // last } before '
-        if (start == -1 || end == -1 || end <= start) {
-            return null;
-        }
-        String json = variableValue.substring(start, end + 1);
-        return json.replace("\\r\\n", "\r\n").replace("\\\"", "\"").trim();
     }
 
 }

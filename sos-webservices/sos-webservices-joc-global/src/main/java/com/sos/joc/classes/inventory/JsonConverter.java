@@ -52,6 +52,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.agent.AgentHelper;
 import com.sos.joc.classes.calendar.ControllerSettings;
 import com.sos.joc.classes.order.OrdersHelper;
+import com.sos.joc.classes.publish.util.FileTransferJobResourceUtils;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.model.common.IDeployObject;
@@ -106,7 +107,11 @@ public class JsonConverter {
         }
         if (clazz.getName().equals("com.sos.sign.model.workflow.Workflow")) {
             return (T) readAsConvertedWorkflow(controllerId, objectPath, json, releasedScripts);
-        } else {
+        } 
+        else if (clazz.getName().equals("com.sos.sign.model.filetransfer.FileTransferJobResource")) {
+            return (T) FileTransferJobResourceUtils.toSignedFileTransferJobResource(objectPath, json);
+        }
+        else {
             return Globals.objectMapper.readValue(json.replaceAll("(\\$)epoch(Second|Milli)", "$1js7Epoch$2"), clazz);
         }
     }
@@ -147,7 +152,7 @@ public class JsonConverter {
 
         return signWorkflow;
     }
-
+   
     // not private because of unit test
     protected static void considerReturnCodeWarningsAndSubagentClusterId(Jobs invJobs, com.sos.sign.model.workflow.Jobs signJobs) {
         if (signJobs.getAdditionalProperties() != null && invJobs.getAdditionalProperties() != null) {

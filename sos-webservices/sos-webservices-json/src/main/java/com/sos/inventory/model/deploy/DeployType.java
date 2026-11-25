@@ -13,6 +13,7 @@ public enum DeployType {
     LOCK("Lock", 4),
     FILEORDERSOURCE("FileWatch", 9),
     JOBRESOURCE("JobResource", 10),
+    FT_PROFILE_JOBRESOURCE("JobResource", 99),
     PLANNABLEBOARD("PlannableBoard", 11),
     NOTICEBOARD("Board", 11);
     private final String value;

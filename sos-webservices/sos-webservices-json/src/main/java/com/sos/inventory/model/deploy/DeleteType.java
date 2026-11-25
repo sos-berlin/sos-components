@@ -13,6 +13,7 @@ public enum DeleteType {
     LOCK("LockPath", 4),
     FILEORDERSOURCE("FileWatchPath", 9),
     JOBRESOURCE("JobResourcePath", 10),
+    FT_PROFILE_JOBRESOURCE("JobResourcePath", 99),
     NOTICEBOARD("BoardPath", 11);
     private final String value;
     private final Integer intValue;

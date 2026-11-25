@@ -3,10 +3,13 @@ package com.sos.joc.classes.filetransfer;
 import java.util.Arrays;
 import java.util.List;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.inventory.model.filetransfer.FileTransferJobResource;
 import com.sos.inventory.model.filetransfer.profile.Source;
 import com.sos.inventory.model.filetransfer.profile.Target;
 import com.sos.inventory.model.filetransfer.profile.fragments.Fragment;
+import com.sos.joc.Globals;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 
 public class FileTransferHelper {
@@ -19,6 +22,11 @@ public class FileTransferHelper {
     private static final String PROPERY_NAME_ALTERNATIVE_JUMP = "alternativeJumpFragmentName";
     private static final String PROPERY_NAME_ALTERNATIVE_SMB = "alternativeSmbFragmentName";
     private static final String PROPERY_NAME_ALTERNATIVE_WEBDAV = "alternativeWebdavFragmentName";
+
+    public static FileTransferJobResource toFileTransferJobResource(String json) throws JsonProcessingException {
+        // return Globals.objectMapper.readValue(extractJson(json), FileTransferJobResource.class);
+        return Globals.objectMapper.readValue(json, FileTransferJobResource.class);
+    }
 
     public static String getPropertyNameAlternative(ConfigurationType fileTransferType) throws SOSHibernateException {
         switch (fileTransferType) {
@@ -167,4 +175,21 @@ public class FileTransferHelper {
     public static List<ConfigurationType> getFragmentsUsingSocksProxy() {
         return Arrays.asList(ConfigurationType.FT_FRAGMENT_JUMP, ConfigurationType.FT_FRAGMENT_FTP, ConfigurationType.FT_FRAGMENT_SFTP);
     }
+
+    // String variableValue = "toFile( '{....}', '*.json' )";
+    @SuppressWarnings("unused")
+    private static String extractJson(String variableValue) {
+        if (!variableValue.contains("toFile(")) {
+            return variableValue;
+        }
+        int start = variableValue.indexOf('{'); // first {
+        int quoteEnd = variableValue.lastIndexOf('\''); // last '
+        int end = variableValue.lastIndexOf('}', quoteEnd); // last } before '
+        if (start == -1 || end == -1 || end <= start) {
+            return null;
+        }
+        String json = variableValue.substring(start, end + 1);
+        return json.replace("\\r\\n", "\r\n").replace("\\\"", "\"").trim();
+    }
+
 }

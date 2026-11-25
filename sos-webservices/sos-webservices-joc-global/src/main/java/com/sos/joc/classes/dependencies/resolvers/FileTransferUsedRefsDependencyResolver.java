@@ -22,7 +22,6 @@ import com.sos.inventory.model.filetransfer.profile.Profile;
 import com.sos.inventory.model.filetransfer.profile.fragments.Fragment;
 import com.sos.joc.classes.dependencies.items.ReferencedDbItem;
 import com.sos.joc.classes.filetransfer.FileTransferHelper;
-import com.sos.joc.classes.filetransfer.FileTransferJobResourceHandler;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
@@ -200,7 +199,7 @@ public class FileTransferUsedRefsDependencyResolver {
     public static void resolveProfileJobResource(InventoryDBLayer dbLayer, ReferencedDbItem item,
             Map<ConfigurationType, Set<DBItemInventoryConfiguration>> allItemsGrouped) throws IOException {
 
-        FileTransferJobResource ftjr = FileTransferJobResourceHandler.toFileTransferJobResource(item.getReferencedItem().getContent());
+        FileTransferJobResource ftjr = FileTransferHelper.toFileTransferJobResource(item.getReferencedItem().getContent());
 
         Profile p = ftjr.getProfile();
 

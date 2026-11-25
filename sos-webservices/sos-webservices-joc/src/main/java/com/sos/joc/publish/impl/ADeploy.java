@@ -126,6 +126,7 @@ public abstract class ADeploy extends JOCResourceImpl {
             Set<DBItemDeploymentHistory> itemsFromFolderToDelete = getDepItemsFromFolders(controllerIds, deployFilter, dbLayer);
             // get all objects from INV_CONFIGURATION with deployed = false
             Set<DBItemInventoryConfiguration> unsignedDrafts = getInvDbItemsToStore(deployFilter, dbLayer);
+                        
             // get all latest objects from DEP_HISTORY where INV_CONFIGURATION object has deployed = true
             Set<DBItemDeploymentHistory> unsignedReDeployables = getDepDbItemsToStore(deployFilter, dbLayer);
             // set new versionId for first round (update items)

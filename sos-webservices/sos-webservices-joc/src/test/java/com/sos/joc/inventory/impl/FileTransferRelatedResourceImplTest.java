@@ -7,7 +7,6 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.inventory.model.filetransfer.FileTransferJobResource;
 import com.sos.inventory.model.filetransfer.common.PostProcessing;
 import com.sos.inventory.model.filetransfer.common.Processing;
@@ -27,10 +26,6 @@ import com.sos.inventory.model.filetransfer.profile.source.Selection;
 import com.sos.inventory.model.filetransfer.profile.source.SourceOptions;
 import com.sos.inventory.model.filetransfer.profile.target.TargetOptions;
 import com.sos.joc.UnitTestSimpleWSImplHelper;
-import com.sos.joc.classes.filetransfer.FileTransferJobResourceHandler;
-import com.sos.joc.classes.inventory.JocInventory;
-import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
-import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 
@@ -150,6 +145,28 @@ public class FileTransferRelatedResourceImplTest {
 
     @Ignore
     @Test
+    public void testRenameProfile() throws Exception {
+        UnitTestSimpleWSImplHelper h = new UnitTestSimpleWSImplHelper(new RenameConfigurationResourceImpl());
+        h.setHibernateConfigurationFileFromWebservicesGlobal("hibernate.cfg.mysql.xml");
+
+        com.sos.joc.model.inventory.rename.RequestFilter f = new com.sos.joc.model.inventory.rename.RequestFilter();
+        f.setNewPath("/filetransfer/ft_jr_profile");
+        f.setObjectType(ConfigurationType.FT_PROFILE_JOBRESOURCE);
+        f.setPath("/b");
+
+        try {
+            h.init();
+
+            h.post("rename", f);
+        } catch (Throwable e) {
+            LOGGER.error(e.toString(), e);
+        } finally {
+            h.destroy();
+        }
+    }
+
+    @Ignore
+    @Test
     public void testStoreProfile() throws Exception {
         UnitTestSimpleWSImplHelper h = new UnitTestSimpleWSImplHelper(new StoreConfigurationResourceImpl());
         h.setHibernateConfigurationFileFromWebservicesGlobal("hibernate.cfg.mysql.xml");
@@ -201,7 +218,7 @@ public class FileTransferRelatedResourceImplTest {
         jr.setProfile(p);
 
         ConfigurationObject in = new ConfigurationObject();
-        in.setPath("/b");
+        in.setPath("/filetransfer/ft_jr_profile");
         in.setConfiguration(jr);
         in.setObjectType(ConfigurationType.FT_PROFILE_JOBRESOURCE);
 
@@ -214,29 +231,6 @@ public class FileTransferRelatedResourceImplTest {
         } finally {
             h.destroy();
         }
-    }
-
-    // TODO remove - Deployment code
-    @SuppressWarnings("unused")
-    private void store(DBItemInventoryConfiguration item, ConfigurationObject in, InventoryDBLayer dbLayer) {
-        try {
-            item.setContent(toJobResource((FileTransferJobResource) in.getConfiguration(), item.getName(), dbLayer));
-        } catch (Exception e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-    }
-
-    /** Converts a FileTransferJobResource to a JobResource.<br />
-     * The dbLayer argument (null or not null) acts as a flag to include additional information.
-     *
-     * @param ft the file transfer job resource
-     * @param ftJobResourceName Inventory name of the file transfer job resource
-     * @param dbLayer inventory DB layer; if not null, additional information is included
-     * @return the serialized JobResource as JSON string
-     * @throws JsonProcessingException if serialization fails */
-    private String toJobResource(FileTransferJobResource ft, String ftJobResourceName, InventoryDBLayer dbLayer) throws Exception {
-        return JocInventory.toString(FileTransferJobResourceHandler.toJobResource(ft, ftJobResourceName, dbLayer));
     }
 
 }

@@ -6,7 +6,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.inventory.model.filetransfer.FileTransferJobResource;
 import com.sos.inventory.model.filetransfer.profile.Source;
 import com.sos.inventory.model.filetransfer.profile.Target;
-import com.sos.joc.classes.filetransfer.FileTransferJobResourceHandler;
+import com.sos.joc.classes.filetransfer.FileTransferHelper;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 
@@ -24,7 +24,7 @@ public class ProfileRefsUpdater extends AProtocolOrProfileFragmentRefsUpdater<Fi
 
     @Override
     protected FileTransferJobResource readAlternativeFragment(DBItemInventoryConfiguration c) throws Exception {
-        return FileTransferJobResourceHandler.toFileTransferJobResource(c.getContent());
+        return FileTransferHelper.toFileTransferJobResource(c.getContent());
     }
 
     @Override

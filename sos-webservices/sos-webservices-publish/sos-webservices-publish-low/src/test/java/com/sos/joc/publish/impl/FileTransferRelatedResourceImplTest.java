@@ -25,7 +25,7 @@ public class FileTransferRelatedResourceImplTest {
         try {
             h.init();
 
-            h.post("postDeploy", Paths.get("src/test/resources/ws/publish/impl/filetransfer/request-DeployImpl.json"));
+            h.post("postDeploy", Paths.get("src/test/resources/ws/publish/impl/filetransfer/request-DeployImpl-draft-jr-profile.json"));
 
             TimeUnit.SECONDS.sleep(WAIT_SECONDS);
         } catch (Throwable e) {

@@ -60,10 +60,10 @@ import com.sos.joc.model.publish.ShowDepHistoryFilter;
 import com.sos.joc.model.publish.repository.CopyToFilter;
 import com.sos.joc.model.sign.SignaturePath;
 import com.sos.joc.publish.mapper.FilterAttributesMapper;
+import com.sos.joc.publish.util.FileTransferJobResourceUtils;
 import com.sos.joc.publish.util.PublishUtils;
 
 import jakarta.persistence.NoResultException;
-import jakarta.persistence.TemporalType;
 
 public class DBLayerDeploy {
 
@@ -137,7 +137,7 @@ public class DBLayerDeploy {
         Query<DBItemDeploymentHistory> query = session.createQuery(sql.toString());
         query.setParameter("inventoryConfigurationIds", inventoryConfigurationIds);
         List<DBItemDeploymentHistory> results = session.getResultList(query);
-        if(results == null) {
+        if (results == null) {
             return Collections.emptyList();
         }
         return results;
@@ -751,7 +751,11 @@ public class DBLayerDeploy {
                     query.setParameter("type", cfg.getObjectType().intValue());
                     query.setMaxResults(1);
                     try {
-                        results.add(query.getSingleResult());
+                        DBItemInventoryConfiguration invItem = query.getSingleResult();
+                        if (invItem != null && ConfigurationType.FT_PROFILE_JOBRESOURCE.equals(invItem.getTypeAsEnum())) {
+                            invItem.setContent(FileTransferJobResourceUtils.completeForDeploy(invItem, this));
+                        }
+                        results.add(invItem);
                     } catch (NoResultException e) {
                         LOGGER.trace("no result found in db!");
                     }
@@ -1023,7 +1027,8 @@ public class DBLayerDeploy {
         try {
             boolean valid = false;
             try {
-                Validator.validate(configuration.getObjectType(), configuration.getPath(), configuration.getConfiguration(), new InventoryDBLayer(session), agentNames);
+                Validator.validate(configuration.getObjectType(), configuration.getPath(), configuration.getConfiguration(), new InventoryDBLayer(
+                        session), agentNames);
                 valid = true;
             } catch (Throwable e) {
                 valid = false;
@@ -1052,15 +1057,16 @@ public class DBLayerDeploy {
             DBItemInventoryConfiguration existingConfiguration, String account, Long auditLogId, Set<String> agentNames) {
         return updateInventoryConfiguration(configuration, existingConfiguration, account, auditLogId, agentNames, true);
     }
-    
-    public DBItemInventoryConfiguration updateInventoryConfiguration(ConfigurationObject configuration, DBItemInventoryConfiguration existingConfiguration, 
-            String account, Long auditLogId, Set<String> agentNames, boolean updatePublishState) {
+
+    public DBItemInventoryConfiguration updateInventoryConfiguration(ConfigurationObject configuration,
+            DBItemInventoryConfiguration existingConfiguration, String account, Long auditLogId, Set<String> agentNames, boolean updatePublishState) {
         String configPath = configuration.getPath();
         ConfigurationType configType = configuration.getObjectType();
         try {
             boolean valid = false;
             try {
-                Validator.validate(configuration.getObjectType(), configuration.getPath(), configuration.getConfiguration(), new InventoryDBLayer(session), agentNames);
+                Validator.validate(configuration.getObjectType(), configuration.getPath(), configuration.getConfiguration(), new InventoryDBLayer(
+                        session), agentNames);
                 valid = true;
             } catch (Throwable e) {
                 valid = false;
@@ -1076,7 +1082,7 @@ public class DBLayerDeploy {
                 }
                 existingConfiguration.setAuditLogId(auditLogId);
                 existingConfiguration.setValid(valid);
-                if(updatePublishState) {
+                if (updatePublishState) {
                     existingConfiguration.setDeployed(false);
                     existingConfiguration.setReleased(false);
                 }
@@ -1664,8 +1670,8 @@ public class DBLayerDeploy {
                     return FROM_DEP_DATE;
                 } else if ("to".equals(item)) {
                     return TO_DEP_DATE;
-//                } else if ("limit".equals(item)) {
-//                    return null;
+                    // } else if ("limit".equals(item)) {
+                    // return null;
                 } else if ("controllerId".equals(item)) {
                     return "controllerId in (:controllerIds)";
                 } else {

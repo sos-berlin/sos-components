@@ -154,6 +154,7 @@ public class UpdateItemUtils {
                         }
                         // no break!!
                     case JOBRESOURCE:
+                    case FT_PROFILE_JOBRESOURCE:
                         try {
                             String json = JsonSerializer.serializeAsString(content);
                             if(signatureAlgorithm.equals(SOSKeyConstants.PGP_ALGORITHM_NAME)) {

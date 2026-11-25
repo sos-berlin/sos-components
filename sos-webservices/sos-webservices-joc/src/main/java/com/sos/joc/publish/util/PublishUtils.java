@@ -106,6 +106,7 @@ import com.sos.joc.publish.mapper.UpdateableFileOrderSourceAgentName;
 import com.sos.joc.publish.mapper.UpdateableWorkflowJobAgentName;
 import com.sos.sign.model.board.Board;
 import com.sos.sign.model.fileordersource.FileOrderSource;
+import com.sos.sign.model.filetransfer.FileTransferJobResource;
 import com.sos.sign.model.instruction.ConsumeNotices;
 import com.sos.sign.model.instruction.Cycle;
 import com.sos.sign.model.instruction.ForkJoin;
@@ -222,7 +223,7 @@ public abstract class PublishUtils {
                 }
                 deployed.setContent(JsonSerializer.serializeAsString(deployed.readUpdateableContent()));
                 if (SOSKeyConstants.PGP_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
-                    if (deployed.getType() == DeployType.WORKFLOW.intValue() || deployed.getType() == DeployType.JOBRESOURCE.intValue()) {
+                    if (deployed.getType() == DeployType.WORKFLOW.intValue() || deployed.getType() == DeployType.JOBRESOURCE.intValue() || deployed.getType() == DeployType.FT_PROFILE_JOBRESOURCE.intValue()) {
                         sig = new DBItemDepSignatures();
                         sig.setSignature(SignObject.signPGP(keyPair.getPrivateKey(), deployed.getContent(), null));
                     }
@@ -233,14 +234,14 @@ public abstract class PublishUtils {
                     } else {
                         kp = KeyUtil.getKeyPairFromPrivatKeyString(keyPair.getPrivateKey());
                     }
-                    if (deployed.getType() == DeployType.WORKFLOW.intValue() || deployed.getType() == ConfigurationType.JOBRESOURCE.intValue()) {
+                    if (deployed.getType() == DeployType.WORKFLOW.intValue() || deployed.getType() == ConfigurationType.JOBRESOURCE.intValue() || deployed.getType() == DeployType.FT_PROFILE_JOBRESOURCE.intValue()) {
                         sig = new DBItemDepSignatures();
                         sig.setSignature(SignObject.signX509(kp.getPrivate(), deployed.getContent()));
                     }
                 } else if (SOSKeyConstants.ECDSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
                     KeyPair kp = KeyUtil.getKeyPairFromECDSAPrivatKeyString(keyPair.getPrivateKey());
                     // X509Certificate cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
-                    if (deployed.getType() == DeployType.WORKFLOW.intValue() || deployed.getType() == ConfigurationType.JOBRESOURCE.intValue()) {
+                    if (deployed.getType() == DeployType.WORKFLOW.intValue() || deployed.getType() == ConfigurationType.JOBRESOURCE.intValue() || deployed.getType() == DeployType.FT_PROFILE_JOBRESOURCE.intValue()) {
                         sig = new DBItemDepSignatures();
                         sig.setSignature(SignObject.signX509(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, kp.getPrivate(), deployed.getContent()));
                     }
@@ -576,7 +577,7 @@ public abstract class PublishUtils {
                         setAgentNamesInInstructions(seg.getBlock().getInstructions(), path, controllerId, agentIdAliasesMap, jobAgentNames);
                     }
                     break;
-                
+
                 default:
                     break;
                 }
@@ -1727,6 +1728,8 @@ public abstract class PublishUtils {
             ((Board) deployed.readUpdateableContent()).setPath(deployed.getName());
         } else if (deployed.getType() == DeployType.JOBCLASS.intValue()) {
             ((JobClass) deployed.readUpdateableContent()).setPath(deployed.getName());
+        } else if (deployed.getType() == DeployType.FT_PROFILE_JOBRESOURCE.intValue()) {
+            ((FileTransferJobResource) deployed.readUpdateableContent()).setPath(deployed.getName());
         }
         // deployed.setContent(JsonSerializer.serializeAsString(deployed.readUpdateableContent()));
         // } catch (JsonProcessingException e) {
