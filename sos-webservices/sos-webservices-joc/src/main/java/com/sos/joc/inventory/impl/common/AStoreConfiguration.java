@@ -75,7 +75,7 @@ public abstract class AStoreConfiguration extends JOCResourceImpl {
                 item = setProperties(in, item, dbLayer, false);
                 String newContent = item.getContent();
                 
-                confIsChanged = compareContents(newContent, oldContent, in.getObjectType());
+                confIsChanged = true; //compareContents(newContent, oldContent, in.getObjectType());
                 
                 if (confIsChanged) {
 
