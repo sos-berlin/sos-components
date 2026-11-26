@@ -1,11 +1,14 @@
 package com.sos.joc.inventory.impl.common;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.function.Predicate;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSCheckJavaVariableName;
@@ -65,28 +68,36 @@ public abstract class AStoreConfiguration extends JOCResourceImpl {
 
             session.beginTransaction();
             DBItemInventoryConfiguration item;
+            boolean confIsChanged = true;
             try {
                 item = JocInventory.getConfiguration(dbLayer, in.getId(), in.getPath(), in.getObjectType(), permittedFolders, true);
-                //JocInventory.checkFolderPermissions(item, permittedFolders, true);
+                String oldContent = item.getContent();
                 item = setProperties(in, item, dbLayer, false);
-                DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog(), Collections.singleton(
-                        new AuditLogDetail(item.getPath(), item.getType())));
-                item.setAuditLogId(dbAuditLog.getId());
-                JocInventory.updateConfiguration(dbLayer, item, in.getConfiguration());
-                if (JocInventory.isFolder(item.getType())) {
-                    JocInventory.postFolderEvent(item.getFolder());
-                } else if (JocInventory.isWorkflow(item.getType())) {
-                    InventoryTagDBLayer tagDbLayer = new InventoryTagDBLayer(session);
-                    try {
-                        tagDbLayer.getTags(item.getId()).stream().distinct().forEach(JocInventory::postTaggingEvent);
-                    } catch (Exception e) {
-                        //
+                String newContent = item.getContent();
+                
+                confIsChanged = compareContents(newContent, oldContent, in.getObjectType());
+                
+                if (confIsChanged) {
+
+                    DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog(), Collections.singleton(
+                            new AuditLogDetail(item.getPath(), item.getType())));
+                    item.setAuditLogId(dbAuditLog.getId());
+                    JocInventory.updateConfiguration(dbLayer, item, in.getConfiguration());
+                    if (JocInventory.isFolder(item.getType())) {
+                        JocInventory.postFolderEvent(item.getFolder());
+                    } else if (JocInventory.isWorkflow(item.getType())) {
+                        InventoryTagDBLayer tagDbLayer = new InventoryTagDBLayer(session);
+                        try {
+                            tagDbLayer.getTags(item.getId()).stream().distinct().forEach(JocInventory::postTaggingEvent);
+                        } catch (Exception e) {
+                            //
+                        }
+                        JocInventory.postEvent(item.getFolder());
+                        JocInventory.postObjectEvent(item.getPath(), item.getTypeAsEnum());
+                    } else {
+                        JocInventory.postEvent(item.getFolder());
+                        JocInventory.postObjectEvent(item.getPath(), item.getTypeAsEnum());
                     }
-                    JocInventory.postEvent(item.getFolder());
-                    JocInventory.postObjectEvent(item.getPath(), item.getTypeAsEnum());
-                } else {
-                    JocInventory.postEvent(item.getFolder());
-                    JocInventory.postObjectEvent(item.getPath(), item.getTypeAsEnum());
                 }
 
             } catch (DBMissingDataException e) {
@@ -133,7 +144,9 @@ public abstract class AStoreConfiguration extends JOCResourceImpl {
                 JocAuditObjectsLog.log(auditLogDetail, dbAuditLog.getId());
             }
             session.commit();
-            DependencyResolver.updateDependencies(item);
+            if (confIsChanged) {
+                DependencyResolver.updateDependencies(item);
+            }
             ConfigurationObject answer = new ConfigurationObject();
             answer.setId(item.getId());
             answer.setDeliveryDate(Date.from(Instant.now()));
@@ -153,6 +166,17 @@ public abstract class AStoreConfiguration extends JOCResourceImpl {
         } finally {
             Globals.disconnect(session);
         }
+    }
+
+    private boolean compareContents(String newContent, String oldContent, ConfigurationType type) {
+        if (!JocInventory.isFolder(type)) {
+            try {
+                return !JocInventory.content2IJSObject(oldContent, type).equals(JocInventory.content2IJSObject(newContent, type));
+            } catch (Exception e) {
+                //
+            }
+        }
+        return true;
     }
 
     private DBItemInventoryConfiguration setProperties(ConfigurationObject in, DBItemInventoryConfiguration item, InventoryDBLayer dbLayer,

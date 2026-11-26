@@ -12,22 +12,23 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 
 
 /**
- * workflow
+ * estimated time required of a workflow
  * <p>
  * 
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "path",
-    "versionId",
-    "statistics"
+    "statistics",
+    "cycleStatistics"
 })
 public class WorkflowTimeConsumption
     extends WorkflowId
 {
 
     /**
+     * estimated time required of a workflow
+     * <p>
      * Unit of max, min, average is seconds
      * (Required)
      * 
@@ -35,8 +36,19 @@ public class WorkflowTimeConsumption
     @JsonProperty("statistics")
     @JsonPropertyDescription("Unit of max, min, average is seconds")
     private WorkflowTimeStatistics statistics;
+    /**
+     * estimated time required of a workflow
+     * <p>
+     * Unit of max, min, average is seconds
+     * 
+     */
+    @JsonProperty("cycleStatistics")
+    @JsonPropertyDescription("Unit of max, min, average is seconds")
+    private WorkflowTimeStatistics cycleStatistics;
 
     /**
+     * estimated time required of a workflow
+     * <p>
      * Unit of max, min, average is seconds
      * (Required)
      * 
@@ -47,6 +59,8 @@ public class WorkflowTimeConsumption
     }
 
     /**
+     * estimated time required of a workflow
+     * <p>
      * Unit of max, min, average is seconds
      * (Required)
      * 
@@ -56,9 +70,31 @@ public class WorkflowTimeConsumption
         this.statistics = statistics;
     }
 
+    /**
+     * estimated time required of a workflow
+     * <p>
+     * Unit of max, min, average is seconds
+     * 
+     */
+    @JsonProperty("cycleStatistics")
+    public WorkflowTimeStatistics getCycleStatistics() {
+        return cycleStatistics;
+    }
+
+    /**
+     * estimated time required of a workflow
+     * <p>
+     * Unit of max, min, average is seconds
+     * 
+     */
+    @JsonProperty("cycleStatistics")
+    public void setCycleStatistics(WorkflowTimeStatistics cycleStatistics) {
+        this.cycleStatistics = cycleStatistics;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("statistics", statistics).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("statistics", statistics).append("cycleStatistics", cycleStatistics).toString();
     }
 
     @Override

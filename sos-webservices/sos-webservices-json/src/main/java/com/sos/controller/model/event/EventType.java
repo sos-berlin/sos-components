@@ -46,14 +46,14 @@ public enum EventType {
     OrderCancelled("OrderCancelled", true),
     OrderFinished("OrderFinished", false),
     OrderLocksAcquired("OrderLocksAcquired", false),
-    OrderLocksQueued("OrderLocksQueued", false), //maybe true
+    OrderLocksQueued("OrderLocksQueued", false),
     OrderLocksReleased("OrderLocksReleased", false),
     OrderNoticesConsumed("OrderNoticesConsumed", false),
     OrderNoticesConsumptionStarted("OrderNoticesConsumptionStarted", false),
     OrderNoticesRead("OrderNoticesRead", false),
     OrderNoticesExpected("OrderNoticesExpected", false),
     OrderNoticePosted("OrderNoticePosted", false),
-    OrderPrompted("OrderPrompted", false), //maybe true
+    OrderPrompted("OrderPrompted", false),
     OrderPromptAnswered("OrderPromptAnswered", false),
     OrderCyclingPrepared("OrderCyclingPrepared", false),
     OrderOrderAdded("OrderOrderAdded", false),

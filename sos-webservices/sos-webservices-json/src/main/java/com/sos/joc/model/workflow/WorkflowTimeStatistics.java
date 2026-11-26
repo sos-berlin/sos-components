@@ -10,6 +10,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 
 
 /**
+ * estimated time required of a workflow
+ * <p>
  * Unit of max, min, average is seconds
  * 
  */
