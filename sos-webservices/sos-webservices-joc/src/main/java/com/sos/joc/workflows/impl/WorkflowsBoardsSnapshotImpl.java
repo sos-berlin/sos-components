@@ -77,12 +77,12 @@ public class WorkflowsBoardsSnapshotImpl extends JOCResourceImpl implements IWor
             JsonValidator.validateFailFast(filterBytes, PlansFilter.class);
             PlansFilter filter = Globals.objectMapper.readValue(filterBytes, PlansFilter.class);
             String controllerId = filter.getControllerId();
-            JOCDefaultResponse response = initPermissions(getBasicControllerPermissions(controllerId).getNoticeBoards().getView());
+            JOCDefaultResponse response = initPermissions(getBasicControllerPermissions(controllerId).getWorkflows().getView());
             if (response != null) {
                 return response;
             }
             AuthFolders permittedFolders = getPermittedFoldersByControllerPermissions(controllerId, getControllerPermissionsPredicate()
-                    .getNoticeBoards().getView());
+                    .getWorkflows().getView());
             
             currentState = Proxy.of(controllerId).currentState();
             Set<OrderId> orderIds = new HashSet<>();
@@ -151,11 +151,14 @@ public class WorkflowsBoardsSnapshotImpl extends JOCResourceImpl implements IWor
             entity.setNoticeBoards(pbs);
             
             Map<String, WorkflowBoards> wbsMap = WorkflowRefs.getWorkflowNamesWithBoards(controllerId);
-            if (permittedFolders != null) {
-                wbsMap = wbsMap.entrySet().stream().filter(e -> canAdd(e.getValue().getPath(), permittedFolders)).collect(Collectors.toMap(
-                        Map.Entry::getKey, Map.Entry::getValue));
-            }
-            // only with clone: wbsMap.keySet().removeIf(wn -> !canAdd(WorkflowPaths.getPath(wn), permittedFolders));
+            
+            JRepo jRepo = currentState.repo();
+            Predicate<WorkflowBoards> onlySynchronized = w -> jRepo == null ? true : jRepo.pathToCheckedWorkflow(WorkflowPath.of(JocInventory
+                    .pathToName(w.getPath()))).isRight();
+            Predicate<Map.Entry<String, WorkflowBoards>> onlySynchronized2 = e -> onlySynchronized.test(e.getValue());
+
+            wbsMap = wbsMap.entrySet().stream().filter(e -> canAdd(e.getValue().getPath(), permittedFolders)).filter(onlySynchronized2).collect(
+                    Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
             
             Map<WorkflowPath, List<JOrder>> criticalOrdersPerWorkflow = getCriticalOrdersPerWorkflow(orderIds, wbsMap.keySet());
             Map<WorkflowPath, Set<String>> expectedlOrderIdsPerWorkflow = getExpectingOrdersPerWorkflow(orderIds, wbsMap.keySet());
@@ -166,16 +169,12 @@ public class WorkflowsBoardsSnapshotImpl extends JOCResourceImpl implements IWor
                         criticalOrdersPerWorkflow.values().stream().flatMap(List::stream).map(JOrder::id).map(OrderId::string)), connection);
             }
             
-            JRepo jRepo = currentState.repo();
-            Predicate<WorkflowBoards> onlySynchronized = w -> jRepo == null ? true : jRepo.pathToCheckedWorkflow(WorkflowPath.of(JocInventory
-                    .pathToName(w.getPath()))).isRight();
-            
             List<com.sos.controller.model.workflow.WorkflowBoardsV> postingWorkflows = new ArrayList<>();
             List<com.sos.controller.model.workflow.WorkflowBoardsV> expectingWorkflows = new ArrayList<>();
             List<com.sos.controller.model.workflow.WorkflowBoardsV> consumingWorkflows = new ArrayList<>();
             OrderIdToOrder idToOrder = new OrderIdToOrder();
             
-            wbsMap.values().stream().filter(w -> canAdd(w.getPath(), permittedFolders)).filter(onlySynchronized).forEach(w -> {
+            wbsMap.values().stream().forEach(w -> {
 
 //                AtomicInteger numOfAnnouncements = new AtomicInteger(0);
 //                AtomicInteger numOfExpectedNotices = new AtomicInteger(0);
