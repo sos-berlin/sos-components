@@ -154,9 +154,11 @@ public class ClientServerCertImpl extends JOCResourceImpl implements ICreateClie
                 conf.setJocId(jocInstance.getClusterId());
                 conf.setUrl(jocInstance.getUri());
                 try {
-                    X509Certificate cert = KeyUtil.getX509Certificate(jocInstance.getCertificate());
-                    String dn = CertificateUtils.getDistinguishedName(cert);
-                    conf.setDN(dn);
+                    if(jocInstance.getCertificate() != null) {
+                        X509Certificate cert = KeyUtil.getX509Certificate(jocInstance.getCertificate());
+                        String dn = CertificateUtils.getDistinguishedName(cert);
+                        conf.setDN(dn);
+                    }
                 } catch (CertificateException | UnsupportedEncodingException e) {
                     throw new JocException(e);
                 }
