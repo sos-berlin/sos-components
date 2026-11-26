@@ -39,13 +39,15 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.filetransfer.FileTransferHelper;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
+import com.sos.joc.db.inventory.InventoryDBLayer;
+import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.publish.db.DBLayerDeploy;
 
 // TODO alternative profile - source table?
-public class FileTransferJobResourceUtils {
+public class FileTransferPublishUtils {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(FileTransferJobResourceUtils.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(FileTransferPublishUtils.class);
 
     // TODO - remove duplicate definition - see FileTransferValidator
     private static final String PROPERTY_NAME_FRAGMENT_CREDENTIAL_STORE = "Credential Store Fragment";
@@ -65,12 +67,37 @@ public class FileTransferJobResourceUtils {
     // TODO remove it
     private static final boolean testMode = false;
 
-    public static String completeForDeploy(DBItemInventoryConfiguration c, DBLayerDeploy dbLayer) throws Exception {
+    public static void validateAndPrepareForRelease(InventoryDBLayer dbLayer, DBItemInventoryConfiguration item) throws Exception {
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("[completeForDeploy]" + c.getPath());
+            LOGGER.debug(String.format("[validateAndPrepareForRelease][%s]%s", item.getTypeAsEnum(), item.getPath()));
+        }
+        switch (item.getTypeAsEnum()) {
+        case FT_FRAGMENT_SFTP:
+            break;
+        case FT_FRAGMENT_JUMP:
+            break;
+        case FT_FRAGMENT_SMB:
+            break;
+        case FT_FRAGMENT_FTP:
+            break;
+        case FT_FRAGMENT_HTTP:
+            break;
+        case FT_FRAGMENT_WEBDAV:
+            break;
+        case FT_FRAGMENT_AZURE_BLOB_STORAGE:
+            break;
+        default:
+            break;
+
+        }
+    }
+
+    public static String validateAndPrepareForDeploy(DBLayerDeploy dbLayer, DBItemInventoryConfiguration item) throws Exception {
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(String.format("[validateAndPrepareForDeploy][%s]%s", item.getTypeAsEnum(), item.getPath()));
         }
 
-        FileTransferJobResource ft = FileTransferHelper.toFileTransferJobResource(c.getContent());
+        FileTransferJobResource ft = FileTransferHelper.toFileTransferJobResource(item.getContent());
         Profile p = ft.getProfile();
         if (p == null) {
             throw new Exception("Missing profile");
@@ -80,9 +107,9 @@ public class FileTransferJobResourceUtils {
         }
 
         Settings s = new Settings();
-        s.setProfileName(c.getName());
+        s.setProfileName(item.getName());
 
-        resolveProfile(dbLayer, c.getPath(), s, p);
+        resolveProfile(dbLayer, item.getPath(), s, p);
 
         ft.setSettings(s);
         return Globals.objectMapper.writeValueAsString(ft);
@@ -421,13 +448,13 @@ public class FileTransferJobResourceUtils {
         if (testMode) {
             DBItemInventoryConfiguration item = dbLayer.getConfigurationByName(name, type);
             if (item == null) {
-                throw new Exception("[" + path + "] The assigned " + propertyName + " name  does not exist: " + name);
+                throw new DBMissingDataException("[" + path + "] The assigned " + propertyName + " name  does not exist: " + name);
             }
             return Globals.objectMapper.readValue(item.getJsonContent(), clazz);
         } else {
             DBItemInventoryReleasedConfiguration item = dbLayer.getReleasedConfiguration(name, type);
             if (item == null) {
-                throw new Exception("[" + path + "] No released " + propertyName + " found with name: " + name);
+                throw new DBMissingDataException("[" + path + "] No released " + propertyName + " found with name: " + name);
             }
             return Globals.objectMapper.readValue(item.getJsonContent(), clazz);
         }

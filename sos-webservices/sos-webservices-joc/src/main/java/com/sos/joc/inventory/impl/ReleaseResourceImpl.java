@@ -82,6 +82,7 @@ import com.sos.joc.model.dailyplan.generate.GenerateRequest;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.RequestFilter;
 import com.sos.joc.model.inventory.release.ReleaseFilter;
+import com.sos.joc.publish.util.FileTransferPublishUtils;
 import com.sos.schema.JsonValidator;
 
 import io.vavr.control.Either;
@@ -529,6 +530,13 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                 // .getPath()));
             }
         default:
+            if (FileTransferHelper.RELEASABLE_OBJECTS.contains(item.getTypeAsEnum())) {
+                try {
+                    FileTransferPublishUtils.validateAndPrepareForRelease(dbLayer, item);
+                } catch (Exception e) {
+                    errors.add(new JocReleaseException(item.getTypeAsEnum(), item.getPath(), e));
+                }
+            }
             break;
         }
         return errors;

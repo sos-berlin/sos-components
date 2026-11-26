@@ -60,7 +60,7 @@ import com.sos.joc.model.publish.ShowDepHistoryFilter;
 import com.sos.joc.model.publish.repository.CopyToFilter;
 import com.sos.joc.model.sign.SignaturePath;
 import com.sos.joc.publish.mapper.FilterAttributesMapper;
-import com.sos.joc.publish.util.FileTransferJobResourceUtils;
+import com.sos.joc.publish.util.FileTransferPublishUtils;
 import com.sos.joc.publish.util.PublishUtils;
 
 import jakarta.persistence.NoResultException;
@@ -753,7 +753,7 @@ public class DBLayerDeploy {
                     try {
                         DBItemInventoryConfiguration invItem = query.getSingleResult();
                         if (invItem != null && ConfigurationType.FT_PROFILE_JOBRESOURCE.equals(invItem.getTypeAsEnum())) {
-                            invItem.setContent(FileTransferJobResourceUtils.completeForDeploy(invItem, this));
+                            invItem.setContent(FileTransferPublishUtils.validateAndPrepareForDeploy(this, invItem));
                         }
                         results.add(invItem);
                     } catch (NoResultException e) {
