@@ -82,7 +82,6 @@ import com.sos.joc.model.dailyplan.generate.GenerateRequest;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.RequestFilter;
 import com.sos.joc.model.inventory.release.ReleaseFilter;
-import com.sos.joc.publish.util.FileTransferPublishUtils;
 import com.sos.schema.JsonValidator;
 
 import io.vavr.control.Either;
@@ -93,9 +92,15 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ReleaseResourceImpl.class);
 
+    // @formatter:off
     private static final Set<ConfigurationType> preDeployReleasables = Collections.unmodifiableSet(Stream.concat(Stream.of(
-            ConfigurationType.INCLUDESCRIPT, ConfigurationType.WORKINGDAYSCALENDAR, ConfigurationType.NONWORKINGDAYSCALENDAR,
-            ConfigurationType.JOBTEMPLATE, ConfigurationType.REPORT), FileTransferHelper.RELEASABLE_OBJECTS.stream()).collect(Collectors.toSet()));
+            ConfigurationType.INCLUDESCRIPT, 
+            ConfigurationType.WORKINGDAYSCALENDAR, 
+            ConfigurationType.NONWORKINGDAYSCALENDAR,
+            ConfigurationType.JOBTEMPLATE, 
+            ConfigurationType.REPORT), 
+            FileTransferHelper.RELEASABLE_OBJECTS.stream()).collect(Collectors.toSet()));
+    // @formatter:on
 
     private static final Set<ConfigurationType> postDeployReleasables = Collections.unmodifiableSet(new HashSet<ConfigurationType>(Arrays.asList(
             ConfigurationType.SCHEDULE)));
@@ -319,20 +324,20 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         // Row was updated or deleted by another transaction (or unsaved-value mapping was incorrect)
         // so better a serial processing
         // return toDelete.stream().filter(Objects::nonNull).map(requestFilter -> {
-        // Either<Err419, Void> either = null;
-        // try {
-        // DBItemInventoryConfiguration conf = JocInventory.getConfiguration(dbLayer, requestFilter, folderPermissions);
-        // delete(conf, dbLayer, dbAuditLog, withDeletionOfEmptyFolders, true);
-        // either = Either.right(null);
-        // } catch (DBMissingDataException ex) {
-        // // ignore missing objects at deletion
-        // either = Either.right(null);
-        // } catch (Exception ex) {
-        // if (requestFilter.getPath() != null) {
-        // either = Either.left(new BulkError(LOGGER).get(ex, jocError, requestFilter.getPath()));
-        // } else {
-        // either = Either.left(new BulkError(LOGGER).get(ex, jocError, "Id: " + requestFilter.getId()));
-        // }
+        //  Either<Err419, Void> either = null;
+        //  try {
+        //      DBItemInventoryConfiguration conf = JocInventory.getConfiguration(dbLayer, requestFilter, folderPermissions);
+        //      delete(conf, dbLayer, dbAuditLog, withDeletionOfEmptyFolders, true);
+        //      either = Either.right(null);
+        //  } catch (DBMissingDataException ex) {
+        //      // ignore missing objects at deletion
+        //      either = Either.right(null);
+        //  } catch (Exception ex) {
+        //      if (requestFilter.getPath() != null) {
+        //          either = Either.left(new BulkError(LOGGER).get(ex, jocError, requestFilter.getPath()));
+        //  } else {
+        //      either = Either.left(new BulkError(LOGGER).get(ex, jocError, "Id: " + requestFilter.getId()));
+        //  }
         // }
         // return either;
         // }).filter(Either::isLeft).map(Either::getLeft).collect(Collectors.toList());
@@ -401,28 +406,29 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         // Row was updated or deleted by another transaction (or unsaved-value mapping was incorrect)
         // so better a serial processing
         // return toUpdate.stream().filter(Objects::nonNull).map(requestFilter -> {
-        // Either<Err419, Void> either = null;
-        // try {
-        // DBItemInventoryConfiguration conf = JocInventory.getConfiguration(dbLayer, requestFilter, folderPermissions);
-        // if (ConfigurationType.FOLDER.intValue() == conf.getType()) {
-        // updateReleasedFolder(conf, dbLayer, dbAuditLog);
-        // JocInventory.postEvent(conf.getFolder());
-        // } else if (!JocInventory.isReleasable(conf.getTypeAsEnum())) {
-        // throw new ControllerInvalidResponseDataException(String.format("%s is not a 'Scheduling Object': %s", conf.getPath(), conf
-        // .getTypeAsEnum()));
-        // } else {
-        // updateReleasedObject(conf, dbLayer, dbAuditLog);
-        // JocInventory.postEvent(conf.getFolder());
-        // }
-        // either = Either.right(null);
-        // } catch (Exception ex) {
-        // if (requestFilter.getPath() != null) {
-        // either = Either.left(new BulkError(LOGGER).get(ex, jocError, requestFilter.getPath()));
-        // } else {
-        // either = Either.left(new BulkError(LOGGER).get(ex, jocError, "Id: " + requestFilter.getId()));
-        // }
-        // }
-        // return either;
+        //  Either<Err419, Void> either = null;
+        //  try {
+        //      DBItemInventoryConfiguration conf = JocInventory.getConfiguration(dbLayer, requestFilter, folderPermissions);
+        //      if (ConfigurationType.FOLDER.intValue() == conf.getType()) {
+        //          updateReleasedFolder(conf, dbLayer, dbAuditLog);
+        //          JocInventory.postEvent(conf.getFolder());
+        //      } else if (!JocInventory.isReleasable(conf.getTypeAsEnum())) {
+        //          throw new ControllerInvalidResponseDataException(String.format("%s is not a 'Scheduling Object': %s", conf.getPath(), conf
+        //          .getTypeAsEnum()));
+        //      } else {
+        //          updateReleasedObject(conf, dbLayer, dbAuditLog);
+        //          JocInventory.postEvent(conf.getFolder());
+        //      }
+        //      either = Either.right(null);
+        //  } 
+        //  catch (Exception ex) {
+        //      if (requestFilter.getPath() != null) {
+        //          either = Either.left(new BulkError(LOGGER).get(ex, jocError, requestFilter.getPath()));
+        //      } else {
+        //          either = Either.left(new BulkError(LOGGER).get(ex, jocError, "Id: " + requestFilter.getId()));
+        //      }
+        //  }
+        //  return either;
         //
         // }).filter(Either::isLeft).map(Either::getLeft).collect(Collectors.toList());
     }
@@ -530,13 +536,13 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                 // .getPath()));
             }
         default:
-            if (FileTransferHelper.RELEASABLE_OBJECTS.contains(item.getTypeAsEnum())) {
-                try {
-                    FileTransferPublishUtils.validateAndPrepareForRelease(dbLayer, item);
-                } catch (Exception e) {
-                    errors.add(new JocReleaseException(item.getTypeAsEnum(), item.getPath(), e));
-                }
-            }
+            // if (FileTransferHelper.RELEASABLE_OBJECTS.contains(item.getTypeAsEnum())) {
+            //      try {
+            //          FileTransferPublishUtils.validateAndPrepareForRelease(dbLayer, item);
+            //      } catch (Exception e) {
+            //          errors.add(new JocReleaseException(item.getTypeAsEnum(), item.getPath(), e));
+            //      }
+            // }
             break;
         }
         return errors;

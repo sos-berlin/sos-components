@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum ConfigurationType {
 
+    // @formatter:off
     FOLDER(0), 
     WORKFLOW(1), 
     JOBCLASS(2), 
@@ -41,6 +42,7 @@ public enum ConfigurationType {
     // Reserve 92–98 for future
     // FileTransfer: JobResource per profile
     FT_PROFILE_JOBRESOURCE(99);
+    // @formatter:on
 
     private final Integer intValue;
     private final static Map<String, ConfigurationType> CONSTANTS = new HashMap<String, ConfigurationType>();

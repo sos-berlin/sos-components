@@ -1,5 +1,8 @@
 package com.sos.joc.publish.util;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,24 +74,67 @@ public class FileTransferPublishUtils {
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug(String.format("[validateAndPrepareForRelease][%s]%s", item.getTypeAsEnum(), item.getPath()));
         }
+
+        // Using objectMapper instead of a regex search: equally fast for small fragments, but more robust.
+        Set<String> allSftpNames = new HashSet<>();
+        Set<String> allJumpNames = new HashSet<>();
+        Set<String> allSmbNames = new HashSet<>();
+        Set<String> allFtpNames = new HashSet<>();
+        Set<String> allHttpNames = new HashSet<>();
+        Set<String> allWebdavNames = new HashSet<>();
+        Set<String> allAzureNames = new HashSet<>();
         switch (item.getTypeAsEnum()) {
         case FT_FRAGMENT_SFTP:
+            allSftpNames.add(item.getName());
+            resolveSftpFragmentAlternatives(dbLayer, allSftpNames, item.getPath(), item.getTypeAsEnum(), item.getJsonContent());
+            if (allSftpNames.size() == 1) {
+                allSftpNames.clear();
+            }
             break;
         case FT_FRAGMENT_JUMP:
+            allJumpNames.add(item.getName());
+            resolveJumpFragmentAlternatives(dbLayer, allJumpNames, item.getPath(), item.getTypeAsEnum(), item.getJsonContent());
+            if (allJumpNames.size() == 1) {
+                allJumpNames.clear();
+            }
             break;
         case FT_FRAGMENT_SMB:
+            allSmbNames.add(item.getName());
+            resolveSmbFragmentAlternatives(dbLayer, allSmbNames, item.getPath(), item.getTypeAsEnum(), item.getJsonContent());
+            if (allSmbNames.size() == 1) {
+                allSmbNames.clear();
+            }
             break;
         case FT_FRAGMENT_FTP:
+            allFtpNames.add(item.getName());
+            resolveFtpFragmentAlternatives(dbLayer, allFtpNames, item.getPath(), item.getTypeAsEnum(), item.getJsonContent());
+            if (allFtpNames.size() == 1) {
+                allFtpNames.clear();
+            }
             break;
         case FT_FRAGMENT_HTTP:
+            allHttpNames.add(item.getName());
+            resolveHttpFragmentAlternatives(dbLayer, allHttpNames, item.getPath(), item.getTypeAsEnum(), item.getJsonContent());
+            if (allHttpNames.size() == 1) {
+                allHttpNames.clear();
+            }
             break;
         case FT_FRAGMENT_WEBDAV:
+            allWebdavNames.add(item.getName());
+            resolveWebdavFragmentAlternatives(dbLayer, allWebdavNames, item.getPath(), item.getTypeAsEnum(), item.getJsonContent());
+            if (allWebdavNames.size() == 1) {
+                allWebdavNames.clear();
+            }
             break;
         case FT_FRAGMENT_AZURE_BLOB_STORAGE:
+            allAzureNames.add(item.getName());
+            resolveAzureBlobStorageFragmentAlternatives(dbLayer, allAzureNames, item.getPath(), item.getTypeAsEnum(), item.getJsonContent());
+            if (allAzureNames.size() == 1) {
+                allAzureNames.clear();
+            }
             break;
         default:
             break;
-
         }
     }
 
@@ -113,6 +159,112 @@ public class FileTransferPublishUtils {
 
         ft.setSettings(s);
         return Globals.objectMapper.writeValueAsString(ft);
+    }
+
+    private static void resolveSftpFragmentAlternatives(InventoryDBLayer dbLayer, Set<String> all, String path, ConfigurationType type, String json)
+            throws Exception {
+        SftpFragment f = Globals.objectMapper.readValue(json, SftpFragment.class);
+        String alternative = f.getAlternativeSftpFragmentName();
+        if (!SOSString.isEmpty(alternative)) {
+            if (all.contains(alternative)) {
+                return;
+            }
+            DBItemInventoryReleasedConfiguration released = getReleasedFragmentItem(dbLayer, path, PROPERTY_NAME_FRAGMENT_SFTP, alternative, type);
+            all.add(alternative);
+
+            resolveSftpFragmentAlternatives(dbLayer, all, released.getPath(), released.getTypeAsEnum(), released.getJsonContent());
+        }
+    }
+
+    private static void resolveJumpFragmentAlternatives(InventoryDBLayer dbLayer, Set<String> all, String path, ConfigurationType type, String json)
+            throws Exception {
+        JumpFragment f = Globals.objectMapper.readValue(json, JumpFragment.class);
+        String alternative = f.getAlternativeJumpFragmentName();
+        if (!SOSString.isEmpty(alternative)) {
+            if (all.contains(alternative)) {
+                return;
+            }
+            DBItemInventoryReleasedConfiguration released = getReleasedFragmentItem(dbLayer, path, PROPERTY_NAME_FRAGMENT_JUMP, alternative, type);
+            all.add(alternative);
+
+            resolveJumpFragmentAlternatives(dbLayer, all, released.getPath(), released.getTypeAsEnum(), released.getJsonContent());
+        }
+    }
+
+    private static void resolveSmbFragmentAlternatives(InventoryDBLayer dbLayer, Set<String> all, String path, ConfigurationType type, String json)
+            throws Exception {
+        SmbFragment f = Globals.objectMapper.readValue(json, SmbFragment.class);
+        String alternative = f.getAlternativeSmbFragmentName();
+        if (!SOSString.isEmpty(alternative)) {
+            if (all.contains(alternative)) {
+                return;
+            }
+            DBItemInventoryReleasedConfiguration released = getReleasedFragmentItem(dbLayer, path, PROPERTY_NAME_FRAGMENT_SMB, alternative, type);
+            all.add(alternative);
+
+            resolveSmbFragmentAlternatives(dbLayer, all, released.getPath(), released.getTypeAsEnum(), released.getJsonContent());
+        }
+    }
+
+    private static void resolveFtpFragmentAlternatives(InventoryDBLayer dbLayer, Set<String> all, String path, ConfigurationType type, String json)
+            throws Exception {
+        FtpFragment f = Globals.objectMapper.readValue(json, FtpFragment.class);
+        String alternative = f.getAlternativeFtpFragmentName();
+        if (!SOSString.isEmpty(alternative)) {
+            if (all.contains(alternative)) {
+                return;
+            }
+            DBItemInventoryReleasedConfiguration released = getReleasedFragmentItem(dbLayer, path, PROPERTY_NAME_FRAGMENT_FTP, alternative, type);
+            all.add(alternative);
+
+            resolveFtpFragmentAlternatives(dbLayer, all, released.getPath(), released.getTypeAsEnum(), released.getJsonContent());
+        }
+    }
+
+    private static void resolveHttpFragmentAlternatives(InventoryDBLayer dbLayer, Set<String> all, String path, ConfigurationType type, String json)
+            throws Exception {
+        HttpFragment f = Globals.objectMapper.readValue(json, HttpFragment.class);
+        String alternative = f.getAlternativeHttpFragmentName();
+        if (!SOSString.isEmpty(alternative)) {
+            if (all.contains(alternative)) {
+                return;
+            }
+            DBItemInventoryReleasedConfiguration released = getReleasedFragmentItem(dbLayer, path, PROPERTY_NAME_FRAGMENT_HTTP, alternative, type);
+            all.add(alternative);
+
+            resolveHttpFragmentAlternatives(dbLayer, all, released.getPath(), released.getTypeAsEnum(), released.getJsonContent());
+        }
+    }
+
+    private static void resolveWebdavFragmentAlternatives(InventoryDBLayer dbLayer, Set<String> all, String path, ConfigurationType type, String json)
+            throws Exception {
+        WebdavFragment f = Globals.objectMapper.readValue(json, WebdavFragment.class);
+        String alternative = f.getAlternativeWebdavFragmentName();
+        if (!SOSString.isEmpty(alternative)) {
+            if (all.contains(alternative)) {
+                return;
+            }
+            DBItemInventoryReleasedConfiguration released = getReleasedFragmentItem(dbLayer, path, PROPERTY_NAME_FRAGMENT_WEBDAV, alternative, type);
+            all.add(alternative);
+
+            resolveWebdavFragmentAlternatives(dbLayer, all, released.getPath(), released.getTypeAsEnum(), released.getJsonContent());
+        }
+    }
+
+    private static void resolveAzureBlobStorageFragmentAlternatives(InventoryDBLayer dbLayer, Set<String> all, String path, ConfigurationType type,
+            String json) throws Exception {
+        AzureBlobStorageFragment f = Globals.objectMapper.readValue(json, AzureBlobStorageFragment.class);
+        String alternative = f.getAlternativeAzureBlobStorageFragmentName();
+        if (!SOSString.isEmpty(alternative)) {
+            if (all.contains(alternative)) {
+                return;
+            }
+            DBItemInventoryReleasedConfiguration released = getReleasedFragmentItem(dbLayer, path, PROPERTY_NAME_FRAGMENT_AZURE_BLOB_STORAGE,
+                    alternative, type);
+            all.add(alternative);
+
+            resolveAzureBlobStorageFragmentAlternatives(dbLayer, all, released.getPath(), released.getTypeAsEnum(), released.getJsonContent());
+        }
     }
 
     // All referenced fragments should already have been released
@@ -458,6 +610,15 @@ public class FileTransferPublishUtils {
             }
             return Globals.objectMapper.readValue(item.getJsonContent(), clazz);
         }
+    }
+
+    private static <T extends AFragment> DBItemInventoryReleasedConfiguration getReleasedFragmentItem(InventoryDBLayer dbLayer, String path,
+            String propertyName, String name, ConfigurationType type) throws Exception {
+        DBItemInventoryReleasedConfiguration item = dbLayer.getReleasedConfiguration(name, type);
+        if (item == null) {
+            throw new DBMissingDataException("[" + path + "] No released " + propertyName + " found with name: " + name);
+        }
+        return item;
     }
 
 }
