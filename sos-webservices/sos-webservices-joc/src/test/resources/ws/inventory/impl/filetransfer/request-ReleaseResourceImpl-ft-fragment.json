@@ -1,0 +1,9 @@
+{
+	"auditLog": {},
+	"update": [
+		{
+			"objectType": "FT_FRAGMENT_SFTP",
+			"path": "/filetransfer/my_sftp_fragment_2"
+		}
+	]
+}

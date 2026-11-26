@@ -1,5 +1,21 @@
 {
+	"path": "/filetransfer/ft_w",
+	"valid": true,
+	"objectType": "WORKFLOW",
 	"configuration": {
+		"timeZone": "Europe/Berlin",
+		"orderPreparation": {
+			"parameters": {
+				"file": {
+					"type": "String",
+					"default": "$file"
+				}
+			},
+			"allowUndeclared": false
+		},
+		"jobResourceNames": [
+			"ft_jr_profile"
+		],
 		"instructions": [
 			{
 				"TYPE": "Execute.Named",
@@ -24,20 +40,6 @@
 				"warnOnErrWritten": false,
 				"isNotRestartable": false
 			}
-		},
-		"orderPreparation": {
-			"parameters": {
-				"file": {
-					"type": "String",
-					"default": "$file"
-				}
-			},
-			"allowUndeclared": false
-		},
-		"jobResourceNames": [],
-		"timeZone": "Europe/Berlin"
-	},
-	"path": "/filetransfer/ft_w",
-	"valid": true,
-	"objectType": "WORKFLOW"
+		}
+	}
 }

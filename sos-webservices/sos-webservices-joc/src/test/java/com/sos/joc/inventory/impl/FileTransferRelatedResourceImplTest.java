@@ -1,6 +1,7 @@
 package com.sos.joc.inventory.impl;
 
 import java.nio.file.Paths;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -35,7 +36,7 @@ public class FileTransferRelatedResourceImplTest {
 
     @Ignore
     @Test
-    public void testStoreSftpFragment() throws Exception {
+    public void testStoreSftpFragment1() throws Exception {
         UnitTestSimpleWSImplHelper h = new UnitTestSimpleWSImplHelper(new StoreConfigurationResourceImpl());
         h.setHibernateConfigurationFileFromWebservicesGlobal("hibernate.cfg.mysql.xml");
 
@@ -49,10 +50,8 @@ public class FileTransferRelatedResourceImplTest {
         sa.setPublicKey(pk);
         f.setAuthentication(sa);
 
-        // f.setAlternativeSftpFragmentName("myAltSftp");
-
         ConfigurationObject in = new ConfigurationObject();
-        in.setPath("/filetransfer/mySftp");
+        in.setPath("/filetransfer/my_sftp_fragment_1");
         in.setConfiguration(f);
         in.setObjectType(ConfigurationType.FT_FRAGMENT_SFTP);
 
@@ -60,6 +59,57 @@ public class FileTransferRelatedResourceImplTest {
             h.init();
 
             h.post("store", in);
+        } catch (Throwable e) {
+            LOGGER.error(e.toString(), e);
+        } finally {
+            h.destroy();
+        }
+    }
+
+    @Ignore
+    @Test
+    public void testStoreSftpFragment2UsingAlternative() throws Exception {
+        UnitTestSimpleWSImplHelper h = new UnitTestSimpleWSImplHelper(new StoreConfigurationResourceImpl());
+        h.setHibernateConfigurationFileFromWebservicesGlobal("hibernate.cfg.mysql.xml");
+
+        SftpFragment f = new SftpFragment();
+        BasicConnection bc = new BasicConnection();
+        bc.setHostname("sftp_host");
+        f.setConnection(bc);
+        SftpAuthentication sa = new SftpAuthentication();
+        sa.setAccount("my_user");
+        SftpAuthPublicKey pk = new SftpAuthPublicKey("pk.file", null);
+        sa.setPublicKey(pk);
+        f.setAuthentication(sa);
+
+        f.setAlternativeSftpFragmentName("my_sftp_fragment_1");
+
+        ConfigurationObject in = new ConfigurationObject();
+        in.setPath("/filetransfer/my_sftp_fragment_2");
+        in.setConfiguration(f);
+        in.setObjectType(ConfigurationType.FT_FRAGMENT_SFTP);
+
+        try {
+            h.init();
+
+            h.post("store", in);
+        } catch (Throwable e) {
+            LOGGER.error(e.toString(), e);
+        } finally {
+            h.destroy();
+        }
+    }
+
+    @Ignore
+    @Test
+    public void testReleaseSftpFragment() throws Exception {
+        UnitTestSimpleWSImplHelper h = new UnitTestSimpleWSImplHelper(new ReleaseResourceImpl());
+        h.setHibernateConfigurationFileFromWebservicesGlobal("hibernate.cfg.mysql.xml");
+        try {
+            h.init();
+
+            h.post("release", Paths.get("src/test/resources/ws/inventory/impl/filetransfer/request-ReleaseResourceImpl-ft-fragment.json"));
+            TimeUnit.SECONDS.sleep(10);
         } catch (Throwable e) {
             LOGGER.error(e.toString(), e);
         } finally {
