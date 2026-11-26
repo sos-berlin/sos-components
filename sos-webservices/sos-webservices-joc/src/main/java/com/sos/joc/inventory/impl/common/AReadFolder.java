@@ -29,6 +29,7 @@ import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.RequestFolder;
 import com.sos.joc.model.inventory.common.ResponseFolder;
+import com.sos.joc.model.inventory.common.ResponseFolderFileTransfer;
 import com.sos.joc.model.inventory.common.ResponseFolderItem;
 
 import io.vavr.control.Either;
@@ -80,6 +81,7 @@ public abstract class AReadFolder extends JOCResourceImpl {
             }
 
             if (items != null && !items.isEmpty()) {
+                ResponseFolderFileTransfer fileTransfer = new ResponseFolderFileTransfer();
                 for (InventoryTreeFolderItem item : items) {
                     ResponseFolderItem config = item.toResponseFolderItem();
                     if (config == null) {// e.g. unknown type
@@ -131,10 +133,49 @@ public abstract class AReadFolder extends JOCResourceImpl {
                             folder.getReports().add(config);
                             break;
                         case DEPLOYMENTDESCRIPTOR:
-                             folder.getDeploymentDescriptors().add(config);
+                            folder.getDeploymentDescriptors().add(config);
                             break;
                         case FOLDER:
                             // folder.getFolders().add(config);
+                            break;
+                        case FT_FRAGMENT_CREDENTIAL_STORE:
+                            fileTransfer.getCredentialStoreFragments().add(config);
+                            break;
+                        case FT_FRAGMENT_DECRYPTION:
+                            fileTransfer.getDecryptionFragments().add(config);
+                            break;
+                        case FT_FRAGMENT_MAIL:
+                            fileTransfer.getMailFragments().add(config);
+                            break;
+                        case FT_FRAGMENT_HTTP_PROXY:
+                            fileTransfer.getHttpProxyFragments().add(config);
+                            break;
+                        case FT_FRAGMENT_SOCKS_PROXY:
+                            fileTransfer.getSocksProxyFragments().add(config);
+                            break;
+                        case FT_FRAGMENT_AZURE_BLOB_STORAGE:
+                            fileTransfer.getAzureBlobStorageFragments().add(config);
+                            break;
+                        case FT_FRAGMENT_FTP:
+                            fileTransfer.getFtpFragments().add(config);
+                            break;
+                        case FT_FRAGMENT_HTTP:
+                            fileTransfer.getHttpFragments().add(config);
+                            break;
+                        case FT_FRAGMENT_JUMP:
+                            fileTransfer.getJumpFragments().add(config);
+                            break;
+                        case FT_FRAGMENT_SFTP:
+                            fileTransfer.getSftpFragments().add(config);
+                            break;
+                        case FT_FRAGMENT_SMB:
+                            fileTransfer.getSmbFragments().add(config);
+                            break;
+                        case FT_FRAGMENT_WEBDAV:
+                            fileTransfer.getWebdavFragments().add(config);
+                            break;
+                        case FT_PROFILE_JOBRESOURCE:
+                            fileTransfer.getProfileJobResources().add(config);
                             break;
                         default:
                             break;
@@ -154,6 +195,7 @@ public abstract class AReadFolder extends JOCResourceImpl {
                 folder.setCalendars(sort(folder.getCalendars()));
                 folder.setReports(sort(folder.getReports()));
                 folder.setDeploymentDescriptors(sort(folder.getDeploymentDescriptors()));
+                folder.setFileTransfer(sort(fileTransfer));
                 // folder.setFolders(sort(folder.getFolders()));
             }
             return folder;
@@ -182,6 +224,25 @@ public abstract class AReadFolder extends JOCResourceImpl {
             return set;
         }
         return set.stream().sorted(Comparator.comparing(ResponseFolderItem::getPath)).collect(Collectors.toCollection(LinkedHashSet::new));
+    }
+
+    private ResponseFolderFileTransfer sort(ResponseFolderFileTransfer fileTransfer) {
+        fileTransfer.setCredentialStoreFragments(sort(fileTransfer.getCredentialStoreFragments()));
+        fileTransfer.setDecryptionFragments(sort(fileTransfer.getDecryptionFragments()));
+        fileTransfer.setMailFragments(sort(fileTransfer.getMailFragments()));
+        fileTransfer.setHttpProxyFragments(sort(fileTransfer.getHttpProxyFragments()));
+        fileTransfer.setSocksProxyFragments(sort(fileTransfer.getSocksProxyFragments()));
+
+        fileTransfer.setAzureBlobStorageFragments(sort(fileTransfer.getAzureBlobStorageFragments()));
+        fileTransfer.setFtpFragments(sort(fileTransfer.getFtpFragments()));
+        fileTransfer.setHttpFragments(sort(fileTransfer.getHttpFragments()));
+        fileTransfer.setJumpFragments(sort(fileTransfer.getJumpFragments()));
+        fileTransfer.setSftpFragments(sort(fileTransfer.getSftpFragments()));
+        fileTransfer.setSmbFragments(sort(fileTransfer.getSmbFragments()));
+        fileTransfer.setWebdavFragments(sort(fileTransfer.getWebdavFragments()));
+
+        fileTransfer.setProfileJobResources(sort(fileTransfer.getProfileJobResources()));
+        return fileTransfer;
     }
 
     public JOCDefaultResponse checkPermissions(final RequestFolder in, boolean permission, AuthFolders authFolders) throws Exception {

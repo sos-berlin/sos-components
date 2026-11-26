@@ -35,7 +35,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "includeScripts",
     "calendars",
     "reports",
-    "deploymentDescriptors"
+    "deploymentDescriptors",
+    "fileTransfer"
 })
 public class ResponseFolder {
 
@@ -95,6 +96,8 @@ public class ResponseFolder {
     @JsonProperty("deploymentDescriptors")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
     private Set<ResponseFolderItem> deploymentDescriptors = new LinkedHashSet<ResponseFolderItem>();
+    @JsonProperty("fileTransfer")
+    private ResponseFolderFileTransfer fileTransfer;
 
     /**
      * timestamp
@@ -264,14 +267,24 @@ public class ResponseFolder {
         this.deploymentDescriptors = deploymentDescriptors;
     }
 
+    @JsonProperty("fileTransfer")
+    public ResponseFolderFileTransfer getFileTransfer() {
+        return fileTransfer;
+    }
+
+    @JsonProperty("fileTransfer")
+    public void setFileTransfer(ResponseFolderFileTransfer fileTransfer) {
+        this.fileTransfer = fileTransfer;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("path", path).append("workflows", workflows).append("jobTemplates", jobTemplates).append("jobClasses", jobClasses).append("jobResources", jobResources).append("locks", locks).append("noticeBoards", noticeBoards).append("fileOrderSources", fileOrderSources).append("schedules", schedules).append("includeScripts", includeScripts).append("calendars", calendars).append("reports", reports).append("deploymentDescriptors", deploymentDescriptors).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("path", path).append("workflows", workflows).append("jobTemplates", jobTemplates).append("jobClasses", jobClasses).append("jobResources", jobResources).append("locks", locks).append("noticeBoards", noticeBoards).append("fileOrderSources", fileOrderSources).append("schedules", schedules).append("includeScripts", includeScripts).append("calendars", calendars).append("reports", reports).append("deploymentDescriptors", deploymentDescriptors).append("fileTransfer", fileTransfer).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(reports).append(includeScripts).append(jobClasses).append(workflows).append(locks).append(noticeBoards).append(path).append(fileOrderSources).append(calendars).append(schedules).append(jobTemplates).append(deliveryDate).append(jobResources).append(deploymentDescriptors).toHashCode();
+        return new HashCodeBuilder().append(reports).append(includeScripts).append(fileTransfer).append(jobClasses).append(workflows).append(locks).append(noticeBoards).append(path).append(fileOrderSources).append(calendars).append(schedules).append(jobTemplates).append(deliveryDate).append(jobResources).append(deploymentDescriptors).toHashCode();
     }
 
     @Override
@@ -283,7 +296,7 @@ public class ResponseFolder {
             return false;
         }
         ResponseFolder rhs = ((ResponseFolder) other);
-        return new EqualsBuilder().append(reports, rhs.reports).append(includeScripts, rhs.includeScripts).append(jobClasses, rhs.jobClasses).append(workflows, rhs.workflows).append(locks, rhs.locks).append(noticeBoards, rhs.noticeBoards).append(path, rhs.path).append(fileOrderSources, rhs.fileOrderSources).append(calendars, rhs.calendars).append(schedules, rhs.schedules).append(jobTemplates, rhs.jobTemplates).append(deliveryDate, rhs.deliveryDate).append(jobResources, rhs.jobResources).append(deploymentDescriptors, rhs.deploymentDescriptors).isEquals();
+        return new EqualsBuilder().append(reports, rhs.reports).append(includeScripts, rhs.includeScripts).append(fileTransfer, rhs.fileTransfer).append(jobClasses, rhs.jobClasses).append(workflows, rhs.workflows).append(locks, rhs.locks).append(noticeBoards, rhs.noticeBoards).append(path, rhs.path).append(fileOrderSources, rhs.fileOrderSources).append(calendars, rhs.calendars).append(schedules, rhs.schedules).append(jobTemplates, rhs.jobTemplates).append(deliveryDate, rhs.deliveryDate).append(jobResources, rhs.jobResources).append(deploymentDescriptors, rhs.deploymentDescriptors).isEquals();
     }
 
 }

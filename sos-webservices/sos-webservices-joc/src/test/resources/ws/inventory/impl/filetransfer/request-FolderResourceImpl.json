@@ -1,0 +1,7 @@
+{
+	"path": "/filetransfer",
+	"objectTypes": [
+		"JOBRESOURCE",
+		"FT_PROFILE_JOBRESOURCE"
+	]
+}

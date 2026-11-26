@@ -123,6 +123,23 @@ public class FileTransferRelatedResourceImplTest {
 
     @Ignore
     @Test
+    public void testReadFolder() throws Exception {
+        UnitTestSimpleWSImplHelper h = new UnitTestSimpleWSImplHelper(new FolderResourceImpl());
+        h.setHibernateConfigurationFileFromWebservicesGlobal("hibernate.cfg.mysql.xml");
+
+        try {
+            h.init();
+
+            h.post("readFolder", Paths.get("src/test/resources/ws/inventory/impl/filetransfer/request-FolderResourceImpl.json"));
+        } catch (Throwable e) {
+            LOGGER.error(e.toString(), e);
+        } finally {
+            h.destroy();
+        }
+    }
+
+    @Ignore
+    @Test
     public void testRenameSftpFragment() throws Exception {
         UnitTestSimpleWSImplHelper h = new UnitTestSimpleWSImplHelper(new RenameConfigurationResourceImpl());
         h.setHibernateConfigurationFileFromWebservicesGlobal("hibernate.cfg.mysql.xml");
