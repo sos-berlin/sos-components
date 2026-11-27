@@ -25,7 +25,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "sftpFragments",
     "smbFragments",
     "webdavFragments",
-    "profileJobResources"
+    "profiles"
 })
 public class ResponseFolderFileTransfer {
 
@@ -65,9 +65,9 @@ public class ResponseFolderFileTransfer {
     @JsonProperty("webdavFragments")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
     private Set<ResponseFolderItem> webdavFragments = new LinkedHashSet<ResponseFolderItem>();
-    @JsonProperty("profileJobResources")
+    @JsonProperty("profiles")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
-    private Set<ResponseFolderItem> profileJobResources = new LinkedHashSet<ResponseFolderItem>();
+    private Set<ResponseFolderItem> profiles = new LinkedHashSet<ResponseFolderItem>();
 
     @JsonProperty("credentialStoreFragments")
     public Set<ResponseFolderItem> getCredentialStoreFragments() {
@@ -189,24 +189,24 @@ public class ResponseFolderFileTransfer {
         this.webdavFragments = webdavFragments;
     }
 
-    @JsonProperty("profileJobResources")
-    public Set<ResponseFolderItem> getProfileJobResources() {
-        return profileJobResources;
+    @JsonProperty("profiles")
+    public Set<ResponseFolderItem> getProfiles() {
+        return profiles;
     }
 
-    @JsonProperty("profileJobResources")
-    public void setProfileJobResources(Set<ResponseFolderItem> profileJobResources) {
-        this.profileJobResources = profileJobResources;
+    @JsonProperty("profiles")
+    public void setProfiles(Set<ResponseFolderItem> profiles) {
+        this.profiles = profiles;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("credentialStoreFragments", credentialStoreFragments).append("decryptionFragments", decryptionFragments).append("mailFragments", mailFragments).append("httpProxyFragments", httpProxyFragments).append("socksProxyFragments", socksProxyFragments).append("azureBlobStorageFragments", azureBlobStorageFragments).append("ftpFragments", ftpFragments).append("httpFragments", httpFragments).append("jumpFragments", jumpFragments).append("sftpFragments", sftpFragments).append("smbFragments", smbFragments).append("webdavFragments", webdavFragments).append("profileJobResources", profileJobResources).toString();
+        return new ToStringBuilder(this).append("credentialStoreFragments", credentialStoreFragments).append("decryptionFragments", decryptionFragments).append("mailFragments", mailFragments).append("httpProxyFragments", httpProxyFragments).append("socksProxyFragments", socksProxyFragments).append("azureBlobStorageFragments", azureBlobStorageFragments).append("ftpFragments", ftpFragments).append("httpFragments", httpFragments).append("jumpFragments", jumpFragments).append("sftpFragments", sftpFragments).append("smbFragments", smbFragments).append("webdavFragments", webdavFragments).append("profiles", profiles).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(mailFragments).append(azureBlobStorageFragments).append(sftpFragments).append(webdavFragments).append(httpProxyFragments).append(jumpFragments).append(socksProxyFragments).append(smbFragments).append(credentialStoreFragments).append(ftpFragments).append(decryptionFragments).append(profileJobResources).append(httpFragments).toHashCode();
+        return new HashCodeBuilder().append(mailFragments).append(azureBlobStorageFragments).append(sftpFragments).append(webdavFragments).append(profiles).append(httpProxyFragments).append(jumpFragments).append(socksProxyFragments).append(smbFragments).append(credentialStoreFragments).append(ftpFragments).append(decryptionFragments).append(httpFragments).toHashCode();
     }
 
     @Override
@@ -218,7 +218,7 @@ public class ResponseFolderFileTransfer {
             return false;
         }
         ResponseFolderFileTransfer rhs = ((ResponseFolderFileTransfer) other);
-        return new EqualsBuilder().append(mailFragments, rhs.mailFragments).append(azureBlobStorageFragments, rhs.azureBlobStorageFragments).append(sftpFragments, rhs.sftpFragments).append(webdavFragments, rhs.webdavFragments).append(httpProxyFragments, rhs.httpProxyFragments).append(jumpFragments, rhs.jumpFragments).append(socksProxyFragments, rhs.socksProxyFragments).append(smbFragments, rhs.smbFragments).append(credentialStoreFragments, rhs.credentialStoreFragments).append(ftpFragments, rhs.ftpFragments).append(decryptionFragments, rhs.decryptionFragments).append(profileJobResources, rhs.profileJobResources).append(httpFragments, rhs.httpFragments).isEquals();
+        return new EqualsBuilder().append(mailFragments, rhs.mailFragments).append(azureBlobStorageFragments, rhs.azureBlobStorageFragments).append(sftpFragments, rhs.sftpFragments).append(webdavFragments, rhs.webdavFragments).append(profiles, rhs.profiles).append(httpProxyFragments, rhs.httpProxyFragments).append(jumpFragments, rhs.jumpFragments).append(socksProxyFragments, rhs.socksProxyFragments).append(smbFragments, rhs.smbFragments).append(credentialStoreFragments, rhs.credentialStoreFragments).append(ftpFragments, rhs.ftpFragments).append(decryptionFragments, rhs.decryptionFragments).append(httpFragments, rhs.httpFragments).isEquals();
     }
 
 }

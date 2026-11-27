@@ -25,7 +25,7 @@ public class SftpFragmentRefsUpdater extends AProtocolOrProfileFragmentRefsUpdat
     }
 
     @Override
-    protected SftpFragment readAlternativeFragment(DBItemInventoryConfiguration c) throws Exception {
+    protected SftpFragment readAlternative(DBItemInventoryConfiguration c) throws Exception {
         return Globals.objectMapper.readValue(c.getContent(), SftpFragment.class);
     }
 

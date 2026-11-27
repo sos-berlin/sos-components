@@ -25,7 +25,7 @@ public class WebdavFragmentRefsUpdater extends AProtocolOrProfileFragmentRefsUpd
     }
 
     @Override
-    protected WebdavFragment readAlternativeFragment(DBItemInventoryConfiguration c) throws Exception {
+    protected WebdavFragment readAlternative(DBItemInventoryConfiguration c) throws Exception {
         return Globals.objectMapper.readValue(c.getContent(), WebdavFragment.class);
     }
 

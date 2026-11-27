@@ -8,42 +8,42 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum ConfigurationType {
 
-    // @formatter:off
-    FOLDER(0), 
-    WORKFLOW(1), 
-    JOBCLASS(2), 
-    LOCK(4), 
-    WORKINGDAYSCALENDAR(60), 
-    NONWORKINGDAYSCALENDAR(61), 
-    SCHEDULE(7), 
-    JOBTEMPLATE(8), 
-    FILEORDERSOURCE(9), 
-    JOBRESOURCE(10), 
-    NOTICEBOARD(11), 
-    INCLUDESCRIPT(12), 
-    DEPLOYMENTDESCRIPTOR(13), 
-    DESCRIPTORFOLDER(14), 
+    FOLDER(0),
+    WORKFLOW(1),
+    JOBCLASS(2),
+    LOCK(4),
+    WORKINGDAYSCALENDAR(60),
+    NONWORKINGDAYSCALENDAR(61),
+    SCHEDULE(7),
+    JOBTEMPLATE(8),
+    FILEORDERSOURCE(9),
+    JOBRESOURCE(10),
+    NOTICEBOARD(11),
+    INCLUDESCRIPT(12),
+    DEPLOYMENTDESCRIPTOR(13),
+    DESCRIPTORFOLDER(14),
     REPORT(15),
-    // FileTransfer: Total range 80-99
-    // FileTransfer: Non-protocol Fragments (80–84)
-    FT_FRAGMENT_CREDENTIAL_STORE(80), 
-    FT_FRAGMENT_DECRYPTION(81), 
-    FT_FRAGMENT_MAIL(82), 
-    FT_FRAGMENT_HTTP_PROXY(83), 
-    FT_FRAGMENT_SOCKS_PROXY(84),
-    // FileTransfer: Protocol fragments (85–91)
-    FT_FRAGMENT_AZURE_BLOB_STORAGE(85), 
-    FT_FRAGMENT_FTP(86), 
-    FT_FRAGMENT_HTTP(87), 
-    FT_FRAGMENT_JUMP(88), 
-    FT_FRAGMENT_SFTP(89), 
-    FT_FRAGMENT_SMB(90), 
-    FT_FRAGMENT_WEBDAV(91),
-    // Reserve 92–98 for future
+    // FileTransfer: Total range 70-89
+    // FileTransfer: Non-protocol Fragments (70–74)
+    FT_FRAGMENT_CREDENTIAL_STORE(70),
+    FT_FRAGMENT_DECRYPTION(71),
+    FT_FRAGMENT_MAIL(72),
+    FT_FRAGMENT_HTTP_PROXY(73),
+    FT_FRAGMENT_SOCKS_PROXY(74),
+    // FileTransfer: Protocol fragments (75–81)
+    FT_FRAGMENT_AZURE_BLOB_STORAGE(75),
+    FT_FRAGMENT_FTP(76),
+    FT_FRAGMENT_HTTP(77),
+    FT_FRAGMENT_JUMP(78),
+    FT_FRAGMENT_SFTP(79),
+    FT_FRAGMENT_SMB(80),
+    FT_FRAGMENT_WEBDAV(81),
+    // Reserve 82–88 for future
     // FileTransfer: JobResource per profile
-    FT_PROFILE_JOBRESOURCE(99);
-    // @formatter:on
+    FT_PROFILE(89);
 
+    // 99 - see com.sos.joc.model.audit.ObjectType.ORDER
+    
     private final Integer intValue;
     private final static Map<String, ConfigurationType> CONSTANTS = new HashMap<String, ConfigurationType>();
     private final static Map<Integer, ConfigurationType> INTCONSTANTS = new HashMap<Integer, ConfigurationType>();

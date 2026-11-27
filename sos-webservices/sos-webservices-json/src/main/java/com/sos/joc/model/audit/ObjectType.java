@@ -22,19 +22,33 @@ public enum ObjectType {
     INCLUDESCRIPT(12),
     REPORT(15),
     DOCUMENTATION(20),
+    FT_FRAGMENT_CREDENTIAL_STORE(70),
+    FT_FRAGMENT_DECRYPTION(71),
+    FT_FRAGMENT_MAIL(72),
+    FT_FRAGMENT_HTTP_PROXY(73),
+    FT_FRAGMENT_SOCKS_PROXY(74),
+    FT_FRAGMENT_AZURE_BLOB_STORAGE(75),
+    FT_FRAGMENT_FTP(76),
+    FT_FRAGMENT_HTTP(77),
+    FT_FRAGMENT_JUMP(78),
+    FT_FRAGMENT_SFTP(79),
+    FT_FRAGMENT_SMB(80),
+    FT_FRAGMENT_WEBDAV(81),
+    FT_PROFILE(89),
     ORDER(99);
+
     private final Integer intValue;
     private final static Map<String, ObjectType> CONSTANTS = new HashMap<String, ObjectType>();
     private final static Map<Integer, ObjectType> INTCONSTANTS = new HashMap<Integer, ObjectType>();
 
     static {
-        for (ObjectType c: values()) {
+        for (ObjectType c : values()) {
             CONSTANTS.put(c.name(), c);
         }
     }
 
     static {
-        for (ObjectType c: values()) {
+        for (ObjectType c : values()) {
             INTCONSTANTS.put(c.intValue, c);
         }
     }

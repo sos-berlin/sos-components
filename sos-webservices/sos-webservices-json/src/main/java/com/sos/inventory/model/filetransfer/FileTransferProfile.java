@@ -23,7 +23,7 @@ import com.sos.joc.model.common.IDeployObject;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 //@JsonPropertyOrder({ "TYPE", "version", "profile", "settings", "documentationName", "title" })
 @JsonPropertyOrder({ "version", "profile", "settings", "documentationName", "title" })
-public class FileTransferJobResource implements IInventoryObject, IConfigurationObject, IDeployObject {
+public class FileTransferProfile implements IInventoryObject, IConfigurationObject, IDeployObject {
 
     /** deployType
      * <p>
@@ -60,7 +60,7 @@ public class FileTransferJobResource implements IInventoryObject, IConfiguration
     private Settings settings;
 
     /** No args constructor for use in serialization */
-    public FileTransferJobResource() {
+    public FileTransferProfile() {
     }
 
     /** @param settings
@@ -68,7 +68,7 @@ public class FileTransferJobResource implements IInventoryObject, IConfiguration
      * @param documentationName
      * @param title
      * @param version */
-    public FileTransferJobResource(String version, String title, String documentationName, Profile profile, Settings settings) {
+    public FileTransferProfile(String version, String title, String documentationName, Profile profile, Settings settings) {
         super();
         this.version = version;
         this.title = title;
@@ -161,8 +161,13 @@ public class FileTransferJobResource implements IInventoryObject, IConfiguration
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("version", version).append("title", title).append("documentationName", documentationName).append(
-                "profile", profile).append("settings", settings).toString();
+        return new ToStringBuilder(this)
+            .append("version", version)
+            .append("title", title)
+            .append("documentationName", documentationName)
+            .append("profile", profile)
+            .append("settings", settings)
+            .toString();
     }
 
     @Override
@@ -175,12 +180,17 @@ public class FileTransferJobResource implements IInventoryObject, IConfiguration
         if (other == this) {
             return true;
         }
-        if ((other instanceof FileTransferJobResource) == false) {
+        if ((other instanceof FileTransferProfile) == false) {
             return false;
         }
-        FileTransferJobResource rhs = ((FileTransferJobResource) other);
-        return new EqualsBuilder().append(settings, rhs.settings).append(documentationName, rhs.documentationName).append(title, rhs.title).append(
-                version, rhs.version).append(profile, rhs.profile).isEquals();
+        FileTransferProfile rhs = ((FileTransferProfile) other);
+        return new EqualsBuilder()
+            .append(settings, rhs.settings)
+            .append(documentationName, rhs.documentationName)
+            .append(title, rhs.title)
+            .append(version, rhs.version)
+            .append(profile, rhs.profile)
+            .isEquals();
     }
 
     @Override
@@ -188,10 +198,10 @@ public class FileTransferJobResource implements IInventoryObject, IConfiguration
         if (other == this) {
             return true;
         }
-        if ((other instanceof FileTransferJobResource) == false) {
+        if ((other instanceof FileTransferProfile) == false) {
             return false;
         }
-        FileTransferJobResource rhs = ((FileTransferJobResource) other);
+        FileTransferProfile rhs = ((FileTransferProfile) other);
         return new EqualsBuilder().append(settings, rhs.settings).append(profile, rhs.profile).isEquals();
     }
 

@@ -23,7 +23,7 @@ public class JumpFragmentRefsUpdater extends AProtocolOrProfileFragmentRefsUpdat
     }
 
     @Override
-    protected JumpFragment readAlternativeFragment(DBItemInventoryConfiguration c) throws Exception {
+    protected JumpFragment readAlternative(DBItemInventoryConfiguration c) throws Exception {
         return Globals.objectMapper.readValue(c.getContent(), JumpFragment.class);
     }
 

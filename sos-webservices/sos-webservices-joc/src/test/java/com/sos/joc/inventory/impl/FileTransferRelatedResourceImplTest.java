@@ -8,7 +8,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.inventory.model.filetransfer.FileTransferJobResource;
+import com.sos.inventory.model.filetransfer.FileTransferProfile;
 import com.sos.inventory.model.filetransfer.common.PostProcessing;
 import com.sos.inventory.model.filetransfer.common.Processing;
 import com.sos.inventory.model.filetransfer.fragments.protocol.SftpFragment;
@@ -218,7 +218,7 @@ public class FileTransferRelatedResourceImplTest {
 
         com.sos.joc.model.inventory.rename.RequestFilter f = new com.sos.joc.model.inventory.rename.RequestFilter();
         f.setNewPath("/filetransfer/ft_jr_profile");
-        f.setObjectType(ConfigurationType.FT_PROFILE_JOBRESOURCE);
+        f.setObjectType(ConfigurationType.FT_PROFILE);
         f.setPath("/b");
 
         try {
@@ -281,13 +281,13 @@ public class FileTransferRelatedResourceImplTest {
 
         p.setTarget(t);
 
-        FileTransferJobResource jr = new FileTransferJobResource();
-        jr.setProfile(p);
+        FileTransferProfile ftP = new FileTransferProfile();
+        ftP.setProfile(p);
 
         ConfigurationObject in = new ConfigurationObject();
         in.setPath("/filetransfer/ft_jr_profile");
-        in.setConfiguration(jr);
-        in.setObjectType(ConfigurationType.FT_PROFILE_JOBRESOURCE);
+        in.setConfiguration(ftP);
+        in.setObjectType(ConfigurationType.FT_PROFILE);
 
         try {
             h.init();

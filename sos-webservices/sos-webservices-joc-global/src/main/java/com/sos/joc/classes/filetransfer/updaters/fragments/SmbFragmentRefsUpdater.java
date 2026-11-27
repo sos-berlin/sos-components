@@ -25,7 +25,7 @@ public class SmbFragmentRefsUpdater extends AProtocolOrProfileFragmentRefsUpdate
     }
 
     @Override
-    protected SmbFragment readAlternativeFragment(DBItemInventoryConfiguration c) throws Exception {
+    protected SmbFragment readAlternative(DBItemInventoryConfiguration c) throws Exception {
         return Globals.objectMapper.readValue(c.getContent(), SmbFragment.class);
     }
 

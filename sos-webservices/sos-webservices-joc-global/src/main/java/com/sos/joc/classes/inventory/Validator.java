@@ -59,8 +59,13 @@ public class Validator {
      * @throws Exception */
     public static void validate(ConfigurationType type, String configPath, byte[] configBytes, InventoryDBLayer dbLayer,
             Set<String> visibleAgentNames) throws Exception {
-        validate(type, configPath, configBytes, (IConfigurationObject) Globals.objectMapper.readValue(configBytes, JocInventory.CLASS_MAPPING.get(
-                type)), dbLayer, visibleAgentNames);
+        validate(
+            type,
+            configPath,
+            configBytes,
+            (IConfigurationObject) Globals.objectMapper.readValue(configBytes, JocInventory.CLASS_MAPPING.get(type)),
+            dbLayer,
+            visibleAgentNames);
     }
 
     /** @param configPath
@@ -79,8 +84,13 @@ public class Validator {
      * @param configBytes
      * @throws Exception */
     public static void validate(ConfigurationType type, String configPath, byte[] configBytes) throws Exception {
-        validate(type, configPath, configBytes, (IConfigurationObject) Globals.objectMapper.readValue(configBytes, JocInventory.CLASS_MAPPING.get(
-                type)), (InventoryDBLayer) null, null);
+        validate(
+            type,
+            configPath,
+            configBytes,
+            (IConfigurationObject) Globals.objectMapper.readValue(configBytes, JocInventory.CLASS_MAPPING.get(type)),
+            (InventoryDBLayer) null,
+            null);
     }
 
     /** @param configPath
@@ -212,9 +222,9 @@ public class Validator {
                 }
                 FileTransferValidator.validateWebdavFragment(configPath, config, dbLayer);
                 break;
-            case FT_PROFILE_JOBRESOURCE:
+            case FT_PROFILE:
                 if (dbLayer == null) {
-                    session = Globals.createSosHibernateStatelessConnection("validateProfileJobResource");
+                    session = Globals.createSosHibernateStatelessConnection("validateProfile");
                     dbLayer = new InventoryDBLayer(session);
                 }
                 FileTransferValidator.validateJobResource(configPath, config, dbLayer);
@@ -280,7 +290,7 @@ public class Validator {
         case FT_FRAGMENT_SMB:
         case FT_FRAGMENT_SOCKS_PROXY:
         case FT_FRAGMENT_WEBDAV:
-        case FT_PROFILE_JOBRESOURCE:
+        case FT_PROFILE:
             // Nothing to do for FileTransfer types - validated by schema.
             break;
 
@@ -313,8 +323,13 @@ public class Validator {
     public static boolean orderPreparationHasRequiredParameters(Requirements orderPrep) {
         if (orderPrep != null && orderPrep.getParameters() != null && orderPrep.getParameters().getAdditionalProperties() != null) {
             // find required param in orderPreparation
-            return orderPrep.getParameters().getAdditionalProperties().values().stream().filter(i -> i.getFinal() == null).anyMatch(i -> i
-                    .getDefault() == null);
+            return orderPrep
+                .getParameters()
+                .getAdditionalProperties()
+                .values()
+                .stream()
+                .filter(i -> i.getFinal() == null)
+                .anyMatch(i -> i.getDefault() == null);
         }
         return false;
     }
@@ -372,8 +387,8 @@ public class Validator {
 
     public static void validateJobResourceRefs(List<String> jobResources, InventoryDBLayer dbLayer) throws SOSHibernateException {
         if (jobResources != null && !jobResources.isEmpty()) {
-            List<DBItemInventoryConfiguration> dbJobResources = dbLayer.getConfigurationByNames(jobResources, ConfigurationType.JOBRESOURCE
-                    .intValue());
+            List<DBItemInventoryConfiguration> dbJobResources = dbLayer
+                .getConfigurationByNames(jobResources, ConfigurationType.JOBRESOURCE.intValue());
             if (dbJobResources == null || dbJobResources.isEmpty()) {
                 throw new JocConfigurationException("Missing assigned JobResources: " + jobResources.toString());
             } else {
@@ -482,8 +497,14 @@ public class Validator {
     }
 
     private static void testJavaNameRulesAtTags(String prefix, Stream<String> tags) {
-        Optional<String> duplicateTagname = tags.map(tag -> testJavaNameRulesAtTag(prefix, tag)).collect(Collectors.groupingBy(Function.identity(),
-                Collectors.counting())).entrySet().stream().filter(e -> e.getValue() > 1L).findAny().map(Map.Entry::getKey);
+        Optional<String> duplicateTagname = tags
+            .map(tag -> testJavaNameRulesAtTag(prefix, tag))
+            .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
+            .entrySet()
+            .stream()
+            .filter(e -> e.getValue() > 1L)
+            .findAny()
+            .map(Map.Entry::getKey);
         if (duplicateTagname.isPresent()) {
             throw new JocConfigurationException(prefix + ": duplicate tag name '" + duplicateTagname.get() + "' with different groups");
         }

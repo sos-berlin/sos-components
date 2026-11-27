@@ -3,7 +3,7 @@ package com.sos.joc.classes.inventory.validators;
 import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.util.SOSString;
-import com.sos.inventory.model.filetransfer.FileTransferJobResource;
+import com.sos.inventory.model.filetransfer.FileTransferProfile;
 import com.sos.inventory.model.filetransfer.fragments.protocol.AProtocolFragment;
 import com.sos.inventory.model.filetransfer.fragments.protocol.AzureBlobStorageFragment;
 import com.sos.inventory.model.filetransfer.fragments.protocol.FtpFragment;
@@ -126,14 +126,14 @@ public class FileTransferValidator {
     public static void validateJobResource(String configPath, IConfigurationObject config, InventoryDBLayer dbLayer)
             throws JocConfigurationException {
 
-        FileTransferJobResource jr = (FileTransferJobResource) config;
-        Profile p = jr.getProfile();
+        FileTransferProfile ftP = (FileTransferProfile) config;
+        Profile p = ftP.getProfile();
         if (p == null) {
             return;
         }
 
         // 1) Alternative profile name
-        checkAlternativeName(dbLayer, ConfigurationType.FT_PROFILE_JOBRESOURCE, configPath, p.getAlternativeProfileName());
+        checkAlternativeName(dbLayer, ConfigurationType.FT_PROFILE, configPath, p.getAlternativeProfileName());
 
         // 2) Source
         if (p.getSource() == null) {  // Redundant to schema validation, but kept as a safety net.

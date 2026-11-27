@@ -46,7 +46,7 @@ import com.sos.inventory.model.common.IInventoryObject;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.descriptor.DeploymentDescriptor;
 import com.sos.inventory.model.fileordersource.FileOrderSource;
-import com.sos.inventory.model.filetransfer.FileTransferJobResource;
+import com.sos.inventory.model.filetransfer.FileTransferProfile;
 import com.sos.inventory.model.filetransfer.fragments.cs.CredentialStoreFragment;
 import com.sos.inventory.model.filetransfer.fragments.decryption.DecryptionFragment;
 import com.sos.inventory.model.filetransfer.fragments.mail.MailFragment;
@@ -153,58 +153,62 @@ public class JocInventory {
             put(ConfigurationType.DEPLOYMENTDESCRIPTOR, "classpath:/raml/inventory/schemas/deploymentDescriptor/deploymentDescriptor-schema.json");
             put(ConfigurationType.DESCRIPTORFOLDER, "classpath:/raml/api/schemas/inventory/folder-schema.json");
 
-            put(ConfigurationType.FT_FRAGMENT_CREDENTIAL_STORE,
-                    "classpath:/raml/inventory/schemas/filetransfer/fragments/cs/credentialStoreFragment-schema-schema.json");
-            put(ConfigurationType.FT_FRAGMENT_DECRYPTION,
-                    "classpath:/raml/inventory/schemas/filetransfer/fragments/decryption/decryptionFragment-schema.json");
+            put(
+                ConfigurationType.FT_FRAGMENT_CREDENTIAL_STORE,
+                "classpath:/raml/inventory/schemas/filetransfer/fragments/cs/credentialStoreFragment-schema-schema.json");
+            put(
+                ConfigurationType.FT_FRAGMENT_DECRYPTION,
+                "classpath:/raml/inventory/schemas/filetransfer/fragments/decryption/decryptionFragment-schema.json");
             put(ConfigurationType.FT_FRAGMENT_MAIL, "classpath:/raml/inventory/schemas/filetransfer/fragments/mail/mailFragment-schema.json");
-            put(ConfigurationType.FT_FRAGMENT_HTTP_PROXY,
-                    "classpath:/raml/inventory/schemas/filetransfer/fragments/proxy/httpProxyFragment-schema.json");
+            put(
+                ConfigurationType.FT_FRAGMENT_HTTP_PROXY,
+                "classpath:/raml/inventory/schemas/filetransfer/fragments/proxy/httpProxyFragment-schema.json");
             put(ConfigurationType.FT_FRAGMENT_SOCKS_PROXY, "classpath:/raml/inventory/schemas/filetransfer/fragments/proxy/socksProxyFragment.json");
-            put(ConfigurationType.FT_FRAGMENT_AZURE_BLOB_STORAGE,
-                    "classpath:/raml/inventory/schemas/filetransfer/fragments/protocol/azureBlobStorageFragment-schema.json");
+            put(
+                ConfigurationType.FT_FRAGMENT_AZURE_BLOB_STORAGE,
+                "classpath:/raml/inventory/schemas/filetransfer/fragments/protocol/azureBlobStorageFragment-schema.json");
             put(ConfigurationType.FT_FRAGMENT_FTP, "classpath:/raml/inventory/schemas/filetransfer/fragments/protocol/ftpFragment-schema.json");
             put(ConfigurationType.FT_FRAGMENT_HTTP, "classpath:/raml/inventory/schemas/filetransfer/fragments/protocol/httpFragment-schema.json");
             put(ConfigurationType.FT_FRAGMENT_JUMP, "classpath:/raml/inventory/schemas/filetransfer/fragments/protocol/jumpFragment-schema.json");
             put(ConfigurationType.FT_FRAGMENT_SFTP, "classpath:/raml/inventory/schemas/filetransfer/fragments/protocol/sftpFragment-schema.json");
             put(ConfigurationType.FT_FRAGMENT_SMB, "classpath:/raml/inventory/schemas/filetransfer/fragments/protocol/smbFragment-schema.json");
             put(ConfigurationType.FT_FRAGMENT_WEBDAV, "classpath:/raml/inventory/schemas/filetransfer/fragments/protocol/webdavFragment-schema.json");
-            put(ConfigurationType.FT_PROFILE_JOBRESOURCE, "classpath:/raml/inventory/schemas/filetransfer/filetransferJobResource-schema.json");
+            put(ConfigurationType.FT_PROFILE, "classpath:/raml/inventory/schemas/filetransfer/filetransferProfile-schema.json");
         }
     });
 
-    public static final Map<InstructionType, String> INSTRUCTION_SCHEMA_LOCATION = Collections.unmodifiableMap(
-            new HashMap<InstructionType, String>() {
+    public static final Map<InstructionType, String> INSTRUCTION_SCHEMA_LOCATION = Collections
+        .unmodifiableMap(new HashMap<InstructionType, String>() {
 
-                private static final long serialVersionUID = 1L;
+            private static final long serialVersionUID = 1L;
 
-                {
-                    put(InstructionType.EXECUTE_NAMED, "classpath:/raml/inventory/schemas/instruction/namedJob-schema.json");
-                    put(InstructionType.FAIL, "classpath:/raml/inventory/schemas/instruction/fail-schema.json");
-                    put(InstructionType.FINISH, "classpath:/raml/inventory/schemas/instruction/finish-schema.json");
-                    put(InstructionType.FORK, "classpath:/raml/inventory/schemas/instruction/forkJoin-schema.json");
-                    put(InstructionType.FORKLIST, "classpath:/raml/inventory/schemas/instruction/forkList-schema.json");
-                    put(InstructionType.IF, "classpath:/raml/inventory/schemas/instruction/ifelse-schema.json");
-                    put(InstructionType.CASE_WHEN, "classpath:/raml/inventory/schemas/instruction/caseWhen-schema.json");
-                    put(InstructionType.LOCK, "classpath:/raml/inventory/schemas/instruction/lock-schema.json");
-                    put(InstructionType.RETRY, "classpath:/raml/inventory/schemas/instruction/retryInCatch-schema.json");
-                    put(InstructionType.TRY, "classpath:/raml/inventory/schemas/instruction/retry-schema.json");
-                    put(InstructionType.PROMPT, "classpath:/raml/inventory/schemas/instruction/prompt-schema.json");
-                    put(InstructionType.POST_NOTICE, "classpath:/raml/inventory/schemas/instruction/postNotice-schema.json");
-                    put(InstructionType.POST_NOTICES, "classpath:/raml/inventory/schemas/instruction/postNotices-schema.json");
-                    put(InstructionType.EXPECT_NOTICE, "classpath:/raml/inventory/schemas/instruction/expectNotice-schema.json");
-                    put(InstructionType.EXPECT_NOTICES, "classpath:/raml/inventory/schemas/instruction/expectNotices-schema.json");
-                    put(InstructionType.CONSUME_NOTICES, "classpath:/raml/inventory/schemas/instruction/consumeNotices-schema.json");
-                    put(InstructionType.ADD_ORDER, "classpath:/raml/inventory/schemas/instruction/addOrder-schema.json");
-                    put(InstructionType.CYCLE, "classpath:/raml/inventory/schemas/instruction/cycle-schema.json");
-                    put(InstructionType.STICKY_SUBAGENT, "classpath:/raml/inventory/schemas/instruction/stickySubagent-schema.json");
-                    put(InstructionType.OPTIONS, "classpath:/raml/inventory/schemas/instruction/options-schema.json");
-                    put(InstructionType.BREAK, "classpath:/raml/inventory/schemas/instruction/break-schema.json");
-                    put(InstructionType.SLEEP, "classpath:/raml/inventory/schemas/instruction/sleep-schema.json");
-                    put(InstructionType.ADMISSION_TIME, "classpath:/raml/inventory/schemas/instruction/admissionTime-schema.json");
-                    put(InstructionType.SEGMENT, "classpath:/raml/inventory/schemas/instruction/segment-schema.json");
-                }
-            });
+            {
+                put(InstructionType.EXECUTE_NAMED, "classpath:/raml/inventory/schemas/instruction/namedJob-schema.json");
+                put(InstructionType.FAIL, "classpath:/raml/inventory/schemas/instruction/fail-schema.json");
+                put(InstructionType.FINISH, "classpath:/raml/inventory/schemas/instruction/finish-schema.json");
+                put(InstructionType.FORK, "classpath:/raml/inventory/schemas/instruction/forkJoin-schema.json");
+                put(InstructionType.FORKLIST, "classpath:/raml/inventory/schemas/instruction/forkList-schema.json");
+                put(InstructionType.IF, "classpath:/raml/inventory/schemas/instruction/ifelse-schema.json");
+                put(InstructionType.CASE_WHEN, "classpath:/raml/inventory/schemas/instruction/caseWhen-schema.json");
+                put(InstructionType.LOCK, "classpath:/raml/inventory/schemas/instruction/lock-schema.json");
+                put(InstructionType.RETRY, "classpath:/raml/inventory/schemas/instruction/retryInCatch-schema.json");
+                put(InstructionType.TRY, "classpath:/raml/inventory/schemas/instruction/retry-schema.json");
+                put(InstructionType.PROMPT, "classpath:/raml/inventory/schemas/instruction/prompt-schema.json");
+                put(InstructionType.POST_NOTICE, "classpath:/raml/inventory/schemas/instruction/postNotice-schema.json");
+                put(InstructionType.POST_NOTICES, "classpath:/raml/inventory/schemas/instruction/postNotices-schema.json");
+                put(InstructionType.EXPECT_NOTICE, "classpath:/raml/inventory/schemas/instruction/expectNotice-schema.json");
+                put(InstructionType.EXPECT_NOTICES, "classpath:/raml/inventory/schemas/instruction/expectNotices-schema.json");
+                put(InstructionType.CONSUME_NOTICES, "classpath:/raml/inventory/schemas/instruction/consumeNotices-schema.json");
+                put(InstructionType.ADD_ORDER, "classpath:/raml/inventory/schemas/instruction/addOrder-schema.json");
+                put(InstructionType.CYCLE, "classpath:/raml/inventory/schemas/instruction/cycle-schema.json");
+                put(InstructionType.STICKY_SUBAGENT, "classpath:/raml/inventory/schemas/instruction/stickySubagent-schema.json");
+                put(InstructionType.OPTIONS, "classpath:/raml/inventory/schemas/instruction/options-schema.json");
+                put(InstructionType.BREAK, "classpath:/raml/inventory/schemas/instruction/break-schema.json");
+                put(InstructionType.SLEEP, "classpath:/raml/inventory/schemas/instruction/sleep-schema.json");
+                put(InstructionType.ADMISSION_TIME, "classpath:/raml/inventory/schemas/instruction/admissionTime-schema.json");
+                put(InstructionType.SEGMENT, "classpath:/raml/inventory/schemas/instruction/segment-schema.json");
+            }
+        });
 
     public static final String FORKLIST_SCHEMA_WITHOUT_LICENSE = "classpath:/raml/inventory/schemas/instruction/forkListWithoutLicense-schema.json";
 
@@ -241,18 +245,40 @@ public class JocInventory {
             put(ConfigurationType.FT_FRAGMENT_SFTP, SftpFragment.class);
             put(ConfigurationType.FT_FRAGMENT_SMB, SmbFragment.class);
             put(ConfigurationType.FT_FRAGMENT_WEBDAV, WebdavFragment.class);
-            put(ConfigurationType.FT_PROFILE_JOBRESOURCE, FileTransferJobResource.class);
+            put(ConfigurationType.FT_PROFILE, FileTransferProfile.class);
 
         }
     });
 
-    public static final Set<ConfigurationType> DEPLOYABLE_OBJECTS = Collections.unmodifiableSet(Stream.concat(Stream.of(ConfigurationType.JOBCLASS,
-            ConfigurationType.FILEORDERSOURCE, ConfigurationType.LOCK, ConfigurationType.WORKFLOW, ConfigurationType.JOBRESOURCE,
-            ConfigurationType.NOTICEBOARD), FileTransferHelper.DEPLOYABLE_OBJECTS.stream()).collect(Collectors.toSet()));
+    public static final Set<ConfigurationType> DEPLOYABLE_OBJECTS = Collections
+        .unmodifiableSet(
+            Stream
+                .concat(
+                    Stream
+                        .of(
+                            ConfigurationType.JOBCLASS,
+                            ConfigurationType.FILEORDERSOURCE,
+                            ConfigurationType.LOCK,
+                            ConfigurationType.WORKFLOW,
+                            ConfigurationType.JOBRESOURCE,
+                            ConfigurationType.NOTICEBOARD),
+                    FileTransferHelper.DEPLOYABLE_OBJECTS.stream())
+                .collect(Collectors.toSet()));
 
-    public static final Set<ConfigurationType> RELEASABLE_OBJECTS = Collections.unmodifiableSet(Stream.concat(Stream.of(ConfigurationType.SCHEDULE,
-            ConfigurationType.INCLUDESCRIPT, ConfigurationType.NONWORKINGDAYSCALENDAR, ConfigurationType.WORKINGDAYSCALENDAR,
-            ConfigurationType.JOBTEMPLATE, ConfigurationType.REPORT), FileTransferHelper.RELEASABLE_OBJECTS.stream()).collect(Collectors.toSet()));
+    public static final Set<ConfigurationType> RELEASABLE_OBJECTS = Collections
+        .unmodifiableSet(
+            Stream
+                .concat(
+                    Stream
+                        .of(
+                            ConfigurationType.SCHEDULE,
+                            ConfigurationType.INCLUDESCRIPT,
+                            ConfigurationType.NONWORKINGDAYSCALENDAR,
+                            ConfigurationType.WORKINGDAYSCALENDAR,
+                            ConfigurationType.JOBTEMPLATE,
+                            ConfigurationType.REPORT),
+                    FileTransferHelper.RELEASABLE_OBJECTS.stream())
+                .collect(Collectors.toSet()));
 
     public static String getResourceImplPath(final String path) {
         return String.format("./%s/%s", APPLICATION_PATH, path);
@@ -293,11 +319,11 @@ public class JocInventory {
     }
 
     public static boolean isJobResource(ConfigurationType type) {
-        return ConfigurationType.JOBRESOURCE.equals(type) || ConfigurationType.FT_PROFILE_JOBRESOURCE.equals(type);
+        return ConfigurationType.JOBRESOURCE.equals(type) || ConfigurationType.FT_PROFILE.equals(type);
     }
 
     public static boolean isJobResource(Integer type) {
-        return Arrays.asList(ConfigurationType.JOBRESOURCE.intValue(), ConfigurationType.FT_PROFILE_JOBRESOURCE.intValue()).contains(type);
+        return Arrays.asList(ConfigurationType.JOBRESOURCE.intValue(), ConfigurationType.FT_PROFILE.intValue()).contains(type);
     }
 
     public static boolean isCalendar(ConfigurationType type) {
@@ -309,8 +335,13 @@ public class JocInventory {
     }
 
     public static List<Integer> getTypesFromObjectsWithReferences() {
-        List<Integer> l = new ArrayList<>(List.of(ConfigurationType.WORKFLOW.intValue(), ConfigurationType.FILEORDERSOURCE.intValue(),
-                ConfigurationType.SCHEDULE.intValue(), ConfigurationType.JOBTEMPLATE.intValue(), ConfigurationType.WORKINGDAYSCALENDAR.intValue()));
+        List<Integer> l = new ArrayList<>(List
+            .of(
+                ConfigurationType.WORKFLOW.intValue(),
+                ConfigurationType.FILEORDERSOURCE.intValue(),
+                ConfigurationType.SCHEDULE.intValue(),
+                ConfigurationType.JOBTEMPLATE.intValue(),
+                ConfigurationType.WORKINGDAYSCALENDAR.intValue()));
         l.addAll(FileTransferHelper.REFERENCING_OBJECTS);
         return l;
 
@@ -323,7 +354,7 @@ public class JocInventory {
     }
 
     public static List<Integer> getJobResourceTypes() {
-        return Arrays.asList(ConfigurationType.JOBRESOURCE.intValue(), ConfigurationType.FT_PROFILE_JOBRESOURCE.intValue());
+        return Arrays.asList(ConfigurationType.JOBRESOURCE.intValue(), ConfigurationType.FT_PROFILE.intValue());
     }
 
     public static List<Integer> getCalendarTypes() {
@@ -350,8 +381,11 @@ public class JocInventory {
         if (objectTypes == null || objectTypes.isEmpty()) {
             return getDeployableTypes();
         }
-        Set<Integer> deployables = objectTypes.stream().filter(type -> isDeployable(type)).map(ConfigurationType::intValue).collect(Collectors
-                .toSet());
+        Set<Integer> deployables = objectTypes
+            .stream()
+            .filter(type -> isDeployable(type))
+            .map(ConfigurationType::intValue)
+            .collect(Collectors.toSet());
         if (deployables.isEmpty()) {
             return getDeployableTypes();
         }
@@ -487,8 +521,8 @@ public class JocInventory {
             if (lastDeployment != null && OperationType.UPDATE.value().equals(lastDeployment.getOperation())) {
                 dbItem.setContent(lastDeployment.getInvContent());
             } else {
-                throw new DBMissingDataException(String.format("Couldn't find deployed configuration: %1$s:%2$s ", type.value().toLowerCase(), dbItem
-                        .getPath()));
+                throw new DBMissingDataException(String
+                    .format("Couldn't find deployed configuration: %1$s:%2$s ", type.value().toLowerCase(), dbItem.getPath()));
             }
         }
         cfg.setConfiguration(JocInventory.content2IJSObject(dbItem.getContent(), dbItem.getType()));
@@ -672,11 +706,17 @@ public class JocInventory {
         if (!folderContent.isEmpty()) {
             LinkedHashSet<DBItemInventoryConfiguration> folders = null;
             if (forDescriptors) {
-                folders = folderContent.stream().filter(i -> ConfigurationType.DESCRIPTORFOLDER.intValue() == i.getType()).sorted(Comparator
-                        .comparing(DBItemInventoryConfiguration::getPath).reversed()).collect(Collectors.toCollection(LinkedHashSet::new));
+                folders = folderContent
+                    .stream()
+                    .filter(i -> ConfigurationType.DESCRIPTORFOLDER.intValue() == i.getType())
+                    .sorted(Comparator.comparing(DBItemInventoryConfiguration::getPath).reversed())
+                    .collect(Collectors.toCollection(LinkedHashSet::new));
             } else {
-                folders = folderContent.stream().filter(i -> ConfigurationType.FOLDER.intValue() == i.getType()).sorted(Comparator.comparing(
-                        DBItemInventoryConfiguration::getPath).reversed()).collect(Collectors.toCollection(LinkedHashSet::new));
+                folders = folderContent
+                    .stream()
+                    .filter(i -> ConfigurationType.FOLDER.intValue() == i.getType())
+                    .sorted(Comparator.comparing(DBItemInventoryConfiguration::getPath).reversed())
+                    .collect(Collectors.toCollection(LinkedHashSet::new));
             }
             for (DBItemInventoryConfiguration folder : folders) {
                 if (!folderContent.stream().parallel().anyMatch(i -> folder.getPath().equals(i.getFolder()))) {
@@ -962,8 +1002,10 @@ public class JocInventory {
             return;
         }
 
-        Map<Long, List<DBItemDeploymentHistory>> groupedWorkflows = deployments.stream().filter(h -> h.getType().equals(ConfigurationType.WORKFLOW
-                .intValue())).collect(Collectors.groupingBy(DBItemDeploymentHistory::getInventoryConfigurationId));
+        Map<Long, List<DBItemDeploymentHistory>> groupedWorkflows = deployments
+            .stream()
+            .filter(h -> h.getType().equals(ConfigurationType.WORKFLOW.intValue()))
+            .collect(Collectors.groupingBy(DBItemDeploymentHistory::getInventoryConfigurationId));
 
         groupedWorkflows.forEach((inventoryId, list) -> {
             if (list.size() > 0) {
@@ -976,8 +1018,13 @@ public class JocInventory {
                         String controllerId = list.get(0).getControllerId();
                         List<Long> deploymentIds = list.stream().map(DBItemDeploymentHistory::getId).collect(Collectors.toList());
                         try {
-                            handleWorkflowSearch(new InventoryDBLayer(session), workflow, inventoryId, controllerId, deploymentIds,
-                                    deleteDeployments);
+                            handleWorkflowSearch(
+                                new InventoryDBLayer(session),
+                                workflow,
+                                inventoryId,
+                                controllerId,
+                                deploymentIds,
+                                deleteDeployments);
                         } catch (Throwable e) {
                             LOGGER.error(e.toString(), e);
                         }
@@ -1006,8 +1053,9 @@ public class JocInventory {
             // Only released job templates are assigned to jobs.
             // If job template is renamed or moved then the assignment is missing
             DBItemInventoryReleasedConfiguration releasedItem = dbLayer.getReleasedItemByConfigurationId(item.getId());
-            if (releasedItem != null && ConfigurationType.JOBTEMPLATE.intValue().equals(item.getType()) && !item.getPath().equals(releasedItem
-                    .getPath())) {
+            if (releasedItem != null && ConfigurationType.JOBTEMPLATE.intValue().equals(item.getType()) && !item
+                .getPath()
+                .equals(releasedItem.getPath())) {
                 releasedItem.setFolder(item.getFolder());
                 releasedItem.setName(item.getName());
                 releasedItem.setPath(item.getPath());
@@ -1175,8 +1223,11 @@ public class JocInventory {
                 session.update(config);
             }
 
-            List<Long> workflows = configs.stream().filter(c -> c.getType().equals(ConfigurationType.WORKFLOW.intValue())).map(
-                    DBItemInventoryConfiguration::getId).collect(Collectors.toList());
+            List<Long> workflows = configs
+                .stream()
+                .filter(c -> c.getType().equals(ConfigurationType.WORKFLOW.intValue()))
+                .map(DBItemInventoryConfiguration::getId)
+                .collect(Collectors.toList());
             if (workflows.size() > 0) {
                 // InventoryDBLayer dbLayer = new InventoryDBLayer(session);
                 // dbLayer.deleteSearchWorkflowByInventoryId(id, deployed)
@@ -1257,8 +1308,9 @@ public class JocInventory {
                     }
 
                     if (changed) {
-                        workflow.setContent(workflow.getContent().replaceAll("(\"lockName\"\\s*:\\s*\")" + config.getName() + "\"", "$1" + newName
-                                + "\""));
+                        workflow
+                            .setContent(
+                                workflow.getContent().replaceAll("(\"lockName\"\\s*:\\s*\")" + config.getName() + "\"", "$1" + newName + "\""));
                         workflow.setDeployed(false);
                         int i = items.indexOf(workflow);
                         if (i != -1) {
@@ -1288,8 +1340,14 @@ public class JocInventory {
                         }
                     }
                     if (isDebugEnabled) {
-                        LOGGER.debug(String.format("[deepCopy][%s][workflow=%s][after worflow level]changed=%s", config.getTypeAsEnum(), workflow
-                                .getPath(), changed));
+                        LOGGER
+                            .debug(
+                                String
+                                    .format(
+                                        "[deepCopy][%s][workflow=%s][after worflow level]changed=%s",
+                                        config.getTypeAsEnum(),
+                                        workflow.getPath(),
+                                        changed));
                     }
                     // JobResources on Job level
                     if (w.getJobs() != null) {
@@ -1306,8 +1364,14 @@ public class JocInventory {
                         }
                     }
                     if (isDebugEnabled) {
-                        LOGGER.debug(String.format("[deepCopy][%s][workflow=%s][after worflow job level]changed=%s", config.getTypeAsEnum(), workflow
-                                .getPath(), changed));
+                        LOGGER
+                            .debug(
+                                String
+                                    .format(
+                                        "[deepCopy][%s][workflow=%s][after worflow job level]changed=%s",
+                                        config.getTypeAsEnum(),
+                                        workflow.getPath(),
+                                        changed));
                     }
                     if (changed) {
                         workflow.setContent(Globals.objectMapper.writeValueAsString(w));
@@ -1337,8 +1401,10 @@ public class JocInventory {
                         }
 
                         if (isDebugEnabled) {
-                            LOGGER.debug(String.format("[deepCopy][%s][jobTemplate=%s]changed=%s", config.getTypeAsEnum(), jobTemplate.getPath(),
-                                    changed));
+                            LOGGER
+                                .debug(
+                                    String
+                                        .format("[deepCopy][%s][jobTemplate=%s]changed=%s", config.getTypeAsEnum(), jobTemplate.getPath(), changed));
                         }
 
                         if (changed) {
@@ -1441,12 +1507,21 @@ public class JocInventory {
                     boolean changed = workflowNamePredicate.test(fileOrderSource.getContent());
 
                     if (isDebugEnabled) {
-                        LOGGER.debug(String.format("[deepCopy][%s][fileOrderSource=%s]changed=%s", config.getTypeAsEnum(), fileOrderSource.getPath(),
-                                changed));
+                        LOGGER
+                            .debug(
+                                String
+                                    .format(
+                                        "[deepCopy][%s][fileOrderSource=%s]changed=%s",
+                                        config.getTypeAsEnum(),
+                                        fileOrderSource.getPath(),
+                                        changed));
                     }
                     if (changed) {
-                        fileOrderSource.setContent(fileOrderSource.getContent().replaceAll("(\"workflowName\"\\s*:\\s*\")" + config.getName() + "\"",
-                                "$1" + newName + "\""));
+                        fileOrderSource
+                            .setContent(
+                                fileOrderSource
+                                    .getContent()
+                                    .replaceAll("(\"workflowName\"\\s*:\\s*\")" + config.getName() + "\"", "$1" + newName + "\""));
                         fileOrderSource.setDeployed(false);
                         int i = items.indexOf(fileOrderSource);
                         if (i != -1) {
@@ -1464,8 +1539,11 @@ public class JocInventory {
                 for (DBItemInventoryConfiguration addOrderWorkflow : addOrderWorkflows) {
                     boolean changed = workflowNamePredicate.test(addOrderWorkflow.getContent());
                     if (changed) {
-                        addOrderWorkflow.setContent(addOrderWorkflow.getContent().replaceAll("(\"workflowName\"\\s*:\\s*\")" + config.getName()
-                                + "\"", "$1" + newName + "\""));
+                        addOrderWorkflow
+                            .setContent(
+                                addOrderWorkflow
+                                    .getContent()
+                                    .replaceAll("(\"workflowName\"\\s*:\\s*\")" + config.getName() + "\"", "$1" + newName + "\""));
                         addOrderWorkflow.setDeployed(false);
                         int i = items.indexOf(addOrderWorkflow);
                         if (i != -1) {
@@ -1489,20 +1567,37 @@ public class JocInventory {
                     Optional.ofNullable(s.getCalendars()).ifPresent(cs -> cs.forEach(ac -> {
                         if (ac.getCalendarName().equals(config.getName())) {
                             if (isDebugEnabled) {
-                                LOGGER.debug(String.format("[deepCopy][%s][schedule=%s, calendarName=%s]new calendar name=%s", config.getTypeAsEnum(),
-                                        schedule.getPath(), ac.getCalendarName(), newName));
+                                LOGGER
+                                    .debug(
+                                        String
+                                            .format(
+                                                "[deepCopy][%s][schedule=%s, calendarName=%s]new calendar name=%s",
+                                                config.getTypeAsEnum(),
+                                                schedule.getPath(),
+                                                ac.getCalendarName(),
+                                                newName));
                             }
 
                             ac.setCalendarName(newName);
                         }
-                        Optional.ofNullable(ac.getExcludes()).map(Frequencies::getNonWorkingDayCalendars).filter(nwcs -> nwcs.remove(config
-                                .getName())).ifPresent(nwcs -> nwcs.add(newName));
+                        Optional
+                            .ofNullable(ac.getExcludes())
+                            .map(Frequencies::getNonWorkingDayCalendars)
+                            .filter(nwcs -> nwcs.remove(config.getName()))
+                            .ifPresent(nwcs -> nwcs.add(newName));
                     }));
                     Optional.ofNullable(s.getNonWorkingDayCalendars()).ifPresent(cs -> cs.forEach(ac -> {
                         if (!ac.getCalendarName().equals(config.getName())) {
                             if (isDebugEnabled) {
-                                LOGGER.debug(String.format("[deepCopy][%s][schedule=%s, calendarName=%s]new calendar name=%s", config.getTypeAsEnum(),
-                                        schedule.getPath(), ac.getCalendarName(), newName));
+                                LOGGER
+                                    .debug(
+                                        String
+                                            .format(
+                                                "[deepCopy][%s][schedule=%s, calendarName=%s]new calendar name=%s",
+                                                config.getTypeAsEnum(),
+                                                schedule.getPath(),
+                                                ac.getCalendarName(),
+                                                newName));
                             }
                             ac.setCalendarName(newName);
                         }
@@ -1530,8 +1625,11 @@ public class JocInventory {
             if (calendars != null && !calendars.isEmpty()) {
                 for (DBItemInventoryConfiguration calendar : calendars) {
                     Calendar cal = (Calendar) content2IJSObject(calendar.getContent(), calendar.getType());
-                    Optional.ofNullable(cal.getExcludes()).map(Frequencies::getNonWorkingDayCalendars).filter(nwcs -> nwcs.remove(config.getName()))
-                            .ifPresent(nwcs -> nwcs.add(newName));
+                    Optional
+                        .ofNullable(cal.getExcludes())
+                        .map(Frequencies::getNonWorkingDayCalendars)
+                        .filter(nwcs -> nwcs.remove(config.getName()))
+                        .ifPresent(nwcs -> nwcs.add(newName));
                     calendar.setContent(Globals.objectMapper.writeValueAsString(cal));
                     calendar.setReleased(false);
                     int i = items.indexOf(calendar);
@@ -1548,8 +1646,9 @@ public class JocInventory {
             break;
         case INCLUDESCRIPT: // determine Workflows with script reference in INCLUDE line of a job script
             List<DBItemInventoryConfiguration> workflowsOrJobTemplates = dbLayer.getWorkflowsAndJobTemplatesWithIncludedScripts();
-            Predicate<String> hasScriptInclude = Pattern.compile(JsonConverter.scriptIncludeComments + JsonConverter.scriptInclude + "[ \t]+" + config
-                    .getName() + "\\s*").asPredicate();
+            Predicate<String> hasScriptInclude = Pattern
+                .compile(JsonConverter.scriptIncludeComments + JsonConverter.scriptInclude + "[ \t]+" + config.getName() + "\\s*")
+                .asPredicate();
             if (workflowsOrJobTemplates != null && !workflowsOrJobTemplates.isEmpty()) {
                 for (DBItemInventoryConfiguration workflowOrJobTemplate : workflowsOrJobTemplates) {
                     if (hasScriptInclude.test(workflowOrJobTemplate.getContent())) {
@@ -1563,8 +1662,8 @@ public class JocInventory {
                                         if (es.getScript() != null && hasScriptInclude.test(es.getScript())) {
                                             String[] scriptLines = es.getScript().split("\n");
                                             for (int i = 0; i < scriptLines.length; i++) {
-                                                scriptLines[i] = JsonConverter.replaceNameOfIncludeScriptInScriptLine(scriptLines[i], config
-                                                        .getName(), newName);
+                                                scriptLines[i] = JsonConverter
+                                                    .replaceNameOfIncludeScriptInScriptLine(scriptLines[i], config.getName(), newName);
 
                                             }
                                             es.setScript(String.join("\n", scriptLines));
@@ -1583,8 +1682,8 @@ public class JocInventory {
                                 if (es.getScript() != null && hasScriptInclude.test(es.getScript())) {
                                     String[] scriptLines = es.getScript().split("\n");
                                     for (int i = 0; i < scriptLines.length; i++) {
-                                        scriptLines[i] = JsonConverter.replaceNameOfIncludeScriptInScriptLine(scriptLines[i], config.getName(),
-                                                newName);
+                                        scriptLines[i] = JsonConverter
+                                            .replaceNameOfIncludeScriptInScriptLine(scriptLines[i], config.getName(), newName);
 
                                     }
                                     es.setScript(String.join("\n", scriptLines));
@@ -1619,8 +1718,10 @@ public class JocInventory {
                     if (w.getJobs() != null) {
                         for (Map.Entry<String, Job> entry : w.getJobs().getAdditionalProperties().entrySet()) {
                             Job j = entry.getValue();
-                            if (j.getJobTemplate() != null && j.getJobTemplate().getName() != null && j.getJobTemplate().getName().equals(config
-                                    .getName())) {
+                            if (j.getJobTemplate() != null && j.getJobTemplate().getName() != null && j
+                                .getJobTemplate()
+                                .getName()
+                                .equals(config.getName())) {
                                 j.getJobTemplate().setName(newName);
                                 changed = true;
                             }
@@ -1658,7 +1759,7 @@ public class JocInventory {
             FileTransferUpdateConfigurationHelper.updateSocksProxyRefs(dbLayer, config, newName, items, events);
             break;
         // FileTransfer - profile
-        case FT_PROFILE_JOBRESOURCE:
+        case FT_PROFILE:
             FileTransferUpdateConfigurationHelper.updateProfileRefs(dbLayer, config, newName, items, events);
             break;
         // FileTransfer - protocol fragments
@@ -1731,9 +1832,9 @@ public class JocInventory {
     }
 
     public static List<String> getSearchReplace(SuffixPrefix suffixPrefix) {
-        return suffixPrefix.getSuffix().isEmpty() ? Arrays.asList("^(" + suffixPrefix.getPrefix().replaceFirst("[0-9]*$", "") + "[0-9]*-)?(.*)$",
-                suffixPrefix.getPrefix() + "-$2") : Arrays.asList("(.*?)(-" + suffixPrefix.getSuffix().replaceFirst("[0-9]*$", "") + "[0-9]*)?$",
-                        "$1-" + suffixPrefix.getSuffix());
+        return suffixPrefix.getSuffix().isEmpty() ? Arrays
+            .asList("^(" + suffixPrefix.getPrefix().replaceFirst("[0-9]*$", "") + "[0-9]*-)?(.*)$", suffixPrefix.getPrefix() + "-$2") : Arrays
+                .asList("(.*?)(-" + suffixPrefix.getSuffix().replaceFirst("[0-9]*$", "") + "[0-9]*)?$", "$1-" + suffixPrefix.getSuffix());
     }
 
     public static <T extends Schedule> T setWorkflowNames(T schedule) {
@@ -1776,8 +1877,10 @@ public class JocInventory {
     public static void postDeployHistoryEvent(Collection<DBItemDeploymentHistory> dbItems) {
         if (dbItems != null) {
             EnumSet<DeployType> eSet = EnumSet.of(DeployType.WORKFLOW, DeployType.JOBRESOURCE, DeployType.FILEORDERSOURCE);
-            Map<Integer, List<DBItemDeploymentHistory>> items = dbItems.stream().filter(item -> eSet.contains(item.getTypeAsEnum())).collect(
-                    Collectors.groupingBy(DBItemDeploymentHistory::getType));
+            Map<Integer, List<DBItemDeploymentHistory>> items = dbItems
+                .stream()
+                .filter(item -> eSet.contains(item.getTypeAsEnum()))
+                .collect(Collectors.groupingBy(DBItemDeploymentHistory::getType));
 
             if (items.containsKey(DeployType.WORKFLOW.intValue())) {
                 Set<String> controllerIds = new HashSet<>();
@@ -1793,15 +1896,23 @@ public class JocInventory {
             if (items.containsKey(DeployType.JOBRESOURCE.intValue())) {
                 items.get(DeployType.JOBRESOURCE.intValue()).forEach(dbItem -> {
                     // Consumer: SystemMonitoringModel
-                    EventBus.getInstance().post(new DeployHistoryJobResourceEvent(dbItem.getControllerId(), dbItem.getName(), dbItem.getCommitId(),
-                            dbItem.getPath(), ConfigurationType.JOBRESOURCE.intValue()));
+                    EventBus
+                        .getInstance()
+                        .post(
+                            new DeployHistoryJobResourceEvent(dbItem.getControllerId(), dbItem.getName(), dbItem.getCommitId(), dbItem.getPath(),
+                                    ConfigurationType.JOBRESOURCE.intValue()));
                 });
             }
 
             if (items.containsKey(DeployType.FILEORDERSOURCE.intValue())) {
                 // Consumer: WorkflowRefs
-                items.get(DeployType.FILEORDERSOURCE.intValue()).stream().map(DBItemDeploymentHistory::getControllerId).distinct().map(
-                        DeployHistoryFileOrdersSourceEvent::new).forEach(EventBus.getInstance()::post);
+                items
+                    .get(DeployType.FILEORDERSOURCE.intValue())
+                    .stream()
+                    .map(DBItemDeploymentHistory::getControllerId)
+                    .distinct()
+                    .map(DeployHistoryFileOrdersSourceEvent::new)
+                    .forEach(EventBus.getInstance()::post);
             }
         }
     }
@@ -1809,23 +1920,37 @@ public class JocInventory {
     public static void postDeployHistoryEventWhenDeleted(Collection<DBItemDeploymentHistory> dbItems) {
         if (dbItems != null) {
             EnumSet<DeployType> eSet = EnumSet.of(DeployType.WORKFLOW, DeployType.FILEORDERSOURCE);
-            Map<Integer, Set<String>> items = dbItems.stream().filter(item -> eSet.contains(item.getTypeAsEnum())).collect(Collectors.groupingBy(
-                    DBItemDeploymentHistory::getType, Collectors.mapping(DBItemDeploymentHistory::getControllerId, Collectors.toSet())));
+            Map<Integer, Set<String>> items = dbItems
+                .stream()
+                .filter(item -> eSet.contains(item.getTypeAsEnum()))
+                .collect(
+                    Collectors
+                        .groupingBy(
+                            DBItemDeploymentHistory::getType,
+                            Collectors.mapping(DBItemDeploymentHistory::getControllerId, Collectors.toSet())));
 
             // Consumer: WorkflowRefs
-            items.getOrDefault(DeployType.WORKFLOW.intValue(), Collections.emptySet()).stream().map(DeployHistoryWorkflowEvent::new).forEach(EventBus
-                    .getInstance()::post);
+            items
+                .getOrDefault(DeployType.WORKFLOW.intValue(), Collections.emptySet())
+                .stream()
+                .map(DeployHistoryWorkflowEvent::new)
+                .forEach(EventBus.getInstance()::post);
             // Consumer: WorkflowRefs
-            items.getOrDefault(DeployType.FILEORDERSOURCE.intValue(), Collections.emptySet()).stream().map(DeployHistoryFileOrdersSourceEvent::new)
-                    .forEach(EventBus.getInstance()::post);
+            items
+                .getOrDefault(DeployType.FILEORDERSOURCE.intValue(), Collections.emptySet())
+                .stream()
+                .map(DeployHistoryFileOrdersSourceEvent::new)
+                .forEach(EventBus.getInstance()::post);
         }
     }
 
     public static boolean isJsonHashEqual(String json1, String json2, ConfigurationType type) throws IOException {
         // TODO use isJsonHashEqual below!!!
-        return SOSString.hashMD5(Globals.prettyPrintObjectMapper.writeValueAsString(Globals.objectMapper.readValue(json1, CLASS_MAPPING.get(type))))
-                .equals(SOSString.hashMD5(Globals.prettyPrintObjectMapper.writeValueAsString(Globals.objectMapper.readValue(json2, CLASS_MAPPING.get(
-                        type)))));
+        return SOSString
+            .hashMD5(Globals.prettyPrintObjectMapper.writeValueAsString(Globals.objectMapper.readValue(json1, CLASS_MAPPING.get(type))))
+            .equals(
+                SOSString
+                    .hashMD5(Globals.prettyPrintObjectMapper.writeValueAsString(Globals.objectMapper.readValue(json2, CLASS_MAPPING.get(type)))));
     }
 
     public static boolean isJsonHashEqual(String json1, IConfigurationObject json2) throws IOException {

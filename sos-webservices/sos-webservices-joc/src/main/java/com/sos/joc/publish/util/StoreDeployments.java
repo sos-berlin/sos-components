@@ -66,20 +66,20 @@ public class StoreDeployments {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(StoreDeployments.class);
 
-    public static final Map<Integer, Class<? extends IDeployObject>> CLASS_MAPPING = Collections.unmodifiableMap(
-            new HashMap<Integer, Class<? extends IDeployObject>>() {
+    public static final Map<Integer, Class<? extends IDeployObject>> CLASS_MAPPING = Collections
+        .unmodifiableMap(new HashMap<Integer, Class<? extends IDeployObject>>() {
 
-                private static final long serialVersionUID = 1L;
-                {
-                    put(DeployType.JOBCLASS.intValue(), JobClass.class);
-                    put(DeployType.JOBRESOURCE.intValue(), JobResource.class);
-                    put(DeployType.FT_PROFILE_JOBRESOURCE.intValue(), FileTransferJobResource.class);
-                    put(DeployType.NOTICEBOARD.intValue(), Board.class);
-                    put(DeployType.LOCK.intValue(), Lock.class);
-                    put(DeployType.FILEORDERSOURCE.intValue(), FileOrderSource.class);
-                    put(DeployType.WORKFLOW.intValue(), Workflow.class);
-                }
-            });
+            private static final long serialVersionUID = 1L;
+            {
+                put(DeployType.JOBCLASS.intValue(), JobClass.class);
+                put(DeployType.JOBRESOURCE.intValue(), JobResource.class);
+                put(DeployType.FT_PROFILE_JOBRESOURCE.intValue(), FileTransferJobResource.class);
+                put(DeployType.NOTICEBOARD.intValue(), Board.class);
+                put(DeployType.LOCK.intValue(), Lock.class);
+                put(DeployType.FILEORDERSOURCE.intValue(), FileOrderSource.class);
+                put(DeployType.WORKFLOW.intValue(), Workflow.class);
+            }
+        });
     public static final String API_CALL_REDEPLOY = "./inventory/deployment/redeploy";
     public static final String API_CALL_SYNC = "./inventory/deployment/synchronize";
 
@@ -96,8 +96,12 @@ public class StoreDeployments {
             Set<DBItemDeploymentHistory> deployedObjects = new HashSet<DBItemDeploymentHistory>();
 
             if (signedItemsSpec.getVerifiedDeployables() != null && !signedItemsSpec.getVerifiedDeployables().isEmpty()) {
-                Set<String> folders = signedItemsSpec.getVerifiedDeployables().keySet().stream().map(DBItemDeploymentHistory::getFolder).collect(
-                        Collectors.toSet());
+                Set<String> folders = signedItemsSpec
+                    .getVerifiedDeployables()
+                    .keySet()
+                    .stream()
+                    .map(DBItemDeploymentHistory::getFolder)
+                    .collect(Collectors.toSet());
                 List<Long> workflowInvIds = new ArrayList<>();
                 for (Map.Entry<DBItemDeploymentHistory, DBItemDepSignatures> entry : signedItemsSpec.getVerifiedDeployables().entrySet()) {
                     DBItemDeploymentHistory item = entry.getKey();
@@ -122,8 +126,9 @@ public class StoreDeployments {
                             dbLayer.getSession().save(signature);
                         }
                         deployedObjects.add(item);
-                        DBItemInventoryConfiguration toUpdate = dbLayer.getSession().get(DBItemInventoryConfiguration.class, item
-                                .getInventoryConfigurationId());
+                        DBItemInventoryConfiguration toUpdate = dbLayer
+                            .getSession()
+                            .get(DBItemInventoryConfiguration.class, item.getInventoryConfigurationId());
                         if (toUpdate != null) {
                             if (JocInventory.isWorkflow(toUpdate.getType())) {
                                 workflowInvIds.add(toUpdate.getId());
@@ -136,8 +141,16 @@ public class StoreDeployments {
                         }
                     } else {
                         // second id != null
-                        DBItemDeploymentHistory cloned = PublishUtils.cloneDepHistoryItemsToNewEntry(item, entry.getValue(), account, dbLayer,
-                                commitId, controllerId, deploymentDate, signedItemsSpec.getAuditlogId());
+                        DBItemDeploymentHistory cloned = PublishUtils
+                            .cloneDepHistoryItemsToNewEntry(
+                                item,
+                                entry.getValue(),
+                                account,
+                                dbLayer,
+                                commitId,
+                                controllerId,
+                                deploymentDate,
+                                signedItemsSpec.getAuditlogId());
                         deployedObjects.add(cloned);
                     }
                 }
@@ -151,17 +164,30 @@ public class StoreDeployments {
             if (!deployedObjects.isEmpty()) {
                 long countWorkflows = deployedObjects.stream().filter(item -> ConfigurationType.WORKFLOW.intValue() == item.getType()).count();
                 long countLocks = deployedObjects.stream().filter(item -> ConfigurationType.LOCK.intValue() == item.getType()).count();
-                long countFileOrderSources = deployedObjects.stream().filter(item -> ConfigurationType.FILEORDERSOURCE.intValue() == item.getType())
-                        .count();
+                long countFileOrderSources = deployedObjects
+                    .stream()
+                    .filter(item -> ConfigurationType.FILEORDERSOURCE.intValue() == item.getType())
+                    .count();
                 long countJobResources = deployedObjects.stream().filter(item -> ConfigurationType.JOBRESOURCE.intValue() == item.getType()).count();
-                long countFileTransferJobResources = deployedObjects.stream().filter(item -> ConfigurationType.FT_PROFILE_JOBRESOURCE
-                        .intValue() == item.getType()).count();
+                long countFileTransferJobResources = deployedObjects
+                    .stream()
+                    .filter(item -> ConfigurationType.FT_PROFILE.intValue() == item.getType())
+                    .count();
                 long totalJobResources = countJobResources + countFileTransferJobResources;
                 long countBoards = deployedObjects.stream().filter(item -> ConfigurationType.NOTICEBOARD.intValue() == item.getType()).count();
-                LOGGER.info(String.format(
-                        "Update command send to Controller \"%s\" containing %s Workflows, %s Locks, %s FileOrderSources, %s JobResources (common=%s, fileTransfer=%s) and %s Boards.",
-                        controllerId, countWorkflows, countLocks, countFileOrderSources, totalJobResources, countJobResources,
-                        countFileTransferJobResources, countBoards));
+                LOGGER
+                    .info(
+                        String
+                            .format(
+                                "Update command send to Controller \"%s\" containing %s Workflows, %s Locks, %s FileOrderSources, %s JobResources (common=%s, fileTransfer=%s) and %s Boards.",
+                                controllerId,
+                                countWorkflows,
+                                countLocks,
+                                countFileOrderSources,
+                                totalJobResources,
+                                countJobResources,
+                                countFileTransferJobResources,
+                                countBoards));
                 JocInventory.handleWorkflowSearch(dbLayer.getSession(), deployedObjects, false);
                 JocInventory.postDeployHistoryEvent(deployedObjects);
             }
@@ -193,10 +219,16 @@ public class StoreDeployments {
                     DailyPlanOrdersGenerateImpl ordersGenerate = new DailyPlanOrdersGenerateImpl();
                     ordersGenerate.setCurrentAccount(record.impl());
                     InventoryDBLayer invDbLayer = new InventoryDBLayer(newHibernateSession);
-                    List<String> workflowNames = optimisticEntries.stream().filter(item -> item.getTypeAsEnum().equals(DeployType.WORKFLOW)).map(
-                            workflow -> workflow.getName()).collect(Collectors.toList());
-                    PublishSemaphore.getInstance().getSemaphore(accessToken).map(ReleaseDeploySemaphore::getWorkflowNames).ifPresent(
-                            set -> workflowNames.removeAll(set));
+                    List<String> workflowNames = optimisticEntries
+                        .stream()
+                        .filter(item -> item.getTypeAsEnum().equals(DeployType.WORKFLOW))
+                        .map(workflow -> workflow.getName())
+                        .collect(Collectors.toList());
+                    PublishSemaphore
+                        .getInstance()
+                        .getSemaphore(accessToken)
+                        .map(ReleaseDeploySemaphore::getWorkflowNames)
+                        .ifPresent(set -> workflowNames.removeAll(set));
                     LOGGER.debug("DEPLOY: already processed workflows from Semaphore information removed");
                     // get the schedules referencing these workflows
                     List<String> workflowsWithSubmit = new ArrayList<String>();
@@ -219,16 +251,40 @@ public class StoreDeployments {
                     List<GenerateRequest> requests = new ArrayList<GenerateRequest>();
                     List<String> allowedDailyPlanDates = ordersGenerate.getAllowedDailyPlanDates(newHibernateSession, controllerId);
                     if (!workflowsWithSubmit.isEmpty()) {
-                        PublishSemaphore.getInstance().getSemaphore(record.transactionId()).map(ReleaseDeploySemaphore::getWorkflowNames).ifPresent(
-                                set -> workflowsWithSubmit.removeAll(set));
-                        requests.addAll(ordersGenerate.getGenerateRequests(record.dailyPlanDate(), workflowsWithSubmit, null, controllerId, true,
-                                true, allowedDailyPlanDates));
+                        PublishSemaphore
+                            .getInstance()
+                            .getSemaphore(record.transactionId())
+                            .map(ReleaseDeploySemaphore::getWorkflowNames)
+                            .ifPresent(set -> workflowsWithSubmit.removeAll(set));
+                        requests
+                            .addAll(
+                                ordersGenerate
+                                    .getGenerateRequests(
+                                        record.dailyPlanDate(),
+                                        workflowsWithSubmit,
+                                        null,
+                                        controllerId,
+                                        true,
+                                        true,
+                                        allowedDailyPlanDates));
                     }
                     if (!workflowsWithoutSubmit.isEmpty()) {
-                        PublishSemaphore.getInstance().getSemaphore(record.transactionId()).map(ReleaseDeploySemaphore::getWorkflowNames).ifPresent(
-                                set -> workflowsWithoutSubmit.removeAll(set));
-                        requests.addAll(ordersGenerate.getGenerateRequests(record.dailyPlanDate(), workflowsWithoutSubmit, null, controllerId, false,
-                                true, allowedDailyPlanDates));
+                        PublishSemaphore
+                            .getInstance()
+                            .getSemaphore(record.transactionId())
+                            .map(ReleaseDeploySemaphore::getWorkflowNames)
+                            .ifPresent(set -> workflowsWithoutSubmit.removeAll(set));
+                        requests
+                            .addAll(
+                                ordersGenerate
+                                    .getGenerateRequests(
+                                        record.dailyPlanDate(),
+                                        workflowsWithoutSubmit,
+                                        null,
+                                        controllerId,
+                                        false,
+                                        true,
+                                        allowedDailyPlanDates));
                     }
                     if (!requests.isEmpty()) {
                         boolean successful = ordersGenerate.generateOrders(requests, accessToken, false, record.includeLate(), ADeploy.API_CALL);
@@ -238,8 +294,10 @@ public class StoreDeployments {
                     }
                 }
                 // after successful deployment, set enforce flag to false for related dependencies
-                PublishUtils.resetDependenciesEnforcementAfterPublish(optimisticEntries.stream().map(entry -> entry.getInventoryConfigurationId())
-                        .collect(Collectors.toSet()), newHibernateSession);
+                PublishUtils
+                    .resetDependenciesEnforcementAfterPublish(
+                        optimisticEntries.stream().map(entry -> entry.getInventoryConfigurationId()).collect(Collectors.toSet()),
+                        newHibernateSession);
 
                 ccr = new ControllerCommandResponse(controllerId, Optional.empty(), Optional.of(record));
             } else {
@@ -247,8 +305,11 @@ public class StoreDeployments {
                 // updateRepo command is atomic, therefore all items are rejected
                 // get all already optimistically stored entries for the commit
                 // update all previously optimistically stored entries with the error message and change the state
-                List<DBItemDeploymentHistory> optimisticEntries = updateOptimisticEntriesIfFailed(record.commitId(), exception.getMessage(), dbLayer,
-                        record.wsIdentifier());
+                List<DBItemDeploymentHistory> optimisticEntries = updateOptimisticEntriesIfFailed(
+                    record.commitId(),
+                    exception.getMessage(),
+                    dbLayer,
+                    record.wsIdentifier());
                 ccr = new ControllerCommandResponse(controllerId, Optional.of(new JocDeployException(exception)), Optional.of(record));
             }
             return CompletableFuture.completedFuture(ccr);
@@ -297,8 +358,14 @@ public class StoreDeployments {
                 // call updateItems command via ControllerApi for the given controller
                 switch (signedItemsSpec.getKeyPair().getKeyAlgorithm()) {
                 case SOSKeyConstants.PGP_ALGORITHM_NAME:
-                    Set<JUpdateItemOperation> itemOperations1 = UpdateItemUtils.createUpdateAndDeleteItemOperations(signedItemsSpec
-                            .getVerifiedDeployables(), renamedToDelete, SOSKeyConstants.PGP_ALGORITHM_NAME, null, null, proxy);
+                    Set<JUpdateItemOperation> itemOperations1 = UpdateItemUtils
+                        .createUpdateAndDeleteItemOperations(
+                            signedItemsSpec.getVerifiedDeployables(),
+                            renamedToDelete,
+                            SOSKeyConstants.PGP_ALGORITHM_NAME,
+                            null,
+                            null,
+                            proxy);
                     future = getUpdateItemsFuture(proxy, signedItemsSpec, controllerId, record, itemOperations1);
                 case SOSKeyConstants.RSA_ALGORITHM_NAME:
                     if (signedItemsSpec.getKeyPair().getCertificate() != null && !signedItemsSpec.getKeyPair().getCertificate().isEmpty()) {
@@ -307,21 +374,33 @@ public class StoreDeployments {
                     if (cert != null) {
                         selfIssued = PublishUtils.checkCertificateIsSelfIssued(cert);
                         if (!selfIssued) {
-                            Set<JUpdateItemOperation> itemOperations2 = UpdateItemUtils.createUpdateAndDeleteItemOperations(signedItemsSpec
-                                    .getVerifiedDeployables(), renamedToDelete, SOSKeyConstants.RSA_SIGNER_ALGORITHM, signedItemsSpec.getKeyPair()
-                                            .getCertificate(), null, proxy);
+                            Set<JUpdateItemOperation> itemOperations2 = UpdateItemUtils
+                                .createUpdateAndDeleteItemOperations(
+                                    signedItemsSpec.getVerifiedDeployables(),
+                                    renamedToDelete,
+                                    SOSKeyConstants.RSA_SIGNER_ALGORITHM,
+                                    signedItemsSpec.getKeyPair().getCertificate(),
+                                    null,
+                                    proxy);
                             future = getUpdateItemsFuture(proxy, signedItemsSpec, controllerId, record, itemOperations2);
                         } else {
                             signerDN = cert.getSubjectX500Principal().getName();
-                            Set<JUpdateItemOperation> itemOperations3 = UpdateItemUtils.createUpdateAndDeleteItemOperations(signedItemsSpec
-                                    .getVerifiedDeployables(), renamedToDelete, SOSKeyConstants.RSA_SIGNER_ALGORITHM, null, signerDN, proxy);
+                            Set<JUpdateItemOperation> itemOperations3 = UpdateItemUtils
+                                .createUpdateAndDeleteItemOperations(
+                                    signedItemsSpec.getVerifiedDeployables(),
+                                    renamedToDelete,
+                                    SOSKeyConstants.RSA_SIGNER_ALGORITHM,
+                                    null,
+                                    signerDN,
+                                    proxy);
                             future = getUpdateItemsFuture(proxy, signedItemsSpec, controllerId, record, itemOperations3);
                         }
                     } else {
                         String message = "No certificate present! Items could not be deployed to controller.";
                         updateOptimisticEntriesIfFailed(record.commitId(), message, dbLayer, record.wsIdentifier());
-                        future = CompletableFuture.completedFuture(new ControllerCommandResponse(controllerId, Optional.of(new JocDeployException(
-                                message)), Optional.of(record)));
+                        future = CompletableFuture
+                            .completedFuture(
+                                new ControllerCommandResponse(controllerId, Optional.of(new JocDeployException(message)), Optional.of(record)));
                     }
                     break;
                 case SOSKeyConstants.ECDSA_ALGORITHM_NAME:
@@ -331,21 +410,33 @@ public class StoreDeployments {
                     if (cert != null) {
                         selfIssued = PublishUtils.checkCertificateIsSelfIssued(cert);
                         if (!selfIssued) {
-                            Set<JUpdateItemOperation> itemOperations4 = UpdateItemUtils.createUpdateAndDeleteItemOperations(signedItemsSpec
-                                    .getVerifiedDeployables(), renamedToDelete, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signedItemsSpec.getKeyPair()
-                                            .getCertificate(), null, proxy);
+                            Set<JUpdateItemOperation> itemOperations4 = UpdateItemUtils
+                                .createUpdateAndDeleteItemOperations(
+                                    signedItemsSpec.getVerifiedDeployables(),
+                                    renamedToDelete,
+                                    SOSKeyConstants.ECDSA_SIGNER_ALGORITHM,
+                                    signedItemsSpec.getKeyPair().getCertificate(),
+                                    null,
+                                    proxy);
                             future = getUpdateItemsFuture(proxy, signedItemsSpec, controllerId, record, itemOperations4);
                         } else {
                             signerDN = cert.getSubjectX500Principal().getName();
-                            Set<JUpdateItemOperation> itemOperations5 = UpdateItemUtils.createUpdateAndDeleteItemOperations(signedItemsSpec
-                                    .getVerifiedDeployables(), renamedToDelete, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, null, signerDN, proxy);
+                            Set<JUpdateItemOperation> itemOperations5 = UpdateItemUtils
+                                .createUpdateAndDeleteItemOperations(
+                                    signedItemsSpec.getVerifiedDeployables(),
+                                    renamedToDelete,
+                                    SOSKeyConstants.ECDSA_SIGNER_ALGORITHM,
+                                    null,
+                                    signerDN,
+                                    proxy);
                             future = getUpdateItemsFuture(proxy, signedItemsSpec, controllerId, record, itemOperations5);
                         }
                     } else {
                         String message = "No certificate present! Items could not be deployed to controller.";
                         updateOptimisticEntriesIfFailed(record.commitId(), message, dbLayer, record.wsIdentifier());
-                        future = CompletableFuture.completedFuture(new ControllerCommandResponse(controllerId, Optional.of(new JocDeployException(
-                                message)), Optional.of(record)));
+                        future = CompletableFuture
+                            .completedFuture(
+                                new ControllerCommandResponse(controllerId, Optional.of(new JocDeployException(message)), Optional.of(record)));
                     }
                     break;
                 case SOSKeyConstants.MLDSA_ALGORITHM_NAME:
@@ -355,29 +446,41 @@ public class StoreDeployments {
                     if (cert != null) {
                         selfIssued = PublishUtils.checkCertificateIsSelfIssued(cert);
                         if (!selfIssued) {
-                            Set<JUpdateItemOperation> itemOperations6 = UpdateItemUtils.createUpdateAndDeleteItemOperations(signedItemsSpec
-                                    .getVerifiedDeployables(), renamedToDelete, SOSKeyConstants.MLDSA_SIGNER_ALGORITHM, signedItemsSpec.getKeyPair()
-                                            .getCertificate(), null, proxy);
+                            Set<JUpdateItemOperation> itemOperations6 = UpdateItemUtils
+                                .createUpdateAndDeleteItemOperations(
+                                    signedItemsSpec.getVerifiedDeployables(),
+                                    renamedToDelete,
+                                    SOSKeyConstants.MLDSA_SIGNER_ALGORITHM,
+                                    signedItemsSpec.getKeyPair().getCertificate(),
+                                    null,
+                                    proxy);
                             future = getUpdateItemsFuture(proxy, signedItemsSpec, controllerId, record, itemOperations6);
                         } else {
                             signerDN = cert.getSubjectX500Principal().getName();
-                            Set<JUpdateItemOperation> itemOperations7 = UpdateItemUtils.createUpdateAndDeleteItemOperations(signedItemsSpec
-                                    .getVerifiedDeployables(), renamedToDelete, SOSKeyConstants.MLDSA_SIGNER_ALGORITHM, null, signerDN, proxy);
+                            Set<JUpdateItemOperation> itemOperations7 = UpdateItemUtils
+                                .createUpdateAndDeleteItemOperations(
+                                    signedItemsSpec.getVerifiedDeployables(),
+                                    renamedToDelete,
+                                    SOSKeyConstants.MLDSA_SIGNER_ALGORITHM,
+                                    null,
+                                    signerDN,
+                                    proxy);
                             future = getUpdateItemsFuture(proxy, signedItemsSpec, controllerId, record, itemOperations7);
                         }
                     } else {
                         String message = "No certificate present! Items could not be deployed to controller.";
                         updateOptimisticEntriesIfFailed(record.commitId(), message, dbLayer, record.wsIdentifier());
-                        future = CompletableFuture.completedFuture(new ControllerCommandResponse(controllerId, Optional.of(new JocDeployException(
-                                message)), Optional.of(record)));
+                        future = CompletableFuture
+                            .completedFuture(
+                                new ControllerCommandResponse(controllerId, Optional.of(new JocDeployException(message)), Optional.of(record)));
                     }
                     break;
                 }
             }
             return future;
         } catch (Exception e) {
-            return CompletableFuture.completedFuture(new ControllerCommandResponse(controllerId, Optional.of(new JocDeployException(e)), Optional.of(
-                    record)));
+            return CompletableFuture
+                .completedFuture(new ControllerCommandResponse(controllerId, Optional.of(new JocDeployException(e)), Optional.of(record)));
         }
     }
 
@@ -389,13 +492,17 @@ public class StoreDeployments {
                     if (either.isRight()) {
                         return CompletableFuture.completedFuture(new ControllerCommandResponse(controllerId, Optional.empty(), Optional.of(record)));
                     } else {
-                        return CompletableFuture.completedFuture(new ControllerCommandResponse(controllerId, Optional.of(new JocDeployException(
-                                ProblemHelper.getErrorMessage(either.getLeft()))), Optional.of(record)));
+                        return CompletableFuture
+                            .completedFuture(
+                                new ControllerCommandResponse(controllerId, Optional
+                                    .of(new JocDeployException(ProblemHelper.getErrorMessage(either.getLeft()))), Optional.of(record)));
                     }
                 });
             } else {
-                return CompletableFuture.completedFuture(new ControllerCommandResponse(controllerId, Optional.of(new JocDeployException(ProblemHelper
-                        .getErrorMessage(e.getLeft()))), Optional.of(record)));
+                return CompletableFuture
+                    .completedFuture(
+                        new ControllerCommandResponse(controllerId, Optional.of(new JocDeployException(ProblemHelper.getErrorMessage(e.getLeft()))),
+                                Optional.of(record)));
             }
         });
     }

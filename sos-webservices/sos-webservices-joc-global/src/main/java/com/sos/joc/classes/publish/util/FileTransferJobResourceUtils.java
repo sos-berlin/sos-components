@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.util.SOSPathUtils;
-import com.sos.inventory.model.filetransfer.FileTransferJobResource;
+import com.sos.inventory.model.filetransfer.FileTransferProfile;
 import com.sos.inventory.model.job.Environment;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.filetransfer.FileTransferHelper;
@@ -25,7 +25,7 @@ public class FileTransferJobResourceUtils {
         signed.setPath(SOSPathUtils.getBaseName(objectPath));
 
         // convert only to remove version ...
-        FileTransferJobResource ft = FileTransferHelper.toFileTransferJobResource(json);
+        FileTransferProfile ft = FileTransferHelper.toFileTransferProfile(json);
         ft.setVersion(null);
 
         Environment vars = new Environment();

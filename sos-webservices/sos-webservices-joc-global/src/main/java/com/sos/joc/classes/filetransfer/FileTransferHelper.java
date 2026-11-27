@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.inventory.model.filetransfer.FileTransferJobResource;
+import com.sos.inventory.model.filetransfer.FileTransferProfile;
 import com.sos.inventory.model.filetransfer.profile.Source;
 import com.sos.inventory.model.filetransfer.profile.Target;
 import com.sos.inventory.model.filetransfer.profile.fragments.Fragment;
@@ -30,7 +30,7 @@ public class FileTransferHelper {
     private static final String PROPERY_NAME_ALTERNATIVE_PROFILE = "alternativeProfileName";
     private static final String PROPERY_NAME_ALTERNATIVE_FRAGMENT = "alternativeFragmentName";
 
-    public static final List<ConfigurationType> DEPLOYABLE_OBJECTS = Arrays.asList(ConfigurationType.FT_PROFILE_JOBRESOURCE);
+    public static final List<ConfigurationType> DEPLOYABLE_OBJECTS = Arrays.asList(ConfigurationType.FT_PROFILE);
 
     public static final List<ConfigurationType> RELEASABLE_OBJECTS = Arrays
         .asList(
@@ -49,7 +49,7 @@ public class FileTransferHelper {
 
     public static final List<Integer> REFERENCING_OBJECTS = Arrays
         .asList(
-            ConfigurationType.FT_PROFILE_JOBRESOURCE.intValue(),
+            ConfigurationType.FT_PROFILE.intValue(),
             ConfigurationType.FT_FRAGMENT_AZURE_BLOB_STORAGE.intValue(),
             ConfigurationType.FT_FRAGMENT_FTP.intValue(),
             ConfigurationType.FT_FRAGMENT_HTTP.intValue(),
@@ -58,9 +58,9 @@ public class FileTransferHelper {
             ConfigurationType.FT_FRAGMENT_SMB.intValue(),
             ConfigurationType.FT_FRAGMENT_WEBDAV.intValue());
 
-    public static FileTransferJobResource toFileTransferJobResource(String json) throws JsonProcessingException {
-        // return Globals.objectMapper.readValue(extractJson(json), FileTransferJobResource.class);
-        return Globals.objectMapper.readValue(json, FileTransferJobResource.class);
+    public static FileTransferProfile toFileTransferProfile(String json) throws JsonProcessingException {
+        // return Globals.objectMapper.readValue(extractJson(json), FileTransferProfile.class);
+        return Globals.objectMapper.readValue(json, FileTransferProfile.class);
     }
 
     public static String getFragmentLabel(ConfigurationType fileTransferType) {
@@ -100,7 +100,7 @@ public class FileTransferHelper {
 
     public static String getPropertyNameAlternative(ConfigurationType fileTransferType) throws SOSHibernateException {
         switch (fileTransferType) {
-        case FT_PROFILE_JOBRESOURCE:
+        case FT_PROFILE:
             return PROPERY_NAME_ALTERNATIVE_PROFILE;
         case FT_FRAGMENT_SFTP:
         case FT_FRAGMENT_JUMP:

@@ -26,7 +26,7 @@ public class AzureBlobStorageFragmentRefsUpdater extends
     }
 
     @Override
-    protected AzureBlobStorageFragment readAlternativeFragment(DBItemInventoryConfiguration c) throws Exception {
+    protected AzureBlobStorageFragment readAlternative(DBItemInventoryConfiguration c) throws Exception {
         return Globals.objectMapper.readValue(c.getContent(), AzureBlobStorageFragment.class);
     }
 

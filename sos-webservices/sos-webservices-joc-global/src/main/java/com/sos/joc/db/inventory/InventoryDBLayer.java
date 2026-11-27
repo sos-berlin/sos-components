@@ -90,8 +90,10 @@ public class InventoryDBLayer extends DBLayer {
         query.setParameter("state", DeploymentState.DEPLOYED.value());
         List<InventoryDeploymentItem> result = getSession().getResultList(query);
         if (result != null && !result.isEmpty()) {
-            Optional<InventoryDeploymentItem> lastItem = result.stream().filter(item -> OperationType.UPDATE.value().equals(item.getOperation())
-                    && item.getContent() != null).max(Comparator.comparing(InventoryDeploymentItem::getDeploymentDate));
+            Optional<InventoryDeploymentItem> lastItem = result
+                .stream()
+                .filter(item -> OperationType.UPDATE.value().equals(item.getOperation()) && item.getContent() != null)
+                .max(Comparator.comparing(InventoryDeploymentItem::getDeploymentDate));
             if (lastItem.isPresent()) {
                 return lastItem.get();
             }
@@ -593,11 +595,17 @@ public class InventoryDBLayer extends DBLayer {
 
         List<InventoryDeployablesTreeFolderItem> result = getSession().getResultList(query);
         if (result != null) {
-            Comparator<InventoryDeploymentItem> comp = Comparator.nullsFirst(Comparator.comparing(InventoryDeploymentItem::getDeploymentDate)
-                    .reversed());
-            return result.stream().map(InventoryDeployablesTreeFolderItem::map).collect(Collectors.groupingBy(
-                    InventoryDeployablesTreeFolderItem::getConfiguration, Collectors.mapping(InventoryDeployablesTreeFolderItem::getDeployment,
-                            Collectors.toCollection(() -> new TreeSet<>(comp)))));
+            Comparator<InventoryDeploymentItem> comp = Comparator
+                .nullsFirst(Comparator.comparing(InventoryDeploymentItem::getDeploymentDate).reversed());
+            return result
+                .stream()
+                .map(InventoryDeployablesTreeFolderItem::map)
+                .collect(
+                    Collectors
+                        .groupingBy(
+                            InventoryDeployablesTreeFolderItem::getConfiguration,
+                            Collectors
+                                .mapping(InventoryDeployablesTreeFolderItem::getDeployment, Collectors.toCollection(() -> new TreeSet<>(comp)))));
         }
 
         return Collections.emptyMap();
@@ -808,8 +816,14 @@ public class InventoryDBLayer extends DBLayer {
         }
         Predicate<String> predicate = Pattern.compile(".+-" + suffix + "[0-9]*$", Pattern.CASE_INSENSITIVE).asPredicate();
         Function<String, Integer> mapper = n -> Integer.parseInt(n.replaceFirst(".+-" + suffix.toLowerCase() + "([0-9]*)$", "0$1"));
-        SortedSet<Integer> numbers = result.stream().map(String::toLowerCase).distinct().filter(predicate).map(mapper).sorted().collect(Collectors
-                .toCollection(TreeSet::new));
+        SortedSet<Integer> numbers = result
+            .stream()
+            .map(String::toLowerCase)
+            .distinct()
+            .filter(predicate)
+            .map(mapper)
+            .sorted()
+            .collect(Collectors.toCollection(TreeSet::new));
         if (numbers.isEmpty()) {
             return 0;
         }
@@ -848,8 +862,14 @@ public class InventoryDBLayer extends DBLayer {
         }
         Predicate<String> predicate = Pattern.compile("^" + prefix + "[0-9]*-.+", Pattern.CASE_INSENSITIVE).asPredicate();
         Function<String, Integer> mapper = n -> Integer.parseInt(n.replaceFirst("^" + prefix.toLowerCase() + "([0-9]*)-.+", "0$1"));
-        SortedSet<Integer> numbers = result.stream().map(String::toLowerCase).distinct().filter(predicate).map(mapper).sorted().collect(Collectors
-                .toCollection(TreeSet::new));
+        SortedSet<Integer> numbers = result
+            .stream()
+            .map(String::toLowerCase)
+            .distinct()
+            .filter(predicate)
+            .map(mapper)
+            .sorted()
+            .collect(Collectors.toCollection(TreeSet::new));
         if (numbers.isEmpty()) {
             return 0;
         }
@@ -1137,8 +1157,11 @@ public class InventoryDBLayer extends DBLayer {
             break;
         }
 
-        String foldersClause = Stream.concat(IntStream.range(0, folders.size()).mapToObj(i -> "folder=:folder" + i), IntStream.range(0,
-                recursiveFolders.size()).mapToObj(i -> "folder like :folderlike" + i)).collect(Collectors.joining(" or "));
+        String foldersClause = Stream
+            .concat(
+                IntStream.range(0, folders.size()).mapToObj(i -> "folder=:folder" + i),
+                IntStream.range(0, recursiveFolders.size()).mapToObj(i -> "folder like :folderlike" + i))
+            .collect(Collectors.joining(" or "));
 
         if (!foldersClause.isEmpty()) {
             clause.add("(" + foldersClause + ")");
@@ -1250,8 +1273,11 @@ public class InventoryDBLayer extends DBLayer {
 
     public List<DBItemInventoryReleasedConfiguration> getReleasedFolderContent(String folder, boolean recursive, Collection<Integer> types,
             boolean isDescriptor) throws SOSHibernateException {
-        List<DBItemInventoryReleasedConfiguration> folderContent = getFolderContent(folder, recursive, types,
-                DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
+        List<DBItemInventoryReleasedConfiguration> folderContent = getFolderContent(
+            folder,
+            recursive,
+            types,
+            DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
         final Predicate<DBItemInventoryReleasedConfiguration> filter = i -> JocInventory.isDescriptor(i.getTypeAsEnum());
         if (isDescriptor) {
             return folderContent.stream().filter(filter).collect(Collectors.toList());
@@ -1371,8 +1397,10 @@ public class InventoryDBLayer extends DBLayer {
                 if (result.size() == 1) {
                     return result.get(0);
                 } else {
-                    List<DBItemSearchWorkflow> sorted = result.stream().sorted(Comparator.comparingLong(DBItemSearchWorkflow::getId).reversed())
-                            .collect(Collectors.toList());
+                    List<DBItemSearchWorkflow> sorted = result
+                        .stream()
+                        .sorted(Comparator.comparingLong(DBItemSearchWorkflow::getId).reversed())
+                        .collect(Collectors.toList());
                     DBItemSearchWorkflow last = sorted.get(0);
                     for (DBItemSearchWorkflow w : result) {
                         if (!w.getId().equals(last.getId())) {
@@ -1667,8 +1695,11 @@ public class InventoryDBLayer extends DBLayer {
             return result;
         } else if (!folders.isEmpty()) {
             StringBuilder sql = new StringBuilder();
-            sql.append("select new ").append(FolderItem.class.getName()).append("(path, deleted, repoControlled) from ").append(
-                    DBLayer.DBITEM_INV_CONFIGURATIONS);
+            sql
+                .append("select new ")
+                .append(FolderItem.class.getName())
+                .append("(path, deleted, repoControlled) from ")
+                .append(DBLayer.DBITEM_INV_CONFIGURATIONS);
             // sql.append("select new ").append(FolderItem.class.getName()).append("(path, deleted) from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
             sql.append(" where path in (:folders) and type in (:types)");
             Query<FolderItem> query = getSession().createQuery(sql.toString());
@@ -1857,8 +1888,16 @@ public class InventoryDBLayer extends DBLayer {
         }
         hql.append("and ");
 
-        hql.append(agentNames.stream().map(agentName -> SOSHibernateRegexp.getFunction(SOSHibernateJsonValue.getFunction(ReturnType.JSON, "sw.jobs",
-                "$.agentIds"), getRegexpParameter(agentName, "\""))).collect(Collectors.joining(" or ", "(", ")")));
+        hql
+            .append(
+                agentNames
+                    .stream()
+                    .map(
+                        agentName -> SOSHibernateRegexp
+                            .getFunction(
+                                SOSHibernateJsonValue.getFunction(ReturnType.JSON, "sw.jobs", "$.agentIds"),
+                                getRegexpParameter(agentName, "\"")))
+                    .collect(Collectors.joining(" or ", "(", ")")));
 
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
         query.setParameter("type", ConfigurationType.WORKFLOW.intValue());
@@ -2124,8 +2163,8 @@ public class InventoryDBLayer extends DBLayer {
         hql.append(SOSHibernateRegexp.getFunction(jsonFunc, ":calendarName"));
 
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
-        query.setParameterList("types", Set.of(ConfigurationType.WORKINGDAYSCALENDAR.intValue(), ConfigurationType.NONWORKINGDAYSCALENDAR
-                .intValue()));
+        query
+            .setParameterList("types", Set.of(ConfigurationType.WORKINGDAYSCALENDAR.intValue(), ConfigurationType.NONWORKINGDAYSCALENDAR.intValue()));
         query.setParameter("calendarName", getRegexpParameter(calendarName, "\""));
         return getSession().getResultList(query);
     }
@@ -2192,7 +2231,7 @@ public class InventoryDBLayer extends DBLayer {
     }
 
     public List<DBItemInventoryConfiguration> getUsedFileTransferProfileAlternatives(String name) throws SOSHibernateException {
-        return getUsedFileTransferAlternatives(ConfigurationType.FT_PROFILE_JOBRESOURCE, name);
+        return getUsedFileTransferAlternatives(ConfigurationType.FT_PROFILE, name);
     }
 
     public List<DBItemInventoryConfiguration> getUsedFileTransferAlternatives(ConfigurationType fileTransferType, String name)
@@ -2331,7 +2370,7 @@ public class InventoryDBLayer extends DBLayer {
         hql.append(")");
 
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
-        query.setParameter("type", ConfigurationType.FT_PROFILE_JOBRESOURCE.intValue());
+        query.setParameter("type", ConfigurationType.FT_PROFILE.intValue());
         query.setParameter("value", value);
         return getSession().getResultList(query);
     }
@@ -2351,7 +2390,7 @@ public class InventoryDBLayer extends DBLayer {
         hql.append(")");
 
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
-        query.setParameter("type", ConfigurationType.FT_PROFILE_JOBRESOURCE.intValue());
+        query.setParameter("type", ConfigurationType.FT_PROFILE.intValue());
         query.setParameter("name", name);
         return getSession().getResultList(query);
     }
@@ -2589,8 +2628,8 @@ public class InventoryDBLayer extends DBLayer {
     public List<DBItemInventoryConfiguration> getConfigurationsWithOrderTags(Collection<Integer> types) throws DBConnectionRefusedException,
             DBInvalidDataException {
 
-        List<Integer> relevantTypes = Arrays.asList(ConfigurationType.SCHEDULE.intValue(), ConfigurationType.FILEORDERSOURCE.intValue(),
-                ConfigurationType.WORKFLOW.intValue());
+        List<Integer> relevantTypes = Arrays
+            .asList(ConfigurationType.SCHEDULE.intValue(), ConfigurationType.FILEORDERSOURCE.intValue(), ConfigurationType.WORKFLOW.intValue());
         if (types == null || types.isEmpty()) {
             types = relevantTypes;
         } else {
@@ -2620,10 +2659,14 @@ public class InventoryDBLayer extends DBLayer {
     public Map<String, String> getWorkflowWithOrderTags() throws DBConnectionRefusedException, DBInvalidDataException {
 
         try {
-            StringBuilder hql = new StringBuilder("select ic.name, sw.instructions from ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS).append(
-                    " sw left join ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic on sw.inventoryConfigurationId=ic.id where ");
-            hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "sw.instructions", "$.addOrderTags")).append(
-                    " is not null order by sw.id");
+            StringBuilder hql = new StringBuilder("select ic.name, sw.instructions from ")
+                .append(DBLayer.DBITEM_SEARCH_WORKFLOWS)
+                .append(" sw left join ")
+                .append(DBLayer.DBITEM_INV_CONFIGURATIONS)
+                .append(" ic on sw.inventoryConfigurationId=ic.id where ");
+            hql
+                .append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "sw.instructions", "$.addOrderTags"))
+                .append(" is not null order by sw.id");
             Query<Object[]> query = getSession().createQuery(hql.toString());
             List<Object[]> result = getSession().getResultList(query);
             if (result == null) {

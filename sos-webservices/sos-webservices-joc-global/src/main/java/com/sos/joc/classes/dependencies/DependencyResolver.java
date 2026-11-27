@@ -111,175 +111,175 @@ public class DependencyResolver {
             add(ConfigurationType.FT_FRAGMENT_SFTP.intValue());
             add(ConfigurationType.FT_FRAGMENT_SMB.intValue());
             add(ConfigurationType.FT_FRAGMENT_WEBDAV.intValue());
-            add(ConfigurationType.FT_PROFILE_JOBRESOURCE.intValue());
+            add(ConfigurationType.FT_PROFILE.intValue());
         }
     });
 
-    public static final Map<ConfigurationType, Set<ConfigurationType>> referencedTypesByRequestedType = Collections.unmodifiableMap(
-            new HashMap<ConfigurationType, Set<ConfigurationType>>() {
+    public static final Map<ConfigurationType, Set<ConfigurationType>> referencedTypesByRequestedType = Collections
+        .unmodifiableMap(new HashMap<ConfigurationType, Set<ConfigurationType>>() {
 
-                private static final long serialVersionUID = 1L;
-                {
-                    put(ConfigurationType.WORKFLOW, Collections.unmodifiableSet(new HashSet<ConfigurationType>() {
+            private static final long serialVersionUID = 1L;
+            {
+                put(ConfigurationType.WORKFLOW, Collections.unmodifiableSet(new HashSet<ConfigurationType>() {
 
-                        private static final long serialVersionUID = 1L;
-                        {
-                            add(ConfigurationType.WORKFLOW);
-                            add(ConfigurationType.JOBRESOURCE);
-                            add(ConfigurationType.LOCK);
-                            add(ConfigurationType.NOTICEBOARD);
-                            add(ConfigurationType.INCLUDESCRIPT);
-                        }
-                    }));
-                    put(ConfigurationType.FILEORDERSOURCE, Collections.unmodifiableSet(new HashSet<ConfigurationType>() {
+                    private static final long serialVersionUID = 1L;
+                    {
+                        add(ConfigurationType.WORKFLOW);
+                        add(ConfigurationType.JOBRESOURCE);
+                        add(ConfigurationType.LOCK);
+                        add(ConfigurationType.NOTICEBOARD);
+                        add(ConfigurationType.INCLUDESCRIPT);
+                    }
+                }));
+                put(ConfigurationType.FILEORDERSOURCE, Collections.unmodifiableSet(new HashSet<ConfigurationType>() {
 
-                        private static final long serialVersionUID = 1L;
-                        {
-                            add(ConfigurationType.WORKFLOW);
-                        }
-                    }));
-                    put(ConfigurationType.SCHEDULE, Collections.unmodifiableSet(new HashSet<ConfigurationType>() {
+                    private static final long serialVersionUID = 1L;
+                    {
+                        add(ConfigurationType.WORKFLOW);
+                    }
+                }));
+                put(ConfigurationType.SCHEDULE, Collections.unmodifiableSet(new HashSet<ConfigurationType>() {
 
-                        private static final long serialVersionUID = 1L;
-                        {
-                            add(ConfigurationType.WORKFLOW);
-                            add(ConfigurationType.WORKINGDAYSCALENDAR);
-                            add(ConfigurationType.NONWORKINGDAYSCALENDAR);
-                        }
-                    }));
-                    put(ConfigurationType.JOBTEMPLATE, Collections.unmodifiableSet(new HashSet<ConfigurationType>() {
+                    private static final long serialVersionUID = 1L;
+                    {
+                        add(ConfigurationType.WORKFLOW);
+                        add(ConfigurationType.WORKINGDAYSCALENDAR);
+                        add(ConfigurationType.NONWORKINGDAYSCALENDAR);
+                    }
+                }));
+                put(ConfigurationType.JOBTEMPLATE, Collections.unmodifiableSet(new HashSet<ConfigurationType>() {
 
-                        private static final long serialVersionUID = 1L;
-                        {
-                            add(ConfigurationType.JOBRESOURCE);
-                            add(ConfigurationType.INCLUDESCRIPT);
-                        }
-                    }));
-                    put(ConfigurationType.WORKINGDAYSCALENDAR, Collections.unmodifiableSet(new HashSet<ConfigurationType>() {
+                    private static final long serialVersionUID = 1L;
+                    {
+                        add(ConfigurationType.JOBRESOURCE);
+                        add(ConfigurationType.INCLUDESCRIPT);
+                    }
+                }));
+                put(ConfigurationType.WORKINGDAYSCALENDAR, Collections.unmodifiableSet(new HashSet<ConfigurationType>() {
 
-                        private static final long serialVersionUID = 1L;
-                        {
-                            add(ConfigurationType.NONWORKINGDAYSCALENDAR);
-                        }
-                    }));
-                    // FileTransfer
-                    put(ConfigurationType.FT_FRAGMENT_AZURE_BLOB_STORAGE, Collections.unmodifiableSet(new HashSet<ConfigurationType>() {
+                    private static final long serialVersionUID = 1L;
+                    {
+                        add(ConfigurationType.NONWORKINGDAYSCALENDAR);
+                    }
+                }));
+                // FileTransfer
+                put(ConfigurationType.FT_FRAGMENT_AZURE_BLOB_STORAGE, Collections.unmodifiableSet(new HashSet<ConfigurationType>() {
 
-                        private static final long serialVersionUID = 1L;
-                        {
-                            add(ConfigurationType.FT_FRAGMENT_CREDENTIAL_STORE);
-                            add(ConfigurationType.FT_FRAGMENT_DECRYPTION);
+                    private static final long serialVersionUID = 1L;
+                    {
+                        add(ConfigurationType.FT_FRAGMENT_CREDENTIAL_STORE);
+                        add(ConfigurationType.FT_FRAGMENT_DECRYPTION);
 
-                            add(ConfigurationType.FT_FRAGMENT_JUMP);
-                            add(ConfigurationType.FT_FRAGMENT_HTTP_PROXY);
+                        add(ConfigurationType.FT_FRAGMENT_JUMP);
+                        add(ConfigurationType.FT_FRAGMENT_HTTP_PROXY);
 
-                            add(ConfigurationType.FT_FRAGMENT_AZURE_BLOB_STORAGE); // self - alternative name
-                        }
-                    }));
-                    put(ConfigurationType.FT_FRAGMENT_FTP, Collections.unmodifiableSet(new HashSet<ConfigurationType>() {
+                        add(ConfigurationType.FT_FRAGMENT_AZURE_BLOB_STORAGE); // self - alternative name
+                    }
+                }));
+                put(ConfigurationType.FT_FRAGMENT_FTP, Collections.unmodifiableSet(new HashSet<ConfigurationType>() {
 
-                        private static final long serialVersionUID = 1L;
-                        {
-                            add(ConfigurationType.FT_FRAGMENT_CREDENTIAL_STORE);
-                            add(ConfigurationType.FT_FRAGMENT_DECRYPTION);
+                    private static final long serialVersionUID = 1L;
+                    {
+                        add(ConfigurationType.FT_FRAGMENT_CREDENTIAL_STORE);
+                        add(ConfigurationType.FT_FRAGMENT_DECRYPTION);
 
-                            add(ConfigurationType.FT_FRAGMENT_JUMP);
-                            add(ConfigurationType.FT_FRAGMENT_HTTP_PROXY);
-                            add(ConfigurationType.FT_FRAGMENT_SOCKS_PROXY);
+                        add(ConfigurationType.FT_FRAGMENT_JUMP);
+                        add(ConfigurationType.FT_FRAGMENT_HTTP_PROXY);
+                        add(ConfigurationType.FT_FRAGMENT_SOCKS_PROXY);
 
-                            add(ConfigurationType.FT_FRAGMENT_FTP); // self - alternative name
-                        }
-                    }));
-                    put(ConfigurationType.FT_FRAGMENT_HTTP, Collections.unmodifiableSet(new HashSet<ConfigurationType>() {
+                        add(ConfigurationType.FT_FRAGMENT_FTP); // self - alternative name
+                    }
+                }));
+                put(ConfigurationType.FT_FRAGMENT_HTTP, Collections.unmodifiableSet(new HashSet<ConfigurationType>() {
 
-                        private static final long serialVersionUID = 1L;
-                        {
-                            add(ConfigurationType.FT_FRAGMENT_CREDENTIAL_STORE);
-                            add(ConfigurationType.FT_FRAGMENT_DECRYPTION);
+                    private static final long serialVersionUID = 1L;
+                    {
+                        add(ConfigurationType.FT_FRAGMENT_CREDENTIAL_STORE);
+                        add(ConfigurationType.FT_FRAGMENT_DECRYPTION);
 
-                            add(ConfigurationType.FT_FRAGMENT_JUMP);
-                            add(ConfigurationType.FT_FRAGMENT_HTTP_PROXY);
+                        add(ConfigurationType.FT_FRAGMENT_JUMP);
+                        add(ConfigurationType.FT_FRAGMENT_HTTP_PROXY);
 
-                            add(ConfigurationType.FT_FRAGMENT_HTTP); // self - alternative name
-                        }
-                    }));
-                    put(ConfigurationType.FT_FRAGMENT_JUMP, Collections.unmodifiableSet(new HashSet<ConfigurationType>() {
+                        add(ConfigurationType.FT_FRAGMENT_HTTP); // self - alternative name
+                    }
+                }));
+                put(ConfigurationType.FT_FRAGMENT_JUMP, Collections.unmodifiableSet(new HashSet<ConfigurationType>() {
 
-                        private static final long serialVersionUID = 1L;
-                        {
-                            add(ConfigurationType.FT_FRAGMENT_CREDENTIAL_STORE);
-                            add(ConfigurationType.FT_FRAGMENT_DECRYPTION);
+                    private static final long serialVersionUID = 1L;
+                    {
+                        add(ConfigurationType.FT_FRAGMENT_CREDENTIAL_STORE);
+                        add(ConfigurationType.FT_FRAGMENT_DECRYPTION);
 
-                            add(ConfigurationType.FT_FRAGMENT_HTTP_PROXY);
-                            add(ConfigurationType.FT_FRAGMENT_SOCKS_PROXY);
+                        add(ConfigurationType.FT_FRAGMENT_HTTP_PROXY);
+                        add(ConfigurationType.FT_FRAGMENT_SOCKS_PROXY);
 
-                            add(ConfigurationType.FT_FRAGMENT_JUMP); // self - alternative name
-                        }
-                    }));
-                    put(ConfigurationType.FT_FRAGMENT_SFTP, Collections.unmodifiableSet(new HashSet<ConfigurationType>() {
+                        add(ConfigurationType.FT_FRAGMENT_JUMP); // self - alternative name
+                    }
+                }));
+                put(ConfigurationType.FT_FRAGMENT_SFTP, Collections.unmodifiableSet(new HashSet<ConfigurationType>() {
 
-                        private static final long serialVersionUID = 1L;
-                        {
-                            add(ConfigurationType.FT_FRAGMENT_CREDENTIAL_STORE);
-                            add(ConfigurationType.FT_FRAGMENT_DECRYPTION);
+                    private static final long serialVersionUID = 1L;
+                    {
+                        add(ConfigurationType.FT_FRAGMENT_CREDENTIAL_STORE);
+                        add(ConfigurationType.FT_FRAGMENT_DECRYPTION);
 
-                            add(ConfigurationType.FT_FRAGMENT_JUMP);
-                            add(ConfigurationType.FT_FRAGMENT_HTTP_PROXY);
-                            add(ConfigurationType.FT_FRAGMENT_SOCKS_PROXY);
+                        add(ConfigurationType.FT_FRAGMENT_JUMP);
+                        add(ConfigurationType.FT_FRAGMENT_HTTP_PROXY);
+                        add(ConfigurationType.FT_FRAGMENT_SOCKS_PROXY);
 
-                            add(ConfigurationType.FT_FRAGMENT_SFTP); // self - alternative name
-                        }
-                    }));
-                    put(ConfigurationType.FT_FRAGMENT_SMB, Collections.unmodifiableSet(new HashSet<ConfigurationType>() {
+                        add(ConfigurationType.FT_FRAGMENT_SFTP); // self - alternative name
+                    }
+                }));
+                put(ConfigurationType.FT_FRAGMENT_SMB, Collections.unmodifiableSet(new HashSet<ConfigurationType>() {
 
-                        private static final long serialVersionUID = 1L;
-                        {
-                            add(ConfigurationType.FT_FRAGMENT_CREDENTIAL_STORE);
-                            add(ConfigurationType.FT_FRAGMENT_DECRYPTION);
+                    private static final long serialVersionUID = 1L;
+                    {
+                        add(ConfigurationType.FT_FRAGMENT_CREDENTIAL_STORE);
+                        add(ConfigurationType.FT_FRAGMENT_DECRYPTION);
 
-                            add(ConfigurationType.FT_FRAGMENT_SMB); // self - alternative name
-                        }
-                    }));
-                    put(ConfigurationType.FT_FRAGMENT_WEBDAV, Collections.unmodifiableSet(new HashSet<ConfigurationType>() {
+                        add(ConfigurationType.FT_FRAGMENT_SMB); // self - alternative name
+                    }
+                }));
+                put(ConfigurationType.FT_FRAGMENT_WEBDAV, Collections.unmodifiableSet(new HashSet<ConfigurationType>() {
 
-                        private static final long serialVersionUID = 1L;
-                        {
-                            add(ConfigurationType.FT_FRAGMENT_CREDENTIAL_STORE);
-                            add(ConfigurationType.FT_FRAGMENT_DECRYPTION);
+                    private static final long serialVersionUID = 1L;
+                    {
+                        add(ConfigurationType.FT_FRAGMENT_CREDENTIAL_STORE);
+                        add(ConfigurationType.FT_FRAGMENT_DECRYPTION);
 
-                            add(ConfigurationType.FT_FRAGMENT_JUMP);
-                            add(ConfigurationType.FT_FRAGMENT_HTTP_PROXY);
+                        add(ConfigurationType.FT_FRAGMENT_JUMP);
+                        add(ConfigurationType.FT_FRAGMENT_HTTP_PROXY);
 
-                            add(ConfigurationType.FT_FRAGMENT_WEBDAV); // self - alternative name
-                        }
-                    }));
-                    put(ConfigurationType.FT_PROFILE_JOBRESOURCE, Collections.unmodifiableSet(new HashSet<ConfigurationType>() {
+                        add(ConfigurationType.FT_FRAGMENT_WEBDAV); // self - alternative name
+                    }
+                }));
+                put(ConfigurationType.FT_PROFILE, Collections.unmodifiableSet(new HashSet<ConfigurationType>() {
 
-                        private static final long serialVersionUID = 1L;
-                        {
-                            // for verification - this part is already included in the corresponding FileTransfer referencedTypesByRequestedType entries
-                            add(ConfigurationType.FT_FRAGMENT_CREDENTIAL_STORE);
-                            add(ConfigurationType.FT_FRAGMENT_DECRYPTION);
-                            add(ConfigurationType.FT_FRAGMENT_JUMP);
-                            add(ConfigurationType.FT_FRAGMENT_HTTP_PROXY);
-                            add(ConfigurationType.FT_FRAGMENT_SOCKS_PROXY);
+                    private static final long serialVersionUID = 1L;
+                    {
+                        // for verification - this part is already included in the corresponding FileTransfer referencedTypesByRequestedType entries
+                        add(ConfigurationType.FT_FRAGMENT_CREDENTIAL_STORE);
+                        add(ConfigurationType.FT_FRAGMENT_DECRYPTION);
+                        add(ConfigurationType.FT_FRAGMENT_JUMP);
+                        add(ConfigurationType.FT_FRAGMENT_HTTP_PROXY);
+                        add(ConfigurationType.FT_FRAGMENT_SOCKS_PROXY);
 
-                            // Notification triggers - onError etc.
-                            add(ConfigurationType.FT_FRAGMENT_MAIL);
+                        // Notification triggers - onError etc.
+                        add(ConfigurationType.FT_FRAGMENT_MAIL);
 
-                            // oneOf for Source/Target
-                            add(ConfigurationType.FT_FRAGMENT_AZURE_BLOB_STORAGE);
-                            add(ConfigurationType.FT_FRAGMENT_FTP);
-                            add(ConfigurationType.FT_FRAGMENT_HTTP);
-                            add(ConfigurationType.FT_FRAGMENT_SFTP);
-                            add(ConfigurationType.FT_FRAGMENT_SMB);
-                            add(ConfigurationType.FT_FRAGMENT_WEBDAV);
+                        // oneOf for Source/Target
+                        add(ConfigurationType.FT_FRAGMENT_AZURE_BLOB_STORAGE);
+                        add(ConfigurationType.FT_FRAGMENT_FTP);
+                        add(ConfigurationType.FT_FRAGMENT_HTTP);
+                        add(ConfigurationType.FT_FRAGMENT_SFTP);
+                        add(ConfigurationType.FT_FRAGMENT_SMB);
+                        add(ConfigurationType.FT_FRAGMENT_WEBDAV);
 
-                            add(ConfigurationType.FT_PROFILE_JOBRESOURCE); // self - alternative name
-                        }
-                    }));
-                }
-            });
+                        add(ConfigurationType.FT_PROFILE); // self - alternative name
+                    }
+                }));
+            }
+        });
 
     public static ReferencedDbItem createReferencedDbItem(DBItemInventoryConfiguration inventoryDbItem) {
         return new ReferencedDbItem(inventoryDbItem);
@@ -318,8 +318,11 @@ public class DependencyResolver {
                     if (allItemsGrouped.isEmpty()) {
                         item.getReferences().addAll(dbLayer.getConfigurationsByNames(lockIds.stream(), ConfigurationType.LOCK.intValue()));
                     } else {
-                        allItemsGrouped.getOrDefault(ConfigurationType.LOCK, Collections.emptySet()).stream().filter(getPredicate(lockIds)).forEach(
-                                item.getReferences()::add);
+                        allItemsGrouped
+                            .getOrDefault(ConfigurationType.LOCK, Collections.emptySet())
+                            .stream()
+                            .filter(getPredicate(lockIds))
+                            .forEach(item.getReferences()::add);
                     }
                 } else {
                     // fallback: if result in WindowsSearch is empty check again directly in json
@@ -330,8 +333,11 @@ public class DependencyResolver {
                         if (allItemsGrouped.isEmpty()) {
                             item.getReferences().addAll(dbLayer.getConfigurationsByNames(wfLockNames.stream(), ConfigurationType.LOCK.intValue()));
                         } else {
-                            allItemsGrouped.getOrDefault(ConfigurationType.LOCK, Collections.emptySet()).stream().filter(getPredicate(wfLockNames))
-                                    .forEach(item.getReferences()::add);
+                            allItemsGrouped
+                                .getOrDefault(ConfigurationType.LOCK, Collections.emptySet())
+                                .stream()
+                                .filter(getPredicate(wfLockNames))
+                                .forEach(item.getReferences()::add);
                         }
                     }
                 }
@@ -344,8 +350,11 @@ public class DependencyResolver {
                     if (allItemsGrouped.isEmpty()) {
                         item.getReferences().addAll(dbLayer.getConfigurationsByNames(wfLockNames.stream(), ConfigurationType.LOCK.intValue()));
                     } else {
-                        allItemsGrouped.getOrDefault(ConfigurationType.LOCK, Collections.emptySet()).stream().filter(getPredicate(wfLockNames))
-                                .forEach(item.getReferences()::add);
+                        allItemsGrouped
+                            .getOrDefault(ConfigurationType.LOCK, Collections.emptySet())
+                            .stream()
+                            .filter(getPredicate(wfLockNames))
+                            .forEach(item.getReferences()::add);
                     }
                 }
             }
@@ -356,22 +365,32 @@ public class DependencyResolver {
                 if (!wfSearchJobsJobResourceNames.isEmpty()) {
                     wfSearchJobsJobResourceNames.forEach(jobResourceName -> jobResourceName.replaceAll("\"", ""));
                     if (allItemsGrouped.isEmpty()) {
-                        item.getReferences().addAll(dbLayer.getConfigurationsByNames(wfSearchJobsJobResourceNames.stream(),
-                                ConfigurationType.JOBRESOURCE.intValue()));
+                        item
+                            .getReferences()
+                            .addAll(
+                                dbLayer.getConfigurationsByNames(wfSearchJobsJobResourceNames.stream(), ConfigurationType.JOBRESOURCE.intValue()));
                     } else {
-                        allItemsGrouped.getOrDefault(ConfigurationType.JOBRESOURCE, Collections.emptySet()).stream().filter(getPredicate(
-                                wfSearchJobsJobResourceNames)).forEach(item.getReferences()::add);
+                        allItemsGrouped
+                            .getOrDefault(ConfigurationType.JOBRESOURCE, Collections.emptySet())
+                            .stream()
+                            .filter(getPredicate(wfSearchJobsJobResourceNames))
+                            .forEach(item.getReferences()::add);
                     }
                 } else {
                     List<String> wfSearchJobsJobResources = getValuesFromObject(wfsearchJobs, JOBRESOURCES_SEARCH);
                     if (!wfSearchJobsJobResources.isEmpty()) {
                         wfSearchJobsJobResources.forEach(jobResourceName -> jobResourceName.replaceAll("\"", ""));
                         if (allItemsGrouped.isEmpty()) {
-                            item.getReferences().addAll(dbLayer.getConfigurationsByNames(wfSearchJobsJobResources.stream(),
-                                    ConfigurationType.JOBRESOURCE.intValue()));
+                            item
+                                .getReferences()
+                                .addAll(
+                                    dbLayer.getConfigurationsByNames(wfSearchJobsJobResources.stream(), ConfigurationType.JOBRESOURCE.intValue()));
                         } else {
-                            allItemsGrouped.getOrDefault(ConfigurationType.JOBRESOURCE, Collections.emptySet()).stream().filter(getPredicate(
-                                    wfSearchJobsJobResources)).forEach(item.getReferences()::add);
+                            allItemsGrouped
+                                .getOrDefault(ConfigurationType.JOBRESOURCE, Collections.emptySet())
+                                .stream()
+                                .filter(getPredicate(wfSearchJobsJobResources))
+                                .forEach(item.getReferences()::add);
                         }
 
                     } else {
@@ -381,11 +400,15 @@ public class DependencyResolver {
                         if (!wfJobResourceNames.isEmpty()) {
                             wfJobResourceNames.forEach(jobResourceName -> jobResourceName.replaceAll("\"", ""));
                             if (allItemsGrouped.isEmpty()) {
-                                item.getReferences().addAll(dbLayer.getConfigurationsByNames(wfJobResourceNames.stream(),
-                                        ConfigurationType.JOBRESOURCE.intValue()));
+                                item
+                                    .getReferences()
+                                    .addAll(dbLayer.getConfigurationsByNames(wfJobResourceNames.stream(), ConfigurationType.JOBRESOURCE.intValue()));
                             } else {
-                                allItemsGrouped.getOrDefault(ConfigurationType.JOBRESOURCE, Collections.emptySet()).stream().filter(getPredicate(
-                                        wfJobResourceNames)).forEach(item.getReferences()::add);
+                                allItemsGrouped
+                                    .getOrDefault(ConfigurationType.JOBRESOURCE, Collections.emptySet())
+                                    .stream()
+                                    .filter(getPredicate(wfJobResourceNames))
+                                    .forEach(item.getReferences()::add);
                             }
                         }
                     }
@@ -397,11 +420,15 @@ public class DependencyResolver {
                 if (!wfJobResourceNames.isEmpty()) {
                     wfJobResourceNames.forEach(jobResourceName -> jobResourceName.replaceAll("\"", ""));
                     if (allItemsGrouped.isEmpty()) {
-                        item.getReferences().addAll(dbLayer.getConfigurationsByNames(wfJobResourceNames.stream(), ConfigurationType.JOBRESOURCE
-                                .intValue()));
+                        item
+                            .getReferences()
+                            .addAll(dbLayer.getConfigurationsByNames(wfJobResourceNames.stream(), ConfigurationType.JOBRESOURCE.intValue()));
                     } else {
-                        allItemsGrouped.getOrDefault(ConfigurationType.JOBRESOURCE, Collections.emptySet()).stream().filter(getPredicate(
-                                wfJobResourceNames)).forEach(item.getReferences()::add);
+                        allItemsGrouped
+                            .getOrDefault(ConfigurationType.JOBRESOURCE, Collections.emptySet())
+                            .stream()
+                            .filter(getPredicate(wfJobResourceNames))
+                            .forEach(item.getReferences()::add);
                     }
                 }
             }
@@ -414,8 +441,11 @@ public class DependencyResolver {
                     if (allItemsGrouped.isEmpty()) {
                         item.getReferences().addAll(dbLayer.getConfigurationsByNames(boardNames.stream(), ConfigurationType.NOTICEBOARD.intValue()));
                     } else {
-                        allItemsGrouped.getOrDefault(ConfigurationType.NOTICEBOARD, Collections.emptySet()).stream().filter(getPredicate(boardNames))
-                                .forEach(item.getReferences()::add);
+                        allItemsGrouped
+                            .getOrDefault(ConfigurationType.NOTICEBOARD, Collections.emptySet())
+                            .stream()
+                            .filter(getPredicate(boardNames))
+                            .forEach(item.getReferences()::add);
                     }
                 } else {
                     // fallback: if result in WindowsSearch is empty check again directly in json
@@ -424,11 +454,15 @@ public class DependencyResolver {
                     if (!wfBoardNames.isEmpty()) {
                         wfBoardNames.forEach(boardName -> boardName.replaceAll("\"", ""));
                         if (allItemsGrouped.isEmpty()) {
-                            item.getReferences().addAll(dbLayer.getConfigurationsByNames(wfBoardNames.stream(), ConfigurationType.NOTICEBOARD
-                                    .intValue()));
+                            item
+                                .getReferences()
+                                .addAll(dbLayer.getConfigurationsByNames(wfBoardNames.stream(), ConfigurationType.NOTICEBOARD.intValue()));
                         } else {
-                            allItemsGrouped.getOrDefault(ConfigurationType.NOTICEBOARD, Collections.emptySet()).stream().filter(getPredicate(
-                                    wfBoardNames)).forEach(item.getReferences()::add);
+                            allItemsGrouped
+                                .getOrDefault(ConfigurationType.NOTICEBOARD, Collections.emptySet())
+                                .stream()
+                                .filter(getPredicate(wfBoardNames))
+                                .forEach(item.getReferences()::add);
                         }
                     }
                 }
@@ -439,11 +473,15 @@ public class DependencyResolver {
                 if (!wfBoardNames.isEmpty()) {
                     wfBoardNames.forEach(boardName -> boardName.replaceAll("\"", ""));
                     if (allItemsGrouped.isEmpty()) {
-                        item.getReferences().addAll(dbLayer.getConfigurationsByNames(wfBoardNames.stream(), ConfigurationType.NOTICEBOARD
-                                .intValue()));
+                        item
+                            .getReferences()
+                            .addAll(dbLayer.getConfigurationsByNames(wfBoardNames.stream(), ConfigurationType.NOTICEBOARD.intValue()));
                     } else {
-                        allItemsGrouped.getOrDefault(ConfigurationType.NOTICEBOARD, Collections.emptySet()).stream().filter(getPredicate(
-                                wfBoardNames)).forEach(item.getReferences()::add);
+                        allItemsGrouped
+                            .getOrDefault(ConfigurationType.NOTICEBOARD, Collections.emptySet())
+                            .stream()
+                            .filter(getPredicate(wfBoardNames))
+                            .forEach(item.getReferences()::add);
                     }
                 }
             }
@@ -454,11 +492,15 @@ public class DependencyResolver {
                 if (!wfInstructionWorkflowNames.isEmpty()) {
                     wfInstructionWorkflowNames.forEach(workflowName -> workflowName.replaceAll("\"", ""));
                     if (allItemsGrouped.isEmpty()) {
-                        item.getReferences().addAll(dbLayer.getConfigurationsByNames(wfInstructionWorkflowNames.stream(), ConfigurationType.WORKFLOW
-                                .intValue()));
+                        item
+                            .getReferences()
+                            .addAll(dbLayer.getConfigurationsByNames(wfInstructionWorkflowNames.stream(), ConfigurationType.WORKFLOW.intValue()));
                     } else {
-                        allItemsGrouped.getOrDefault(ConfigurationType.WORKFLOW, Collections.emptySet()).stream().filter(getPredicate(
-                                wfInstructionWorkflowNames)).forEach(item.getReferences()::add);
+                        allItemsGrouped
+                            .getOrDefault(ConfigurationType.WORKFLOW, Collections.emptySet())
+                            .stream()
+                            .filter(getPredicate(wfInstructionWorkflowNames))
+                            .forEach(item.getReferences()::add);
                     }
                 } else {
                     // fallback: if result in WindowsSearch is empty check again directly in json
@@ -467,11 +509,15 @@ public class DependencyResolver {
                     if (!wfWorkflowNames.isEmpty()) {
                         wfWorkflowNames.forEach(workflowName -> workflowName.replaceAll("\"", ""));
                         if (allItemsGrouped.isEmpty()) {
-                            item.getReferences().addAll(dbLayer.getConfigurationsByNames(wfWorkflowNames.stream(), ConfigurationType.WORKFLOW
-                                    .intValue()));
+                            item
+                                .getReferences()
+                                .addAll(dbLayer.getConfigurationsByNames(wfWorkflowNames.stream(), ConfigurationType.WORKFLOW.intValue()));
                         } else {
-                            allItemsGrouped.getOrDefault(ConfigurationType.WORKFLOW, Collections.emptySet()).stream().filter(getPredicate(
-                                    wfWorkflowNames)).forEach(item.getReferences()::add);
+                            allItemsGrouped
+                                .getOrDefault(ConfigurationType.WORKFLOW, Collections.emptySet())
+                                .stream()
+                                .filter(getPredicate(wfWorkflowNames))
+                                .forEach(item.getReferences()::add);
                         }
                     }
                 }
@@ -482,11 +528,15 @@ public class DependencyResolver {
                 if (!wfWorkflowNames.isEmpty()) {
                     wfWorkflowNames.forEach(workflowName -> workflowName.replaceAll("\"", ""));
                     if (allItemsGrouped.isEmpty()) {
-                        item.getReferences().addAll(dbLayer.getConfigurationsByNames(wfWorkflowNames.stream(), ConfigurationType.WORKFLOW
-                                .intValue()));
+                        item
+                            .getReferences()
+                            .addAll(dbLayer.getConfigurationsByNames(wfWorkflowNames.stream(), ConfigurationType.WORKFLOW.intValue()));
                     } else {
-                        allItemsGrouped.getOrDefault(ConfigurationType.WORKFLOW, Collections.emptySet()).stream().filter(getPredicate(
-                                wfWorkflowNames)).forEach(item.getReferences()::add);
+                        allItemsGrouped
+                            .getOrDefault(ConfigurationType.WORKFLOW, Collections.emptySet())
+                            .stream()
+                            .filter(getPredicate(wfWorkflowNames))
+                            .forEach(item.getReferences()::add);
                     }
                 }
             }
@@ -495,14 +545,22 @@ public class DependencyResolver {
                 if (JsonConverter.hasScriptIncludes.test(wfSearch.getJobsScripts())) {
                     List<String> wfSearchJobScriptNames = getValuesFromObject(wfsearchScripts, INCLUDESCRIPT_SEARCH);
                     if (!wfSearchJobScriptNames.isEmpty()) {
-                        Stream<String> names = wfSearchJobScriptNames.stream().map(script -> Arrays.asList(script.split("\n"))).flatMap(List::stream)
-                                .map(JsonConverter.scriptIncludePattern::matcher).map(Matcher::results).flatMap(Function.identity()).map(mr -> mr
-                                        .group(3));
+                        Stream<String> names = wfSearchJobScriptNames
+                            .stream()
+                            .map(script -> Arrays.asList(script.split("\n")))
+                            .flatMap(List::stream)
+                            .map(JsonConverter.scriptIncludePattern::matcher)
+                            .map(Matcher::results)
+                            .flatMap(Function.identity())
+                            .map(mr -> mr.group(3));
                         if (allItemsGrouped.isEmpty()) {
                             item.getReferences().addAll(dbLayer.getConfigurationsByNames(names, ConfigurationType.INCLUDESCRIPT.intValue()));
                         } else {
-                            allItemsGrouped.getOrDefault(ConfigurationType.INCLUDESCRIPT, Collections.emptySet()).stream().filter(getPredicate(names
-                                    .toList())).forEach(item.getReferences()::add);
+                            allItemsGrouped
+                                .getOrDefault(ConfigurationType.INCLUDESCRIPT, Collections.emptySet())
+                                .stream()
+                                .filter(getPredicate(names.toList()))
+                                .forEach(item.getReferences()::add);
                         }
                     }
                 }
@@ -511,14 +569,22 @@ public class DependencyResolver {
                     List<String> wfJobScriptNames = new ArrayList<String>();
                     getValuesRecursively("", workflow, SCRIPT_SEARCH, wfJobScriptNames);
                     if (!wfJobScriptNames.isEmpty()) {
-                        Stream<String> names = wfJobScriptNames.stream().map(script -> Arrays.asList(script.split("\n"))).flatMap(List::stream).map(
-                                JsonConverter.scriptIncludePattern::matcher).map(Matcher::results).flatMap(Function.identity()).map(mr -> mr.group(
-                                        3));
+                        Stream<String> names = wfJobScriptNames
+                            .stream()
+                            .map(script -> Arrays.asList(script.split("\n")))
+                            .flatMap(List::stream)
+                            .map(JsonConverter.scriptIncludePattern::matcher)
+                            .map(Matcher::results)
+                            .flatMap(Function.identity())
+                            .map(mr -> mr.group(3));
                         if (allItemsGrouped.isEmpty()) {
                             item.getReferences().addAll(dbLayer.getConfigurationsByNames(names, ConfigurationType.INCLUDESCRIPT.intValue()));
                         } else {
-                            allItemsGrouped.getOrDefault(ConfigurationType.INCLUDESCRIPT, Collections.emptySet()).stream().filter(getPredicate(names
-                                    .toList())).forEach(item.getReferences()::add);
+                            allItemsGrouped
+                                .getOrDefault(ConfigurationType.INCLUDESCRIPT, Collections.emptySet())
+                                .stream()
+                                .filter(getPredicate(names.toList()))
+                                .forEach(item.getReferences()::add);
                         }
                     }
                 }
@@ -535,8 +601,11 @@ public class DependencyResolver {
                 if (allItemsGrouped.isEmpty()) {
                     item.getReferences().addAll(dbLayer.getConfigurationsByNames(scheduleWorkflows.stream(), ConfigurationType.WORKFLOW.intValue()));
                 } else {
-                    allItemsGrouped.getOrDefault(ConfigurationType.WORKFLOW, Collections.emptySet()).stream().filter(getPredicate(scheduleWorkflows))
-                            .forEach(item.getReferences()::add);
+                    allItemsGrouped
+                        .getOrDefault(ConfigurationType.WORKFLOW, Collections.emptySet())
+                        .stream()
+                        .filter(getPredicate(scheduleWorkflows))
+                        .forEach(item.getReferences()::add);
                 }
             }
             // Calendars
@@ -544,20 +613,30 @@ public class DependencyResolver {
             Schedule s = JocInventory.convertSchedule(json, Schedule.class);
             Optional.ofNullable(s.getCalendars()).ifPresent(cals -> cals.forEach(cal -> {
                 scheduleCalendars.add(cal.getCalendarName());
-                Optional.ofNullable(cal.getExcludes()).map(Frequencies::getNonWorkingDayCalendars).stream().forEach(nwCal -> scheduleCalendars.add(cal
-                        .getCalendarName()));
+                Optional
+                    .ofNullable(cal.getExcludes())
+                    .map(Frequencies::getNonWorkingDayCalendars)
+                    .stream()
+                    .forEach(nwCal -> scheduleCalendars.add(cal.getCalendarName()));
             }));
             Optional.ofNullable(s.getNonWorkingDayCalendars()).ifPresent(cals -> cals.forEach(cal -> scheduleCalendars.add(cal.getCalendarName())));
             if (!scheduleCalendars.isEmpty()) {
                 scheduleCalendars.forEach(calendarName -> calendarName.replaceAll("\"", ""));
                 if (allItemsGrouped.isEmpty()) {
-                    item.getReferences().addAll(dbLayer.getConfigurationsByNames(scheduleCalendars.stream(), ConfigurationType.WORKINGDAYSCALENDAR
-                            .intValue()));
+                    item
+                        .getReferences()
+                        .addAll(dbLayer.getConfigurationsByNames(scheduleCalendars.stream(), ConfigurationType.WORKINGDAYSCALENDAR.intValue()));
                 } else {
-                    allItemsGrouped.getOrDefault(ConfigurationType.WORKINGDAYSCALENDAR, Collections.emptySet()).stream().filter(getPredicate(
-                            scheduleCalendars)).forEach(item.getReferences()::add);
-                    allItemsGrouped.getOrDefault(ConfigurationType.NONWORKINGDAYSCALENDAR, Collections.emptySet()).stream().filter(getPredicate(
-                            scheduleCalendars)).forEach(item.getReferences()::add);
+                    allItemsGrouped
+                        .getOrDefault(ConfigurationType.WORKINGDAYSCALENDAR, Collections.emptySet())
+                        .stream()
+                        .filter(getPredicate(scheduleCalendars))
+                        .forEach(item.getReferences()::add);
+                    allItemsGrouped
+                        .getOrDefault(ConfigurationType.NONWORKINGDAYSCALENDAR, Collections.emptySet())
+                        .stream()
+                        .filter(getPredicate(scheduleCalendars))
+                        .forEach(item.getReferences()::add);
                 }
             }
             break;
@@ -570,11 +649,15 @@ public class DependencyResolver {
             if (!jobTemplateJobResources.isEmpty()) {
                 jobTemplateJobResources.forEach(jobResourceName -> jobResourceName.replaceAll("\"", ""));
                 if (allItemsGrouped.isEmpty()) {
-                    item.getReferences().addAll(dbLayer.getConfigurationsByNames(jobTemplateJobResources.stream(), ConfigurationType.JOBRESOURCE
-                            .intValue()));
+                    item
+                        .getReferences()
+                        .addAll(dbLayer.getConfigurationsByNames(jobTemplateJobResources.stream(), ConfigurationType.JOBRESOURCE.intValue()));
                 } else {
-                    allItemsGrouped.getOrDefault(ConfigurationType.JOBRESOURCE, Collections.emptySet()).stream().filter(getPredicate(
-                            jobTemplateJobResources)).forEach(item.getReferences()::add);
+                    allItemsGrouped
+                        .getOrDefault(ConfigurationType.JOBRESOURCE, Collections.emptySet())
+                        .stream()
+                        .filter(getPredicate(jobTemplateJobResources))
+                        .forEach(item.getReferences()::add);
 
                 }
             }
@@ -583,13 +666,20 @@ public class DependencyResolver {
                 List<String> wfJobScriptNames = new ArrayList<String>();
                 getValuesRecursively("", jobTemplate, SCRIPT_SEARCH, wfJobScriptNames);
                 if (!wfJobScriptNames.isEmpty()) {
-                    Stream<String> names = wfJobScriptNames.stream().map(JsonConverter.scriptIncludePattern::matcher).map(Matcher::results).flatMap(
-                            Function.identity()).map(mr -> mr.group(3));
+                    Stream<String> names = wfJobScriptNames
+                        .stream()
+                        .map(JsonConverter.scriptIncludePattern::matcher)
+                        .map(Matcher::results)
+                        .flatMap(Function.identity())
+                        .map(mr -> mr.group(3));
                     if (allItemsGrouped.isEmpty()) {
                         item.getReferences().addAll(dbLayer.getConfigurationsByNames(names, ConfigurationType.INCLUDESCRIPT.intValue()));
                     } else {
-                        allItemsGrouped.getOrDefault(ConfigurationType.INCLUDESCRIPT, Collections.emptySet()).stream().filter(getPredicate(names
-                                .toList())).forEach(item.getReferences()::add);
+                        allItemsGrouped
+                            .getOrDefault(ConfigurationType.INCLUDESCRIPT, Collections.emptySet())
+                            .stream()
+                            .filter(getPredicate(names.toList()))
+                            .forEach(item.getReferences()::add);
                     }
                 }
             }
@@ -605,8 +695,11 @@ public class DependencyResolver {
                 if (allItemsGrouped.isEmpty()) {
                     item.getReferences().addAll(dbLayer.getConfigurationsByNames(fosWorkflows.stream(), ConfigurationType.WORKFLOW.intValue()));
                 } else {
-                    allItemsGrouped.getOrDefault(ConfigurationType.WORKFLOW, Collections.emptySet()).stream().filter(getPredicate(fosWorkflows))
-                            .forEach(item.getReferences()::add);
+                    allItemsGrouped
+                        .getOrDefault(ConfigurationType.WORKFLOW, Collections.emptySet())
+                        .stream()
+                        .filter(getPredicate(fosWorkflows))
+                        .forEach(item.getReferences()::add);
                 }
             }
             break;
@@ -614,16 +707,22 @@ public class DependencyResolver {
             // Calendars
             Set<String> nwCalendars = new HashSet<String>();
             Calendar calendar = (Calendar) JocInventory.content2IJSObject(json, ConfigurationType.WORKINGDAYSCALENDAR);
-            Optional.ofNullable(calendar.getExcludes()).map(Frequencies::getNonWorkingDayCalendars).ifPresent(cals -> cals.forEach(cal -> nwCalendars
-                    .add(cal)));
+            Optional
+                .ofNullable(calendar.getExcludes())
+                .map(Frequencies::getNonWorkingDayCalendars)
+                .ifPresent(cals -> cals.forEach(cal -> nwCalendars.add(cal)));
             if (!nwCalendars.isEmpty()) {
                 nwCalendars.forEach(nwCalendarName -> nwCalendarName.replaceAll("\"", ""));
                 if (allItemsGrouped.isEmpty()) {
-                    item.getReferences().addAll(dbLayer.getConfigurationsByNames(nwCalendars.stream(), ConfigurationType.NONWORKINGDAYSCALENDAR
-                            .intValue()));
+                    item
+                        .getReferences()
+                        .addAll(dbLayer.getConfigurationsByNames(nwCalendars.stream(), ConfigurationType.NONWORKINGDAYSCALENDAR.intValue()));
                 } else {
-                    allItemsGrouped.getOrDefault(ConfigurationType.NONWORKINGDAYSCALENDAR, Collections.emptySet()).stream().filter(getPredicate(
-                            nwCalendars)).forEach(item.getReferences()::add);
+                    allItemsGrouped
+                        .getOrDefault(ConfigurationType.NONWORKINGDAYSCALENDAR, Collections.emptySet())
+                        .stream()
+                        .filter(getPredicate(nwCalendars))
+                        .forEach(item.getReferences()::add);
                 }
             }
             break;
@@ -663,8 +762,8 @@ public class DependencyResolver {
         case FT_FRAGMENT_WEBDAV:
             FileTransferUsedRefsDependencyResolver.resolveWebdavFragment(dbLayer, item, allItemsGrouped);
             break;
-        case FT_PROFILE_JOBRESOURCE:
-            FileTransferUsedRefsDependencyResolver.resolveProfileJobResource(dbLayer, item, allItemsGrouped);
+        case FT_PROFILE:
+            FileTransferUsedRefsDependencyResolver.resolveProfile(dbLayer, item, allItemsGrouped);
             break;
         default:
             break;
@@ -747,8 +846,9 @@ public class DependencyResolver {
         if (allCfgs == null) {
             return;
         }
-        Map<ConfigurationType, Set<DBItemInventoryConfiguration>> allItemsGrouped = allCfgs.stream().collect(Collectors.groupingBy(
-                DBItemInventoryConfiguration::getTypeAsEnum, Collectors.toSet()));
+        Map<ConfigurationType, Set<DBItemInventoryConfiguration>> allItemsGrouped = allCfgs
+            .stream()
+            .collect(Collectors.groupingBy(DBItemInventoryConfiguration::getTypeAsEnum, Collectors.toSet()));
 
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("[resolveThreaded]allItemsGrouped=" + SOSString.mapToString(allItemsGrouped, false));
@@ -763,8 +863,9 @@ public class DependencyResolver {
                 poolSize = maxPoolSize / 2;
             }
         }
-        Predicate<DBItemInventoryConfiguration> onlyReferncingItemsFilter = cfg -> JocInventory.getTypesFromObjectsWithReferences().contains(cfg
-                .getType());
+        Predicate<DBItemInventoryConfiguration> onlyReferncingItemsFilter = cfg -> JocInventory
+            .getTypesFromObjectsWithReferences()
+            .contains(cfg.getType());
         if (poolSize > 1) {
             // filters to reduce allItemsGrouped
             Function<DBItemInventoryConfiguration, Map<ConfigurationType, Set<DBItemInventoryConfiguration>>> toSubMap = item -> {
@@ -777,8 +878,11 @@ public class DependencyResolver {
                 });
                 return subMap;
             };
-            List<ReferenceCallable> callables = allCfgs.stream().filter(onlyReferncingItemsFilter).map(item -> new ReferenceCallable(item, toSubMap
-                    .apply(item))).collect(Collectors.toList());
+            List<ReferenceCallable> callables = allCfgs
+                .stream()
+                .filter(onlyReferncingItemsFilter)
+                .map(item -> new ReferenceCallable(item, toSubMap.apply(item)))
+                .collect(Collectors.toList());
             if (!callables.isEmpty()) {
                 Set<ReferencedDbItem> referencedItems = new HashSet<ReferencedDbItem>();
                 if (callables.size() == 1) {

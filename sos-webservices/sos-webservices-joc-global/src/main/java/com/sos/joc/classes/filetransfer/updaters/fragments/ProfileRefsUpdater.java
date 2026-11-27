@@ -3,14 +3,14 @@ package com.sos.joc.classes.filetransfer.updaters.fragments;
 import java.util.List;
 
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.inventory.model.filetransfer.FileTransferJobResource;
+import com.sos.inventory.model.filetransfer.FileTransferProfile;
 import com.sos.inventory.model.filetransfer.profile.Source;
 import com.sos.inventory.model.filetransfer.profile.Target;
 import com.sos.joc.classes.filetransfer.FileTransferHelper;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 
-public class ProfileRefsUpdater extends AProtocolOrProfileFragmentRefsUpdater<FileTransferJobResource, String> {
+public class ProfileRefsUpdater extends AProtocolOrProfileFragmentRefsUpdater<FileTransferProfile, String> {
 
     @Override
     protected String getLogPrefix() {
@@ -23,12 +23,12 @@ public class ProfileRefsUpdater extends AProtocolOrProfileFragmentRefsUpdater<Fi
     }
 
     @Override
-    protected FileTransferJobResource readAlternativeFragment(DBItemInventoryConfiguration c) throws Exception {
-        return FileTransferHelper.toFileTransferJobResource(c.getContent());
+    protected FileTransferProfile readAlternative(DBItemInventoryConfiguration c) throws Exception {
+        return FileTransferHelper.toFileTransferProfile(c.getContent());
     }
 
     @Override
-    protected String getAlternativeName(FileTransferJobResource f) {
+    protected String getAlternativeName(FileTransferProfile f) {
         if (f.getProfile() == null) {
             return null;
         }
@@ -36,7 +36,7 @@ public class ProfileRefsUpdater extends AProtocolOrProfileFragmentRefsUpdater<Fi
     }
 
     @Override
-    protected void setAlternativeName(FileTransferJobResource f, String newName) {
+    protected void setAlternativeName(FileTransferProfile f, String newName) {
         if (f.getProfile() == null) {
             return;
         }

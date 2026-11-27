@@ -9,7 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSString;
-import com.sos.inventory.model.filetransfer.FileTransferJobResource;
+import com.sos.inventory.model.filetransfer.FileTransferProfile;
 import com.sos.inventory.model.filetransfer.fragments.AFragment;
 import com.sos.inventory.model.filetransfer.fragments.cs.CredentialStoreFragment;
 import com.sos.inventory.model.filetransfer.fragments.decryption.DecryptionFragment;
@@ -91,8 +91,8 @@ public class FileTransferPublishUtils {
             LOGGER.debug(String.format("[validateAndPrepareForDeploy][%s]%s", item.getTypeAsEnum(), item.getPath()));
         }
 
-        FileTransferJobResource ft = FileTransferHelper.toFileTransferJobResource(item.getContent());
-        Profile p = ft.getProfile();
+        FileTransferProfile ftP = FileTransferHelper.toFileTransferProfile(item.getContent());
+        Profile p = ftP.getProfile();
         if (p == null) {
             throw new Exception("Missing profile");
         }
@@ -105,8 +105,8 @@ public class FileTransferPublishUtils {
 
         resolveProfile(dbLayer, item.getPath(), s, p);
 
-        ft.setSettings(s);
-        return Globals.objectMapper.writeValueAsString(ft);
+        ftP.setSettings(s);
+        return Globals.objectMapper.writeValueAsString(ftP);
     }
 
     private static void resolveFragmentAlternatives(InventoryDBLayer dbLayer, Map<ConfigurationType, Set<String>> all, String path,

@@ -15,7 +15,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sos.inventory.model.filetransfer.AFileTransfer;
-import com.sos.inventory.model.filetransfer.FileTransferJobResource;
+import com.sos.inventory.model.filetransfer.FileTransferProfile;
 import com.sos.inventory.model.filetransfer.common.PostProcessing;
 import com.sos.inventory.model.filetransfer.common.Processing;
 import com.sos.inventory.model.filetransfer.fragments.cs.CredentialStoreAuthKeyFile;
@@ -54,8 +54,10 @@ public class PojosTestFileTransfer {
     private static final String PATH_RAML = "raml/inventory/schemas/filetransfer";
     private static final String PATH_INVENTORY_SCHEMA_RESOURCES = "../../../../schemas/js7-inventory-schemas/src/main/resources";
 
-    private ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).configure(
-            SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false).configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false);
+    private ObjectMapper objectMapper = new ObjectMapper()
+        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+        .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+        .configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false);
 
     @Ignore
     @Test
@@ -273,15 +275,15 @@ public class PojosTestFileTransfer {
 
             p.setTarget(t);
 
-            FileTransferJobResource jr = new FileTransferJobResource();
-            jr.setProfile(p);
+            FileTransferProfile ftP = new FileTransferProfile();
+            ftP.setProfile(p);
 
-            LOGGER.info(objectMapper.writeValueAsString(jr));
+            LOGGER.info(objectMapper.writeValueAsString(ftP));
 
             URI uri = createFromClasspath("profile/profile-schema.json");
             uri = createFromInventorySchemaResources("filetransferJobResource-schema.json");
 
-            JsonValidator.validate(objectMapper.writeValueAsBytes(jr), uri, true);
+            JsonValidator.validate(objectMapper.writeValueAsBytes(ftP), uri, true);
         } catch (Exception e) {
             LOGGER.error(e.toString(), e);
         }

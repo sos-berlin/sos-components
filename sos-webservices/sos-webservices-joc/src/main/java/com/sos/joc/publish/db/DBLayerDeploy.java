@@ -699,8 +699,10 @@ public class DBLayerDeploy {
             List<DBItemInventoryConfiguration> result = session.getResultList(query);
             Date getDraftInventoryConfigurationsByFolderFinished = Date.from(Instant.now());
             LOGGER.trace("*** call getDraftInventoryConfigurationsByFolder finished ***" + getDraftInventoryConfigurationsByFolderFinished);
-            LOGGER.trace("call getDraftInventoryConfigurationsByFolder took: " + (getDraftInventoryConfigurationsByFolderFinished.getTime()
-                    - getDraftInventoryConfigurationsByFolderStarted.getTime()) + " ms");
+            LOGGER
+                .trace(
+                    "call getDraftInventoryConfigurationsByFolder took: " + (getDraftInventoryConfigurationsByFolderFinished.getTime()
+                            - getDraftInventoryConfigurationsByFolderStarted.getTime()) + " ms");
             if (result == null) {
                 return Collections.emptyList();
             }
@@ -752,7 +754,7 @@ public class DBLayerDeploy {
                     query.setMaxResults(1);
                     try {
                         DBItemInventoryConfiguration invItem = query.getSingleResult();
-                        if (invItem != null && ConfigurationType.FT_PROFILE_JOBRESOURCE.equals(invItem.getTypeAsEnum())) {
+                        if (invItem != null && ConfigurationType.FT_PROFILE.equals(invItem.getTypeAsEnum())) {
                             invItem.setContent(FileTransferPublishUtils.validateAndPrepareForDeploy(this, invItem));
                         }
                         results.add(invItem);
@@ -852,8 +854,8 @@ public class DBLayerDeploy {
                 List<DBItemDeploymentHistory> dbItemsByConfId = new ArrayList<DBItemDeploymentHistory>();
                 deployConfigurations.stream().forEach(item -> {
                     try {
-                        DBItemDeploymentHistory d = getLatestActiveDepHistoryItem(getConfigurationByName(Paths.get(item.getPath()).getFileName()
-                                .toString(), item.getObjectType()).getId());
+                        DBItemDeploymentHistory d = getLatestActiveDepHistoryItem(
+                            getConfigurationByName(Paths.get(item.getPath()).getFileName().toString(), item.getObjectType()).getId());
                         if (d != null && OperationType.UPDATE.value().equals(d.getOperation())) {
                             dbItemsByConfId.add(d);
                         }
@@ -925,8 +927,13 @@ public class DBLayerDeploy {
         List<Configuration> configurations = Collections.emptyList();
         // TODO: check local configurations as configured, as JOBRESOURCES may not be the only item
         if (filter.getLocal() != null) {
-            configurations = filter.getLocal().getDraftConfigurations().stream().filter(item -> !ConfigurationType.JOBRESOURCE.equals(item
-                    .getConfiguration().getObjectType())).map(Config::getConfiguration).collect(Collectors.toList());
+            configurations = filter
+                .getLocal()
+                .getDraftConfigurations()
+                .stream()
+                .filter(item -> !ConfigurationType.JOBRESOURCE.equals(item.getConfiguration().getObjectType()))
+                .map(Config::getConfiguration)
+                .collect(Collectors.toList());
         }
         if (!configurations.isEmpty()) {
             return getFilteredInventoryConfiguration(configurations);
@@ -950,8 +957,13 @@ public class DBLayerDeploy {
         // TODO: check local configurations as configured, as JOBRESOURCES may not be the only item
         List<Configuration> configurations = Collections.emptyList();
         if (filter.getLocal() != null) {
-            configurations = filter.getLocal().getReleasedConfigurations().stream().filter(item -> !ConfigurationType.JOBRESOURCE.equals(item
-                    .getConfiguration().getObjectType())).map(item -> item.getConfiguration()).collect(Collectors.toList());
+            configurations = filter
+                .getLocal()
+                .getReleasedConfigurations()
+                .stream()
+                .filter(item -> !ConfigurationType.JOBRESOURCE.equals(item.getConfiguration().getObjectType()))
+                .map(item -> item.getConfiguration())
+                .collect(Collectors.toList());
         }
         if (!configurations.isEmpty()) {
             return getFilteredReleasedConfiguration(configurations);
@@ -972,8 +984,12 @@ public class DBLayerDeploy {
 
     public List<DBItemDeploymentHistory> getFilteredDeployments(DeployablesFilter filter) throws DBConnectionRefusedException,
             DBInvalidDataException {
-        List<Configuration> configurations = filter.getDeployConfigurations().stream().filter(item -> !item.getConfiguration().getObjectType().equals(
-                ConfigurationType.FOLDER)).map(Config::getConfiguration).collect(Collectors.toList());
+        List<Configuration> configurations = filter
+            .getDeployConfigurations()
+            .stream()
+            .filter(item -> !item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
+            .map(Config::getConfiguration)
+            .collect(Collectors.toList());
         if (!configurations.isEmpty()) {
             return getFilteredDeploymentHistory(configurations);
         } else {
@@ -985,12 +1001,24 @@ public class DBLayerDeploy {
         // TODO: check rollout and local configurations as configured, as JOBRESOURCES may not be the only item
         List<Configuration> configurations = new ArrayList<Configuration>();
         if (filter.getRollout() != null) {
-            configurations = filter.getRollout().getDeployConfigurations().stream().filter(item -> !item.getConfiguration().getObjectType().equals(
-                    ConfigurationType.FOLDER)).map(Config::getConfiguration).collect(Collectors.toList());
+            configurations = filter
+                .getRollout()
+                .getDeployConfigurations()
+                .stream()
+                .filter(item -> !item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
+                .map(Config::getConfiguration)
+                .collect(Collectors.toList());
         }
         if (filter.getLocal() != null) {
-            configurations.addAll(filter.getLocal().getDeployConfigurations().stream().filter(item -> ConfigurationType.JOBRESOURCE.equals(item
-                    .getConfiguration().getObjectType())).map(Config::getConfiguration).collect(Collectors.toList()));
+            configurations
+                .addAll(
+                    filter
+                        .getLocal()
+                        .getDeployConfigurations()
+                        .stream()
+                        .filter(item -> ConfigurationType.JOBRESOURCE.equals(item.getConfiguration().getObjectType()))
+                        .map(Config::getConfiguration)
+                        .collect(Collectors.toList()));
         }
         if (!configurations.isEmpty()) {
             return getFilteredDeploymentHistory(configurations);
@@ -1001,8 +1029,12 @@ public class DBLayerDeploy {
 
     public List<DBItemDeploymentHistory> getFilteredDeployments(DeployablesValidFilter filter) throws DBConnectionRefusedException,
             DBInvalidDataException {
-        List<Configuration> configurations = filter.getDeployConfigurations().stream().filter(item -> !item.getConfiguration().getObjectType().equals(
-                ConfigurationType.FOLDER)).map(Config::getConfiguration).collect(Collectors.toList());
+        List<Configuration> configurations = filter
+            .getDeployConfigurations()
+            .stream()
+            .filter(item -> !item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
+            .map(Config::getConfiguration)
+            .collect(Collectors.toList());
         if (!configurations.isEmpty()) {
             return getFilteredDeploymentHistory(configurations);
         } else {
@@ -1016,8 +1048,8 @@ public class DBLayerDeploy {
 
     public List<DBItemDeploymentHistory> getFilteredDeployments(SetVersionsFilter filter) throws DBConnectionRefusedException,
             DBInvalidDataException {
-        return getFilteredDeploymentHistory(filter.getDeployConfigurations().stream().map(item -> item.getConfiguration()).collect(Collectors
-                .toList()));
+        return getFilteredDeploymentHistory(
+            filter.getDeployConfigurations().stream().map(item -> item.getConfiguration()).collect(Collectors.toList()));
     }
 
     public DBItemInventoryConfiguration saveInventoryConfiguration(ConfigurationObject configuration, String account, Long auditLogId,
@@ -1027,8 +1059,13 @@ public class DBLayerDeploy {
         try {
             boolean valid = false;
             try {
-                Validator.validate(configuration.getObjectType(), configuration.getPath(), configuration.getConfiguration(), new InventoryDBLayer(
-                        session), agentNames);
+                Validator
+                    .validate(
+                        configuration.getObjectType(),
+                        configuration.getPath(),
+                        configuration.getConfiguration(),
+                        new InventoryDBLayer(session),
+                        agentNames);
                 valid = true;
             } catch (Throwable e) {
                 valid = false;
@@ -1065,8 +1102,13 @@ public class DBLayerDeploy {
         try {
             boolean valid = false;
             try {
-                Validator.validate(configuration.getObjectType(), configuration.getPath(), configuration.getConfiguration(), new InventoryDBLayer(
-                        session), agentNames);
+                Validator
+                    .validate(
+                        configuration.getObjectType(),
+                        configuration.getPath(),
+                        configuration.getConfiguration(),
+                        new InventoryDBLayer(session),
+                        agentNames);
                 valid = true;
             } catch (Throwable e) {
                 valid = false;
@@ -1470,8 +1512,10 @@ public class DBLayerDeploy {
         try {
             for (DBItemDeploymentHistory failedDeploy : failedDeployments) {
                 // check if item with same constraint exists
-                DBItemDeploymentSubmission submission = getDepSubmission(failedDeploy.getControllerId(), failedDeploy.getCommitId(), failedDeploy
-                        .getPath());
+                DBItemDeploymentSubmission submission = getDepSubmission(
+                    failedDeploy.getControllerId(),
+                    failedDeploy.getCommitId(),
+                    failedDeploy.getPath());
                 if (submission == null) {
                     submission = new DBItemDeploymentSubmission();
                     submission.setId(null);
@@ -1761,22 +1805,33 @@ public class DBLayerDeploy {
         if (agentName != null) {
             try {
                 StringBuilder hql = new StringBuilder("select instance.agentId from ");
-                hql.append(DBLayer.DBITEM_INV_AGENT_INSTANCES).append(" as instance ").append(" left join ").append(DBLayer.DBITEM_INV_AGENT_NAMES)
-                        .append(" as aliases").append(" on instance.agentId = aliases.agentId").append(
-                                " where instance.controllerId = :controllerId and (").append(" instance.agentName = :agentName or ").append(
-                                        " aliases.agentName = :agentName)").append(" group by instance.agentId");
+                hql
+                    .append(DBLayer.DBITEM_INV_AGENT_INSTANCES)
+                    .append(" as instance ")
+                    .append(" left join ")
+                    .append(DBLayer.DBITEM_INV_AGENT_NAMES)
+                    .append(" as aliases")
+                    .append(" on instance.agentId = aliases.agentId")
+                    .append(" where instance.controllerId = :controllerId and (")
+                    .append(" instance.agentName = :agentName or ")
+                    .append(" aliases.agentName = :agentName)")
+                    .append(" group by instance.agentId");
                 Query<String> query = getSession().createQuery(hql.toString());
                 query.setParameter("agentName", agentName);
                 query.setParameter("controllerId", controllerId);
                 return query.getSingleResult();
             } catch (NoResultException e) {
                 if (workflowPath != null && jobname != null) {
-                    throw new JocSosHibernateException(String.format(
-                            "No agentId found for agentName=\"%1$s\" and controllerId=\"%2$s\" in Workflow \"%3$s\" and Job \"%4$s\"!", agentName,
-                            controllerId, workflowPath, jobname), e);
+                    throw new JocSosHibernateException(String
+                        .format(
+                            "No agentId found for agentName=\"%1$s\" and controllerId=\"%2$s\" in Workflow \"%3$s\" and Job \"%4$s\"!",
+                            agentName,
+                            controllerId,
+                            workflowPath,
+                            jobname), e);
                 } else {
-                    throw new JocSosHibernateException(String.format("No agentId found for agentName=\"%1$s\" and controllerId=\"%2$s\"!", agentName,
-                            controllerId), e);
+                    throw new JocSosHibernateException(String
+                        .format("No agentId found for agentName=\"%1$s\" and controllerId=\"%2$s\"!", agentName, controllerId), e);
                 }
 
             } catch (SOSHibernateException e) {
@@ -1991,8 +2046,11 @@ public class DBLayerDeploy {
         if (result == null) {
             return Collections.emptyMap();
         }
-        return result.stream().collect(Collectors.toMap(DBItemInventoryReleasedConfiguration::getName,
-                DBItemInventoryReleasedConfiguration::getContent, (name, content) -> name));
+        return result
+            .stream()
+            .collect(
+                Collectors
+                    .toMap(DBItemInventoryReleasedConfiguration::getName, DBItemInventoryReleasedConfiguration::getContent, (name, content) -> name));
     }
 
     public void insertSignaturesInBatch(List<DBItemDepSignatures> signatures) {

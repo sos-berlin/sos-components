@@ -53,8 +53,8 @@ public abstract class AReadFolder extends JOCResourceImpl {
             }
 
             boolean forTrash = INVENTORY_TRASH_IMPL_PATH.equals(action) || DESCRIPTOR_TRASH_IMPL_PATH.equals(action);
-            List<InventoryTreeFolderItem> items = dbLayer.getConfigurationsByFolder(in.getPath(), in.getRecursive() == Boolean.TRUE, configTypes, in
-                    .getOnlyValidObjects(), forTrash);
+            List<InventoryTreeFolderItem> items = dbLayer
+                .getConfigurationsByFolder(in.getPath(), in.getRecursive() == Boolean.TRUE, configTypes, in.getOnlyValidObjects(), forTrash);
 
             ResponseFolder folder = new ResponseFolder();
             folder.setDeliveryDate(Date.from(Instant.now()));
@@ -174,8 +174,8 @@ public abstract class AReadFolder extends JOCResourceImpl {
                         case FT_FRAGMENT_WEBDAV:
                             fileTransfer.getWebdavFragments().add(config);
                             break;
-                        case FT_PROFILE_JOBRESOURCE:
-                            fileTransfer.getProfileJobResources().add(config);
+                        case FT_PROFILE:
+                            fileTransfer.getProfiles().add(config);
                             break;
                         default:
                             break;
@@ -241,7 +241,7 @@ public abstract class AReadFolder extends JOCResourceImpl {
         fileTransfer.setSmbFragments(sort(fileTransfer.getSmbFragments()));
         fileTransfer.setWebdavFragments(sort(fileTransfer.getWebdavFragments()));
 
-        fileTransfer.setProfileJobResources(sort(fileTransfer.getProfileJobResources()));
+        fileTransfer.setProfiles(sort(fileTransfer.getProfiles()));
         return fileTransfer;
     }
 

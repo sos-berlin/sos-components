@@ -22,7 +22,7 @@ public class MailFragmentRefsUpdater extends AProtocolOrProfileFragmentRefsUpdat
     }
 
     @Override
-    protected MailFragment readAlternativeFragment(DBItemInventoryConfiguration c) throws Exception {
+    protected MailFragment readAlternative(DBItemInventoryConfiguration c) throws Exception {
         return null;
     }
 

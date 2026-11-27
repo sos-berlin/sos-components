@@ -25,7 +25,7 @@ public class HttpFragmentRefsUpdater extends AProtocolOrProfileFragmentRefsUpdat
     }
 
     @Override
-    protected HttpFragment readAlternativeFragment(DBItemInventoryConfiguration c) throws Exception {
+    protected HttpFragment readAlternative(DBItemInventoryConfiguration c) throws Exception {
         return Globals.objectMapper.readValue(c.getContent(), HttpFragment.class);
     }
 

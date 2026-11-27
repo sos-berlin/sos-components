@@ -9,7 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSString;
-import com.sos.inventory.model.filetransfer.FileTransferJobResource;
+import com.sos.inventory.model.filetransfer.FileTransferProfile;
 import com.sos.inventory.model.filetransfer.fragments.protocol.AProtocolFragment;
 import com.sos.inventory.model.filetransfer.fragments.protocol.AzureBlobStorageFragment;
 import com.sos.inventory.model.filetransfer.fragments.protocol.FtpFragment;
@@ -212,16 +212,16 @@ public class FileTransferUsedRefsDependencyResolver {
             name + ".httpProxyFragmentName");
     }
 
-    public static void resolveProfileJobResource(InventoryDBLayer dbLayer, ReferencedDbItem item,
+    public static void resolveProfile(InventoryDBLayer dbLayer, ReferencedDbItem item,
             Map<ConfigurationType, Set<DBItemInventoryConfiguration>> allItemsGrouped) throws IOException {
 
-        FileTransferJobResource ftjr = FileTransferHelper.toFileTransferJobResource(item.getReferencedItem().getContent());
+        FileTransferProfile ftP = FileTransferHelper.toFileTransferProfile(item.getReferencedItem().getContent());
 
-        Profile p = ftjr.getProfile();
+        Profile p = ftP.getProfile();
 
         String name = "profile";
         // 1) Alternative profile name
-        resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_PROFILE_JOBRESOURCE, p.getAlternativeProfileName(), name + ".alternative");
+        resolveName(dbLayer, item, allItemsGrouped, ConfigurationType.FT_PROFILE, p.getAlternativeProfileName(), name + ".alternative");
 
         // 2) Source
         if (p.getSource() != null) {

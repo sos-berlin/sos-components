@@ -25,7 +25,7 @@ public class FtpFragmentRefsUpdater extends AProtocolOrProfileFragmentRefsUpdate
     }
 
     @Override
-    protected FtpFragment readAlternativeFragment(DBItemInventoryConfiguration c) throws Exception {
+    protected FtpFragment readAlternative(DBItemInventoryConfiguration c) throws Exception {
         return Globals.objectMapper.readValue(c.getContent(), FtpFragment.class);
     }
 

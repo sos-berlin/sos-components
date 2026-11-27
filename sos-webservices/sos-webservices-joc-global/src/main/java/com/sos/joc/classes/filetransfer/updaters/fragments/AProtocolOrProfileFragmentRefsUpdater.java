@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSString;
-import com.sos.inventory.model.filetransfer.FileTransferJobResource;
+import com.sos.inventory.model.filetransfer.FileTransferProfile;
 import com.sos.inventory.model.filetransfer.fragments.protocol.AzureBlobStorageFragment;
 import com.sos.inventory.model.filetransfer.fragments.protocol.FtpFragment;
 import com.sos.inventory.model.filetransfer.fragments.protocol.HttpFragment;
@@ -32,7 +32,7 @@ public abstract class AProtocolOrProfileFragmentRefsUpdater<F, R> {
 
     protected abstract String getLogObjectName();
 
-    protected abstract F readAlternativeFragment(DBItemInventoryConfiguration c) throws Exception;
+    protected abstract F readAlternative(DBItemInventoryConfiguration c) throws Exception;
 
     protected abstract String getAlternativeName(F f);
 
@@ -62,7 +62,7 @@ public abstract class AProtocolOrProfileFragmentRefsUpdater<F, R> {
         List<DBItemInventoryConfiguration> alternatives = getAlternatives(dbLayer, config.getName());
         if (!SOSCollection.isEmpty(alternatives)) {
             for (DBItemInventoryConfiguration c : alternatives) {
-                F f = readAlternativeFragment(c);
+                F f = readAlternative(c);
                 if (isDebugEnabled) {
                     LOGGER
                         .debug(
@@ -177,13 +177,13 @@ public abstract class AProtocolOrProfileFragmentRefsUpdater<F, R> {
 
     private void handleProfile(InventoryDBLayer dbLayer, DBItemInventoryConfiguration config, DBItemInventoryConfiguration referencedIn,
             String newName, List<DBItemInventoryConfiguration> items, Set<String> events, boolean isDebugEnabled) throws Exception {
-        FileTransferJobResource jr = FileTransferHelper.toFileTransferJobResource(referencedIn.getContent());
-        if (jr.getProfile() == null) {
+        FileTransferProfile ftP = FileTransferHelper.toFileTransferProfile(referencedIn.getContent());
+        if (ftP.getProfile() == null) {
             return;
         }
         boolean changed = false;
-        Source source = jr.getProfile().getSource();
-        Target target = jr.getProfile().getTarget();
+        Source source = ftP.getProfile().getSource();
+        Target target = ftP.getProfile().getTarget();
 
         if (source != null && hasSourceFragmentRef(source)) {
             R srcFragment = getSourceFragmentRef(source);
@@ -229,19 +229,19 @@ public abstract class AProtocolOrProfileFragmentRefsUpdater<F, R> {
             return;
         }
 
-        referencedIn.setContent(Globals.objectMapper.writeValueAsString(jr));
+        referencedIn.setContent(Globals.objectMapper.writeValueAsString(ftP));
         referencedIn.setDeployed(false);
         ACommonFragmentRefsUpdater.applyChange(dbLayer, referencedIn, items, events);
     }
 
     private void handleMail(InventoryDBLayer dbLayer, DBItemInventoryConfiguration config, DBItemInventoryConfiguration referencedIn, String newName,
             List<DBItemInventoryConfiguration> items, Set<String> events, boolean isDebugEnabled) throws Exception {
-        FileTransferJobResource jr = FileTransferHelper.toFileTransferJobResource(referencedIn.getContent());
-        if (jr.getProfile() == null) {
+        FileTransferProfile ftP = FileTransferHelper.toFileTransferProfile(referencedIn.getContent());
+        if (ftP.getProfile() == null) {
             return;
         }
         boolean changed = false;
-        NotificationTriggers triggers = jr.getProfile().getNotificationTriggers();
+        NotificationTriggers triggers = ftP.getProfile().getNotificationTriggers();
         if (triggers == null) {
             return;
         }
@@ -305,7 +305,7 @@ public abstract class AProtocolOrProfileFragmentRefsUpdater<F, R> {
             return;
         }
 
-        referencedIn.setContent(Globals.objectMapper.writeValueAsString(jr));
+        referencedIn.setContent(Globals.objectMapper.writeValueAsString(ftP));
         referencedIn.setDeployed(false);
         ACommonFragmentRefsUpdater.applyChange(dbLayer, referencedIn, items, events);
     }
