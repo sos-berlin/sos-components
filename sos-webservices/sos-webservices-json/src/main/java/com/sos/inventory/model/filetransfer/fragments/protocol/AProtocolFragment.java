@@ -19,7 +19,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
     "credentialStoreFragmentName",
-    "decryptionFragmentName"
+    "decryptionFragmentName",
+    "alternativeFragmentName"
 })
 public class AProtocolFragment
     extends AFragment
@@ -41,6 +42,14 @@ public class AProtocolFragment
      */
     @JsonProperty("decryptionFragmentName")
     private String decryptionFragmentName;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("alternativeFragmentName")
+    private String alternativeFragmentName;
 
     /**
      * No args constructor for use in serialization
@@ -53,11 +62,13 @@ public class AProtocolFragment
      * 
      * @param decryptionFragmentName
      * @param credentialStoreFragmentName
+     * @param alternativeFragmentName
      */
-    public AProtocolFragment(String credentialStoreFragmentName, String decryptionFragmentName) {
+    public AProtocolFragment(String credentialStoreFragmentName, String decryptionFragmentName, String alternativeFragmentName) {
         super();
         this.credentialStoreFragmentName = credentialStoreFragmentName;
         this.decryptionFragmentName = decryptionFragmentName;
+        this.alternativeFragmentName = alternativeFragmentName;
     }
 
     /**
@@ -104,14 +115,36 @@ public class AProtocolFragment
         this.decryptionFragmentName = decryptionFragmentName;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("alternativeFragmentName")
+    public String getAlternativeFragmentName() {
+        return alternativeFragmentName;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("alternativeFragmentName")
+    public void setAlternativeFragmentName(String alternativeFragmentName) {
+        this.alternativeFragmentName = alternativeFragmentName;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("credentialStoreFragmentName", credentialStoreFragmentName).append("decryptionFragmentName", decryptionFragmentName).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("credentialStoreFragmentName", credentialStoreFragmentName).append("decryptionFragmentName", decryptionFragmentName).append("alternativeFragmentName", alternativeFragmentName).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(decryptionFragmentName).append(credentialStoreFragmentName).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(decryptionFragmentName).append(credentialStoreFragmentName).append(alternativeFragmentName).toHashCode();
     }
 
     @Override
@@ -123,7 +156,7 @@ public class AProtocolFragment
             return false;
         }
         AProtocolFragment rhs = ((AProtocolFragment) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(decryptionFragmentName, rhs.decryptionFragmentName).append(credentialStoreFragmentName, rhs.credentialStoreFragmentName).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(decryptionFragmentName, rhs.decryptionFragmentName).append(credentialStoreFragmentName, rhs.credentialStoreFragmentName).append(alternativeFragmentName, rhs.alternativeFragmentName).isEquals();
     }
 
 }

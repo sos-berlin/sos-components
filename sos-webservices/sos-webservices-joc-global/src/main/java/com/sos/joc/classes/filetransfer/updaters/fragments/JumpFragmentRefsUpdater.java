@@ -29,12 +29,12 @@ public class JumpFragmentRefsUpdater extends AProtocolOrProfileFragmentRefsUpdat
 
     @Override
     protected String getAlternativeName(JumpFragment f) {
-        return f.getAlternativeJumpFragmentName();
+        return f.getAlternativeFragmentName();
     }
 
     @Override
     protected void setAlternativeName(JumpFragment f, String newName) {
-        f.setAlternativeJumpFragmentName(newName);
+        f.setAlternativeFragmentName(newName);
     }
 
     @Override

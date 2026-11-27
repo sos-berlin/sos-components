@@ -22,7 +22,6 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "jumpFragmentName",
     "httpProxyFragmentName",
-    "alternativeAzureBlobStorageFragmentName",
     "connection",
     "authentication"
 })
@@ -46,14 +45,6 @@ public class AzureBlobStorageFragment
      */
     @JsonProperty("httpProxyFragmentName")
     private String httpProxyFragmentName;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("alternativeAzureBlobStorageFragmentName")
-    private String alternativeAzureBlobStorageFragmentName;
     /**
      * 
      * (Required)
@@ -80,16 +71,14 @@ public class AzureBlobStorageFragment
     /**
      * 
      * @param jumpFragmentName
-     * @param alternativeAzureBlobStorageFragmentName
      * @param httpProxyFragmentName
      * @param connection
      * @param authentication
      */
-    public AzureBlobStorageFragment(String jumpFragmentName, String httpProxyFragmentName, String alternativeAzureBlobStorageFragmentName, UrlConnection connection, AzureBSAuthentication authentication) {
+    public AzureBlobStorageFragment(String jumpFragmentName, String httpProxyFragmentName, UrlConnection connection, AzureBSAuthentication authentication) {
         super();
         this.jumpFragmentName = jumpFragmentName;
         this.httpProxyFragmentName = httpProxyFragmentName;
-        this.alternativeAzureBlobStorageFragmentName = alternativeAzureBlobStorageFragmentName;
         this.connection = connection;
         this.authentication = authentication;
     }
@@ -139,28 +128,6 @@ public class AzureBlobStorageFragment
     }
 
     /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("alternativeAzureBlobStorageFragmentName")
-    public String getAlternativeAzureBlobStorageFragmentName() {
-        return alternativeAzureBlobStorageFragmentName;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("alternativeAzureBlobStorageFragmentName")
-    public void setAlternativeAzureBlobStorageFragmentName(String alternativeAzureBlobStorageFragmentName) {
-        this.alternativeAzureBlobStorageFragmentName = alternativeAzureBlobStorageFragmentName;
-    }
-
-    /**
      * 
      * (Required)
      * 
@@ -202,12 +169,12 @@ public class AzureBlobStorageFragment
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("jumpFragmentName", jumpFragmentName).append("httpProxyFragmentName", httpProxyFragmentName).append("alternativeAzureBlobStorageFragmentName", alternativeAzureBlobStorageFragmentName).append("connection", connection).append("authentication", authentication).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("jumpFragmentName", jumpFragmentName).append("httpProxyFragmentName", httpProxyFragmentName).append("connection", connection).append("authentication", authentication).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(jumpFragmentName).append(httpProxyFragmentName).append(connection).append(alternativeAzureBlobStorageFragmentName).append(authentication).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(jumpFragmentName).append(httpProxyFragmentName).append(connection).append(authentication).toHashCode();
     }
 
     @Override
@@ -219,7 +186,7 @@ public class AzureBlobStorageFragment
             return false;
         }
         AzureBlobStorageFragment rhs = ((AzureBlobStorageFragment) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(jumpFragmentName, rhs.jumpFragmentName).append(httpProxyFragmentName, rhs.httpProxyFragmentName).append(connection, rhs.connection).append(alternativeAzureBlobStorageFragmentName, rhs.alternativeAzureBlobStorageFragmentName).append(authentication, rhs.authentication).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(jumpFragmentName, rhs.jumpFragmentName).append(httpProxyFragmentName, rhs.httpProxyFragmentName).append(connection, rhs.connection).append(authentication, rhs.authentication).isEquals();
     }
 
 }

@@ -31,12 +31,12 @@ public class FtpFragmentRefsUpdater extends AProtocolOrProfileFragmentRefsUpdate
 
     @Override
     protected String getAlternativeName(FtpFragment f) {
-        return f.getAlternativeFtpFragmentName();
+        return f.getAlternativeFragmentName();
     }
 
     @Override
     protected void setAlternativeName(FtpFragment f, String newName) {
-        f.setAlternativeFtpFragmentName(newName);
+        f.setAlternativeFragmentName(newName);
     }
 
     @Override

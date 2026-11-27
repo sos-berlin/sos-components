@@ -31,12 +31,12 @@ public class SmbFragmentRefsUpdater extends AProtocolOrProfileFragmentRefsUpdate
 
     @Override
     protected String getAlternativeName(SmbFragment f) {
-        return f.getAlternativeSmbFragmentName();
+        return f.getAlternativeFragmentName();
     }
 
     @Override
     protected void setAlternativeName(SmbFragment f, String newName) {
-        f.setAlternativeSmbFragmentName(newName);
+        f.setAlternativeFragmentName(newName);
     }
 
     @Override

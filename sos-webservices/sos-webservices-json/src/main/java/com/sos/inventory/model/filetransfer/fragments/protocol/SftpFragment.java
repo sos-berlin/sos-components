@@ -24,7 +24,6 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "jumpFragmentName",
     "httpProxyFragmentName",
     "socksProxyFragmentName",
-    "alternativeSftpFragmentName",
     "connection",
     "authentication",
     "socketTimeout",
@@ -61,14 +60,6 @@ public class SftpFragment
      */
     @JsonProperty("socksProxyFragmentName")
     private String socksProxyFragmentName;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("alternativeSftpFragmentName")
-    private String alternativeSftpFragmentName;
     /**
      * 
      * (Required)
@@ -137,7 +128,6 @@ public class SftpFragment
     /**
      * 
      * @param jumpFragmentName
-     * @param alternativeSftpFragmentName
      * @param keepAlive
      * @param disableAutoDetectShell
      * @param configurationFile
@@ -148,12 +138,11 @@ public class SftpFragment
      * @param socksProxyFragmentName
      * @param authentication
      */
-    public SftpFragment(String jumpFragmentName, String httpProxyFragmentName, String socksProxyFragmentName, String alternativeSftpFragmentName, BasicConnection connection, SftpAuthentication authentication, String socketTimeout, SftpKeepAlive keepAlive, String strictHostkeyChecking, String disableAutoDetectShell, String configurationFile) {
+    public SftpFragment(String jumpFragmentName, String httpProxyFragmentName, String socksProxyFragmentName, BasicConnection connection, SftpAuthentication authentication, String socketTimeout, SftpKeepAlive keepAlive, String strictHostkeyChecking, String disableAutoDetectShell, String configurationFile) {
         super();
         this.jumpFragmentName = jumpFragmentName;
         this.httpProxyFragmentName = httpProxyFragmentName;
         this.socksProxyFragmentName = socksProxyFragmentName;
-        this.alternativeSftpFragmentName = alternativeSftpFragmentName;
         this.connection = connection;
         this.authentication = authentication;
         this.socketTimeout = socketTimeout;
@@ -227,28 +216,6 @@ public class SftpFragment
     @JsonProperty("socksProxyFragmentName")
     public void setSocksProxyFragmentName(String socksProxyFragmentName) {
         this.socksProxyFragmentName = socksProxyFragmentName;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("alternativeSftpFragmentName")
-    public String getAlternativeSftpFragmentName() {
-        return alternativeSftpFragmentName;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("alternativeSftpFragmentName")
-    public void setAlternativeSftpFragmentName(String alternativeSftpFragmentName) {
-        this.alternativeSftpFragmentName = alternativeSftpFragmentName;
     }
 
     /**
@@ -407,12 +374,12 @@ public class SftpFragment
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("jumpFragmentName", jumpFragmentName).append("httpProxyFragmentName", httpProxyFragmentName).append("socksProxyFragmentName", socksProxyFragmentName).append("alternativeSftpFragmentName", alternativeSftpFragmentName).append("connection", connection).append("authentication", authentication).append("socketTimeout", socketTimeout).append("keepAlive", keepAlive).append("strictHostkeyChecking", strictHostkeyChecking).append("disableAutoDetectShell", disableAutoDetectShell).append("configurationFile", configurationFile).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("jumpFragmentName", jumpFragmentName).append("httpProxyFragmentName", httpProxyFragmentName).append("socksProxyFragmentName", socksProxyFragmentName).append("connection", connection).append("authentication", authentication).append("socketTimeout", socketTimeout).append("keepAlive", keepAlive).append("strictHostkeyChecking", strictHostkeyChecking).append("disableAutoDetectShell", disableAutoDetectShell).append("configurationFile", configurationFile).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(jumpFragmentName).append(alternativeSftpFragmentName).append(keepAlive).append(disableAutoDetectShell).append(configurationFile).append(socketTimeout).append(httpProxyFragmentName).append(connection).append(strictHostkeyChecking).append(socksProxyFragmentName).append(authentication).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(jumpFragmentName).append(keepAlive).append(disableAutoDetectShell).append(configurationFile).append(socketTimeout).append(httpProxyFragmentName).append(connection).append(strictHostkeyChecking).append(socksProxyFragmentName).append(authentication).toHashCode();
     }
 
     @Override
@@ -424,7 +391,7 @@ public class SftpFragment
             return false;
         }
         SftpFragment rhs = ((SftpFragment) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(jumpFragmentName, rhs.jumpFragmentName).append(alternativeSftpFragmentName, rhs.alternativeSftpFragmentName).append(keepAlive, rhs.keepAlive).append(disableAutoDetectShell, rhs.disableAutoDetectShell).append(configurationFile, rhs.configurationFile).append(socketTimeout, rhs.socketTimeout).append(httpProxyFragmentName, rhs.httpProxyFragmentName).append(connection, rhs.connection).append(strictHostkeyChecking, rhs.strictHostkeyChecking).append(socksProxyFragmentName, rhs.socksProxyFragmentName).append(authentication, rhs.authentication).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(jumpFragmentName, rhs.jumpFragmentName).append(keepAlive, rhs.keepAlive).append(disableAutoDetectShell, rhs.disableAutoDetectShell).append(configurationFile, rhs.configurationFile).append(socketTimeout, rhs.socketTimeout).append(httpProxyFragmentName, rhs.httpProxyFragmentName).append(connection, rhs.connection).append(strictHostkeyChecking, rhs.strictHostkeyChecking).append(socksProxyFragmentName, rhs.socksProxyFragmentName).append(authentication, rhs.authentication).isEquals();
     }
 
 }

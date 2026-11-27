@@ -21,7 +21,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "source",
     "target",
     "transferOptions",
-    "notificationTriggers"
+    "notificationTriggers",
+    "systemPropertyFile"
 })
 public class Profile
     extends ProfileBase
@@ -61,6 +62,14 @@ public class Profile
      */
     @JsonProperty("notificationTriggers")
     private NotificationTriggers notificationTriggers;
+    /**
+     * Any non-empty string. May contain variable references such as ${VAR} that are resolved at runtime.
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("systemPropertyFile")
+    private String systemPropertyFile;
 
     /**
      * No args constructor for use in serialization
@@ -74,14 +83,16 @@ public class Profile
      * @param notificationTriggers
      * @param source
      * @param transferOptions
+     * @param systemPropertyFile
      * @param target
      */
-    public Profile(Source source, Target target, TransferOptions transferOptions, NotificationTriggers notificationTriggers) {
+    public Profile(Source source, Target target, TransferOptions transferOptions, NotificationTriggers notificationTriggers, String systemPropertyFile) {
         super();
         this.source = source;
         this.target = target;
         this.transferOptions = transferOptions;
         this.notificationTriggers = notificationTriggers;
+        this.systemPropertyFile = systemPropertyFile;
     }
 
     /**
@@ -172,14 +183,36 @@ public class Profile
         this.notificationTriggers = notificationTriggers;
     }
 
+    /**
+     * Any non-empty string. May contain variable references such as ${VAR} that are resolved at runtime.
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("systemPropertyFile")
+    public String getSystemPropertyFile() {
+        return systemPropertyFile;
+    }
+
+    /**
+     * Any non-empty string. May contain variable references such as ${VAR} that are resolved at runtime.
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("systemPropertyFile")
+    public void setSystemPropertyFile(String systemPropertyFile) {
+        this.systemPropertyFile = systemPropertyFile;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("source", source).append("target", target).append("transferOptions", transferOptions).append("notificationTriggers", notificationTriggers).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("source", source).append("target", target).append("transferOptions", transferOptions).append("notificationTriggers", notificationTriggers).append("systemPropertyFile", systemPropertyFile).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(notificationTriggers).append(source).append(transferOptions).append(target).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(notificationTriggers).append(source).append(transferOptions).append(systemPropertyFile).append(target).toHashCode();
     }
 
     @Override
@@ -191,7 +224,7 @@ public class Profile
             return false;
         }
         Profile rhs = ((Profile) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(notificationTriggers, rhs.notificationTriggers).append(source, rhs.source).append(transferOptions, rhs.transferOptions).append(target, rhs.target).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(notificationTriggers, rhs.notificationTriggers).append(source, rhs.source).append(transferOptions, rhs.transferOptions).append(systemPropertyFile, rhs.systemPropertyFile).append(target, rhs.target).isEquals();
     }
 
 }

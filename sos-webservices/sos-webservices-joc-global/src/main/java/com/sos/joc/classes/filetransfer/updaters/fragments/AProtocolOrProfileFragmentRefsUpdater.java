@@ -64,8 +64,17 @@ public abstract class AProtocolOrProfileFragmentRefsUpdater<F, R> {
             for (DBItemInventoryConfiguration c : alternatives) {
                 F f = readAlternativeFragment(c);
                 if (isDebugEnabled) {
-                    LOGGER.debug(String.format("[%s][%s][%s=%s, alternativeName=%s]new name=%s", getLogPrefix(), config.getTypeAsEnum(),
-                            getLogObjectName(), c.getPath(), getAlternativeName(f), newName));
+                    LOGGER
+                        .debug(
+                            String
+                                .format(
+                                    "[%s][%s][%s=%s, alternativeName=%s]new name=%s",
+                                    getLogPrefix(),
+                                    config.getTypeAsEnum(),
+                                    getLogObjectName(),
+                                    c.getPath(),
+                                    getAlternativeName(f),
+                                    newName));
                 }
 
                 if (SOSString.isEmpty(getAlternativeName(f)) || newName.equalsIgnoreCase(getAlternativeName(f))) {
@@ -180,8 +189,16 @@ public abstract class AProtocolOrProfileFragmentRefsUpdater<F, R> {
             R srcFragment = getSourceFragmentRef(source);
             if (ACommonFragmentRefsUpdater.refNameEquals(config, getRefName(srcFragment))) {
                 if (isDebugEnabled) {
-                    LOGGER.debug(String.format("[%s][%s][profile=%s][source.fragment.name=%s]new name=%s", getLogPrefix(), config.getTypeAsEnum(),
-                            referencedIn.getPath(), getRefName(srcFragment), newName));
+                    LOGGER
+                        .debug(
+                            String
+                                .format(
+                                    "[%s][%s][profile=%s][source.fragment.name=%s]new name=%s",
+                                    getLogPrefix(),
+                                    config.getTypeAsEnum(),
+                                    referencedIn.getPath(),
+                                    getRefName(srcFragment),
+                                    newName));
                 }
                 setRefName(srcFragment, newName);
                 changed = true;
@@ -192,8 +209,16 @@ public abstract class AProtocolOrProfileFragmentRefsUpdater<F, R> {
             R tgtFragment = getTargetFragmentRef(target);
             if (ACommonFragmentRefsUpdater.refNameEquals(config, getRefName(tgtFragment))) {
                 if (isDebugEnabled) {
-                    LOGGER.debug(String.format("[%s][%s][profile=%s][target.fragment.name=%s]new name=%s", getLogPrefix(), config.getTypeAsEnum(),
-                            referencedIn.getPath(), getRefName(tgtFragment), newName));
+                    LOGGER
+                        .debug(
+                            String
+                                .format(
+                                    "[%s][%s][profile=%s][target.fragment.name=%s]new name=%s",
+                                    getLogPrefix(),
+                                    config.getTypeAsEnum(),
+                                    referencedIn.getPath(),
+                                    getRefName(tgtFragment),
+                                    newName));
                 }
                 setRefName(tgtFragment, newName);
                 changed = true;
@@ -224,8 +249,16 @@ public abstract class AProtocolOrProfileFragmentRefsUpdater<F, R> {
         if (triggers.getOnError() != null) {
             if (ACommonFragmentRefsUpdater.refNameEquals(config, triggers.getOnError().getMailFragmentName())) {
                 if (isDebugEnabled) {
-                    LOGGER.debug(String.format("[%s][%s][profile=%s][notificationTriggers.onError.mailFragmentName=%s]new name=%s", getLogPrefix(),
-                            config.getTypeAsEnum(), referencedIn.getPath(), triggers.getOnError().getMailFragmentName(), newName));
+                    LOGGER
+                        .debug(
+                            String
+                                .format(
+                                    "[%s][%s][profile=%s][notificationTriggers.onError.mailFragmentName=%s]new name=%s",
+                                    getLogPrefix(),
+                                    config.getTypeAsEnum(),
+                                    referencedIn.getPath(),
+                                    triggers.getOnError().getMailFragmentName(),
+                                    newName));
                 }
                 triggers.getOnError().setMailFragmentName(newName);
                 changed = true;
@@ -234,8 +267,16 @@ public abstract class AProtocolOrProfileFragmentRefsUpdater<F, R> {
         if (triggers.getOnSuccess() != null) {
             if (ACommonFragmentRefsUpdater.refNameEquals(config, triggers.getOnSuccess().getMailFragmentName())) {
                 if (isDebugEnabled) {
-                    LOGGER.debug(String.format("[%s][%s][profile=%s][notificationTriggers.onSuccess.mailFragmentName=%s]new name=%s", getLogPrefix(),
-                            config.getTypeAsEnum(), referencedIn.getPath(), triggers.getOnSuccess().getMailFragmentName(), newName));
+                    LOGGER
+                        .debug(
+                            String
+                                .format(
+                                    "[%s][%s][profile=%s][notificationTriggers.onSuccess.mailFragmentName=%s]new name=%s",
+                                    getLogPrefix(),
+                                    config.getTypeAsEnum(),
+                                    referencedIn.getPath(),
+                                    triggers.getOnSuccess().getMailFragmentName(),
+                                    newName));
                 }
                 triggers.getOnSuccess().setMailFragmentName(newName);
                 changed = true;
@@ -244,9 +285,16 @@ public abstract class AProtocolOrProfileFragmentRefsUpdater<F, R> {
         if (triggers.getOnEmptyFiles() != null) {
             if (ACommonFragmentRefsUpdater.refNameEquals(config, triggers.getOnEmptyFiles().getMailFragmentName())) {
                 if (isDebugEnabled) {
-                    LOGGER.debug(String.format("[%s][%s][profile=%s][notificationTriggers.onEmptyFiles.mailFragmentName=%s]new name=%s",
-                            getLogPrefix(), config.getTypeAsEnum(), referencedIn.getPath(), triggers.getOnEmptyFiles().getMailFragmentName(),
-                            newName));
+                    LOGGER
+                        .debug(
+                            String
+                                .format(
+                                    "[%s][%s][profile=%s][notificationTriggers.onEmptyFiles.mailFragmentName=%s]new name=%s",
+                                    getLogPrefix(),
+                                    config.getTypeAsEnum(),
+                                    referencedIn.getPath(),
+                                    triggers.getOnEmptyFiles().getMailFragmentName(),
+                                    newName));
                 }
                 triggers.getOnEmptyFiles().setMailFragmentName(newName);
                 changed = true;

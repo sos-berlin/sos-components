@@ -20,7 +20,6 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
-    "alternativeSmbFragmentName",
     "connection",
     "authentication",
     "configurationFile"
@@ -29,14 +28,6 @@ public class SmbFragment
     extends AProtocolFragment
 {
 
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("alternativeSmbFragmentName")
-    private String alternativeSmbFragmentName;
     /**
      * SMB connection settings.
      * (Required)
@@ -72,38 +63,14 @@ public class SmbFragment
     /**
      * 
      * @param configurationFile
-     * @param alternativeSmbFragmentName
      * @param connection
      * @param authentication
      */
-    public SmbFragment(String alternativeSmbFragmentName, SmbConnection connection, SmbAuthentication authentication, String configurationFile) {
+    public SmbFragment(SmbConnection connection, SmbAuthentication authentication, String configurationFile) {
         super();
-        this.alternativeSmbFragmentName = alternativeSmbFragmentName;
         this.connection = connection;
         this.authentication = authentication;
         this.configurationFile = configurationFile;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("alternativeSmbFragmentName")
-    public String getAlternativeSmbFragmentName() {
-        return alternativeSmbFragmentName;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("alternativeSmbFragmentName")
-    public void setAlternativeSmbFragmentName(String alternativeSmbFragmentName) {
-        this.alternativeSmbFragmentName = alternativeSmbFragmentName;
     }
 
     /**
@@ -170,12 +137,12 @@ public class SmbFragment
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("alternativeSmbFragmentName", alternativeSmbFragmentName).append("connection", connection).append("authentication", authentication).append("configurationFile", configurationFile).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("connection", connection).append("authentication", authentication).append("configurationFile", configurationFile).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(alternativeSmbFragmentName).append(connection).append(authentication).append(configurationFile).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(connection).append(authentication).append(configurationFile).toHashCode();
     }
 
     @Override
@@ -187,7 +154,7 @@ public class SmbFragment
             return false;
         }
         SmbFragment rhs = ((SmbFragment) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(alternativeSmbFragmentName, rhs.alternativeSmbFragmentName).append(connection, rhs.connection).append(authentication, rhs.authentication).append(configurationFile, rhs.configurationFile).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(connection, rhs.connection).append(authentication, rhs.authentication).append(configurationFile, rhs.configurationFile).isEquals();
     }
 
 }

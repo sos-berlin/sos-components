@@ -31,12 +31,12 @@ public class SftpFragmentRefsUpdater extends AProtocolOrProfileFragmentRefsUpdat
 
     @Override
     protected String getAlternativeName(SftpFragment f) {
-        return f.getAlternativeSftpFragmentName();
+        return f.getAlternativeFragmentName();
     }
 
     @Override
     protected void setAlternativeName(SftpFragment f, String newName) {
-        f.setAlternativeSftpFragmentName(newName);
+        f.setAlternativeFragmentName(newName);
     }
 
     @Override

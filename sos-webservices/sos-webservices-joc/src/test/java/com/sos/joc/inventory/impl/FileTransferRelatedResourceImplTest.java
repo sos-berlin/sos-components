@@ -82,7 +82,7 @@ public class FileTransferRelatedResourceImplTest {
         sa.setPublicKey(pk);
         f.setAuthentication(sa);
 
-        f.setAlternativeSftpFragmentName("my_sftp_fragment_1");
+        f.setAlternativeFragmentName("my_sftp_fragment_1");
 
         ConfigurationObject in = new ConfigurationObject();
         in.setPath("/filetransfer/my_sftp_fragment_2");

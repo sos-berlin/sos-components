@@ -31,12 +31,12 @@ public class WebdavFragmentRefsUpdater extends AProtocolOrProfileFragmentRefsUpd
 
     @Override
     protected String getAlternativeName(WebdavFragment f) {
-        return f.getAlternativeWebdavFragmentName();
+        return f.getAlternativeFragmentName();
     }
 
     @Override
     protected void setAlternativeName(WebdavFragment f, String newName) {
-        f.setAlternativeWebdavFragmentName(newName);
+        f.setAlternativeFragmentName(newName);
     }
 
     @Override

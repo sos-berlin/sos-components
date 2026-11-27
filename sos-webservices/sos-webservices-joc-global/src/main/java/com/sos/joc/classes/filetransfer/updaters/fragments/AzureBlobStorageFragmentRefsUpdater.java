@@ -32,12 +32,12 @@ public class AzureBlobStorageFragmentRefsUpdater extends
 
     @Override
     protected String getAlternativeName(AzureBlobStorageFragment f) {
-        return f.getAlternativeAzureBlobStorageFragmentName();
+        return f.getAlternativeFragmentName();
     }
 
     @Override
     protected void setAlternativeName(AzureBlobStorageFragment f, String newName) {
-        f.setAlternativeAzureBlobStorageFragmentName(newName);
+        f.setAlternativeFragmentName(newName);
     }
 
     @Override

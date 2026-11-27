@@ -101,7 +101,7 @@ public class PojosTestFileTransfer {
             ftps.setSsl(ssl);
             // f.setFtps(ftps);
 
-            f.setAlternativeFtpFragmentName("my alternative fragment");
+            f.setAlternativeFragmentName("my alternative fragment");
 
             f.setSocksProxyFragmentName("my socks proxy ref");
 
@@ -136,7 +136,7 @@ public class PojosTestFileTransfer {
             ssl.setTrusted(t);
             f.setSsl(ssl);
 
-            f.setAlternativeHttpFragmentName("my alternative fragment");
+            f.setAlternativeFragmentName("my alternative fragment");
 
             LOGGER.info(objectMapper.writeValueAsString(f));
 
@@ -163,7 +163,7 @@ public class PojosTestFileTransfer {
             sa.setPublicKey(pk);
             f.setAuthentication(sa);
 
-            f.setAlternativeSftpFragmentName("my alternative fragment");
+            f.setAlternativeFragmentName("my alternative fragment");
 
             f.setCredentialStoreFragmentName("cs name");
             f.setDecryptionFragmentName("decryption name");

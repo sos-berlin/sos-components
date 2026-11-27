@@ -31,12 +31,12 @@ public class HttpFragmentRefsUpdater extends AProtocolOrProfileFragmentRefsUpdat
 
     @Override
     protected String getAlternativeName(HttpFragment f) {
-        return f.getAlternativeHttpFragmentName();
+        return f.getAlternativeFragmentName();
     }
 
     @Override
     protected void setAlternativeName(HttpFragment f, String newName) {
-        f.setAlternativeHttpFragmentName(newName);
+        f.setAlternativeFragmentName(newName);
     }
 
     @Override

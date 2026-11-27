@@ -24,7 +24,6 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "jumpFragmentName",
     "httpProxyFragmentName",
     "socksProxyFragmentName",
-    "alternativeFtpFragmentName",
     "connection",
     "authentication",
     "keepAlive",
@@ -58,14 +57,6 @@ public class AFtpFragment
      */
     @JsonProperty("socksProxyFragmentName")
     private String socksProxyFragmentName;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("alternativeFtpFragmentName")
-    private String alternativeFtpFragmentName;
     /**
      * 
      * (Required)
@@ -108,19 +99,17 @@ public class AFtpFragment
      * 
      * @param jumpFragmentName
      * @param keepAlive
-     * @param alternativeFtpFragmentName
      * @param transferMode
      * @param httpProxyFragmentName
      * @param connection
      * @param socksProxyFragmentName
      * @param authentication
      */
-    public AFtpFragment(String jumpFragmentName, String httpProxyFragmentName, String socksProxyFragmentName, String alternativeFtpFragmentName, BasicConnection connection, BasicAuthentication authentication, FtpKeepAlive keepAlive, String transferMode) {
+    public AFtpFragment(String jumpFragmentName, String httpProxyFragmentName, String socksProxyFragmentName, BasicConnection connection, BasicAuthentication authentication, FtpKeepAlive keepAlive, String transferMode) {
         super();
         this.jumpFragmentName = jumpFragmentName;
         this.httpProxyFragmentName = httpProxyFragmentName;
         this.socksProxyFragmentName = socksProxyFragmentName;
-        this.alternativeFtpFragmentName = alternativeFtpFragmentName;
         this.connection = connection;
         this.authentication = authentication;
         this.keepAlive = keepAlive;
@@ -191,28 +180,6 @@ public class AFtpFragment
     @JsonProperty("socksProxyFragmentName")
     public void setSocksProxyFragmentName(String socksProxyFragmentName) {
         this.socksProxyFragmentName = socksProxyFragmentName;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("alternativeFtpFragmentName")
-    public String getAlternativeFtpFragmentName() {
-        return alternativeFtpFragmentName;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("alternativeFtpFragmentName")
-    public void setAlternativeFtpFragmentName(String alternativeFtpFragmentName) {
-        this.alternativeFtpFragmentName = alternativeFtpFragmentName;
     }
 
     /**
@@ -297,12 +264,12 @@ public class AFtpFragment
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("jumpFragmentName", jumpFragmentName).append("httpProxyFragmentName", httpProxyFragmentName).append("socksProxyFragmentName", socksProxyFragmentName).append("alternativeFtpFragmentName", alternativeFtpFragmentName).append("connection", connection).append("authentication", authentication).append("keepAlive", keepAlive).append("transferMode", transferMode).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("jumpFragmentName", jumpFragmentName).append("httpProxyFragmentName", httpProxyFragmentName).append("socksProxyFragmentName", socksProxyFragmentName).append("connection", connection).append("authentication", authentication).append("keepAlive", keepAlive).append("transferMode", transferMode).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(jumpFragmentName).append(keepAlive).append(alternativeFtpFragmentName).append(transferMode).append(httpProxyFragmentName).append(connection).append(socksProxyFragmentName).append(authentication).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(jumpFragmentName).append(keepAlive).append(transferMode).append(httpProxyFragmentName).append(connection).append(socksProxyFragmentName).append(authentication).toHashCode();
     }
 
     @Override
@@ -314,7 +281,7 @@ public class AFtpFragment
             return false;
         }
         AFtpFragment rhs = ((AFtpFragment) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(jumpFragmentName, rhs.jumpFragmentName).append(keepAlive, rhs.keepAlive).append(alternativeFtpFragmentName, rhs.alternativeFtpFragmentName).append(transferMode, rhs.transferMode).append(httpProxyFragmentName, rhs.httpProxyFragmentName).append(connection, rhs.connection).append(socksProxyFragmentName, rhs.socksProxyFragmentName).append(authentication, rhs.authentication).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(jumpFragmentName, rhs.jumpFragmentName).append(keepAlive, rhs.keepAlive).append(transferMode, rhs.transferMode).append(httpProxyFragmentName, rhs.httpProxyFragmentName).append(connection, rhs.connection).append(socksProxyFragmentName, rhs.socksProxyFragmentName).append(authentication, rhs.authentication).isEquals();
     }
 
 }

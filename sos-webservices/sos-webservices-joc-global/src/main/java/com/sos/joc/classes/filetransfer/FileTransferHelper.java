@@ -14,14 +14,21 @@ import com.sos.joc.model.inventory.common.ConfigurationType;
 
 public class FileTransferHelper {
 
+    private static final String FRAGMENT_LABEL_CREDENTIAL_STORE = "Credential Store Fragment";
+    private static final String FRAGMENT_LABEL_DECRYPTION = "Decryption Fragment";
+    private static final String FRAGMENT_LABEL_FRAGMENT_MAIL = "Mail Fragment";
+    private static final String FRAGMENT_LABEL_HTTP_PROXY = "HTTP Proxy Fragment";
+    private static final String FRAGMENT_LABEL_SOCKS_PROXY = "SOCKS Proxy Fragment";
+    private static final String FRAGMENT_LABEL_AZURE_BLOB_STORAGE = "Azure Blob Storage Fragment";
+    private static final String FRAGMENT_LABEL_FTP = "FTP Fragment";
+    private static final String FRAGMENT_LABEL_HTTP = "HTTP Fragment";
+    private static final String FRAGMENT_LABEL_JUMP = "Jump Fragment";
+    private static final String FRAGMENT_LABEL_SFTP = "SFTP Fragment";
+    private static final String FRAGMENT_LABEL_SMB = "SMB Fragment";
+    private static final String FRAGMENT_LABEL_WEBDAV = "WebDAV Fragment";
+
     private static final String PROPERY_NAME_ALTERNATIVE_PROFILE = "alternativeProfileName";
-    private static final String PROPERY_NAME_ALTERNATIVE_AZURE_BLOB_STORAGE = "alternativeAzureBlobStorageFragmentName";
-    private static final String PROPERY_NAME_ALTERNATIVE_FTP = "alternativeFtpFragmentName";
-    private static final String PROPERY_NAME_ALTERNATIVE_HTTP = "alternativeHttpFragmentName";
-    private static final String PROPERY_NAME_ALTERNATIVE_SFTP = "alternativeSftpFragmentName";
-    private static final String PROPERY_NAME_ALTERNATIVE_JUMP = "alternativeJumpFragmentName";
-    private static final String PROPERY_NAME_ALTERNATIVE_SMB = "alternativeSmbFragmentName";
-    private static final String PROPERY_NAME_ALTERNATIVE_WEBDAV = "alternativeWebdavFragmentName";
+    private static final String PROPERY_NAME_ALTERNATIVE_FRAGMENT = "alternativeFragmentName";
 
     public static final List<ConfigurationType> DEPLOYABLE_OBJECTS = Arrays.asList(ConfigurationType.FT_PROFILE_JOBRESOURCE);
 
@@ -56,24 +63,53 @@ public class FileTransferHelper {
         return Globals.objectMapper.readValue(json, FileTransferJobResource.class);
     }
 
+    public static String getFragmentLabel(ConfigurationType fileTransferType) {
+        return getFragmentLabel("", fileTransferType);
+    }
+
+    public static String getFragmentLabel(String prefix, ConfigurationType fileTransferType) {
+        switch (fileTransferType) {
+        case FT_FRAGMENT_CREDENTIAL_STORE:
+            return prefix + FRAGMENT_LABEL_CREDENTIAL_STORE;
+        case FT_FRAGMENT_DECRYPTION:
+            return prefix + FRAGMENT_LABEL_DECRYPTION;
+        case FT_FRAGMENT_MAIL:
+            return prefix + FRAGMENT_LABEL_FRAGMENT_MAIL;
+        case FT_FRAGMENT_HTTP_PROXY:
+            return prefix + FRAGMENT_LABEL_HTTP_PROXY;
+        case FT_FRAGMENT_SOCKS_PROXY:
+            return prefix + FRAGMENT_LABEL_SOCKS_PROXY;
+        case FT_FRAGMENT_AZURE_BLOB_STORAGE:
+            return prefix + FRAGMENT_LABEL_AZURE_BLOB_STORAGE;
+        case FT_FRAGMENT_FTP:
+            return prefix + FRAGMENT_LABEL_FTP;
+        case FT_FRAGMENT_HTTP:
+            return prefix + FRAGMENT_LABEL_HTTP;
+        case FT_FRAGMENT_JUMP:
+            return prefix + FRAGMENT_LABEL_JUMP;
+        case FT_FRAGMENT_SFTP:
+            return prefix + FRAGMENT_LABEL_SFTP;
+        case FT_FRAGMENT_SMB:
+            return prefix + FRAGMENT_LABEL_SMB;
+        case FT_FRAGMENT_WEBDAV:
+            return prefix + FRAGMENT_LABEL_WEBDAV;
+        default:
+            return null;
+        }
+    }
+
     public static String getPropertyNameAlternative(ConfigurationType fileTransferType) throws SOSHibernateException {
         switch (fileTransferType) {
         case FT_PROFILE_JOBRESOURCE:
             return PROPERY_NAME_ALTERNATIVE_PROFILE;
         case FT_FRAGMENT_SFTP:
-            return PROPERY_NAME_ALTERNATIVE_SFTP;
         case FT_FRAGMENT_JUMP:
-            return PROPERY_NAME_ALTERNATIVE_JUMP;
         case FT_FRAGMENT_SMB:
-            return PROPERY_NAME_ALTERNATIVE_SMB;
         case FT_FRAGMENT_FTP:
-            return PROPERY_NAME_ALTERNATIVE_FTP;
         case FT_FRAGMENT_HTTP:
-            return PROPERY_NAME_ALTERNATIVE_HTTP;
         case FT_FRAGMENT_WEBDAV:
-            return PROPERY_NAME_ALTERNATIVE_WEBDAV;
         case FT_FRAGMENT_AZURE_BLOB_STORAGE:
-            return PROPERY_NAME_ALTERNATIVE_AZURE_BLOB_STORAGE;
+            return PROPERY_NAME_ALTERNATIVE_FRAGMENT;
         default:
             return null;
         }

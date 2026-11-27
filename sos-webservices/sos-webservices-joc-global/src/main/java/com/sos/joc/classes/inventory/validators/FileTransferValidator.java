@@ -22,20 +22,6 @@ import com.sos.joc.model.inventory.common.ConfigurationType;
 
 public class FileTransferValidator {
 
-    private static final String PROPERTY_NAME_FRAGMENT_CREDENTIAL_STORE = "Credential Store Fragment";
-    private static final String PROPERTY_NAME_FRAGMENT_DECRYPTION = "Decryption Fragment";
-    private static final String PROPERTY_NAME_FRAGMENT_MAIL = "Mail Fragment";
-    private static final String PROPERTY_NAME_FRAGMENT_HTTP_PROXY = "HTTP Proxy Fragment";
-    private static final String PROPERTY_NAME_FRAGMENT_SOCKS_PROXY = "SOCKS Proxy Fragment";
-    private static final String PROPERTY_NAME_FRAGMENT_AZURE_BLOB_STORAGE = "Azure Blob Storage Fragment";
-    private static final String PROPERTY_NAME_FRAGMENT_FTP = "FTP Fragment";
-    private static final String PROPERTY_NAME_FRAGMENT_HTTP = "HTTP Fragment";
-    private static final String PROPERTY_NAME_FRAGMENT_JUMP = "Jump Fragment";
-    private static final String PROPERTY_NAME_FRAGMENT_SFTP = "SFTP Fragment";
-    private static final String PROPERTY_NAME_FRAGMENT_SMB = "SMB Fragment";
-    private static final String PROPERTY_NAME_FRAGMENT_WEBDAV = "WebDAV Fragment";
-    private static final String PROPERTY_NAME_ALTERNATIVE = "alternative";
-
     /** Currently nothing to do, validated by the schema. May be extended later.
      * 
      * @param configPath
@@ -84,87 +70,57 @@ public class FileTransferValidator {
     public static void validateAzureBlobStorageFragment(String configPath, IConfigurationObject config, InventoryDBLayer dbLayer) throws Exception {
         AzureBlobStorageFragment f = (AzureBlobStorageFragment) config;
 
-        // 1) Fragment references
-        checkCommonProtocolFragmentNames(dbLayer, f);
-        checkName(dbLayer, ConfigurationType.FT_FRAGMENT_JUMP, PROPERTY_NAME_FRAGMENT_JUMP, f.getJumpFragmentName());
-        checkName(dbLayer, ConfigurationType.FT_FRAGMENT_HTTP_PROXY, PROPERTY_NAME_FRAGMENT_HTTP_PROXY, f.getHttpProxyFragmentName());
-
-        // 2) Alternative name
-        checkAlternativeName(dbLayer, ConfigurationType.FT_FRAGMENT_AZURE_BLOB_STORAGE, PROPERTY_NAME_ALTERNATIVE, configPath, f
-                .getAlternativeAzureBlobStorageFragmentName());
+        checkCommonProtocolFragmentNames(dbLayer, ConfigurationType.FT_FRAGMENT_AZURE_BLOB_STORAGE, configPath, f);
+        checkName(dbLayer, ConfigurationType.FT_FRAGMENT_JUMP, f.getJumpFragmentName());
+        checkName(dbLayer, ConfigurationType.FT_FRAGMENT_HTTP_PROXY, f.getHttpProxyFragmentName());
     }
 
     public static void validateFtpFragment(String configPath, IConfigurationObject config, InventoryDBLayer dbLayer) throws Exception {
         FtpFragment f = (FtpFragment) config;
 
-        // 1) Fragment references
-        checkCommonProtocolFragmentNames(dbLayer, f);
-        checkName(dbLayer, ConfigurationType.FT_FRAGMENT_JUMP, PROPERTY_NAME_FRAGMENT_JUMP, f.getJumpFragmentName());
-        checkName(dbLayer, ConfigurationType.FT_FRAGMENT_HTTP_PROXY, PROPERTY_NAME_FRAGMENT_HTTP_PROXY, f.getHttpProxyFragmentName());
-        checkName(dbLayer, ConfigurationType.FT_FRAGMENT_HTTP_PROXY, PROPERTY_NAME_FRAGMENT_SOCKS_PROXY, f.getSocksProxyFragmentName());
-
-        // 2) Alternative name
-        checkAlternativeName(dbLayer, ConfigurationType.FT_FRAGMENT_FTP, PROPERTY_NAME_ALTERNATIVE, configPath, f.getAlternativeFtpFragmentName());
+        checkCommonProtocolFragmentNames(dbLayer, ConfigurationType.FT_FRAGMENT_FTP, configPath, f);
+        checkName(dbLayer, ConfigurationType.FT_FRAGMENT_JUMP, f.getJumpFragmentName());
+        checkName(dbLayer, ConfigurationType.FT_FRAGMENT_HTTP_PROXY, f.getHttpProxyFragmentName());
+        checkName(dbLayer, ConfigurationType.FT_FRAGMENT_SOCKS_PROXY, f.getSocksProxyFragmentName());
     }
 
     public static void validateHttpFragment(String configPath, IConfigurationObject config, InventoryDBLayer dbLayer) throws Exception {
         HttpFragment f = (HttpFragment) config;
 
-        // 1) Fragment references
-        checkCommonProtocolFragmentNames(dbLayer, f);
-        checkName(dbLayer, ConfigurationType.FT_FRAGMENT_JUMP, PROPERTY_NAME_FRAGMENT_JUMP, f.getJumpFragmentName());
-        checkName(dbLayer, ConfigurationType.FT_FRAGMENT_HTTP_PROXY, PROPERTY_NAME_FRAGMENT_HTTP_PROXY, f.getHttpProxyFragmentName());
-
-        // 2) Alternative name
-        checkAlternativeName(dbLayer, ConfigurationType.FT_FRAGMENT_HTTP, PROPERTY_NAME_ALTERNATIVE, configPath, f.getAlternativeHttpFragmentName());
+        checkCommonProtocolFragmentNames(dbLayer, ConfigurationType.FT_FRAGMENT_HTTP, configPath, f);
+        checkName(dbLayer, ConfigurationType.FT_FRAGMENT_JUMP, f.getJumpFragmentName());
+        checkName(dbLayer, ConfigurationType.FT_FRAGMENT_HTTP_PROXY, f.getHttpProxyFragmentName());
     }
 
     public static void validateJumpFragment(String configPath, IConfigurationObject config, InventoryDBLayer dbLayer) throws Exception {
         JumpFragment f = (JumpFragment) config;
 
-        // 1) Fragment references
-        checkCommonProtocolFragmentNames(dbLayer, f);
-        checkName(dbLayer, ConfigurationType.FT_FRAGMENT_HTTP_PROXY, PROPERTY_NAME_FRAGMENT_HTTP_PROXY, f.getHttpProxyFragmentName());
-        checkName(dbLayer, ConfigurationType.FT_FRAGMENT_HTTP_PROXY, PROPERTY_NAME_FRAGMENT_SOCKS_PROXY, f.getSocksProxyFragmentName());
-
-        // 2) Alternative name
-        checkAlternativeName(dbLayer, ConfigurationType.FT_FRAGMENT_JUMP, PROPERTY_NAME_ALTERNATIVE, configPath, f.getAlternativeJumpFragmentName());
+        checkCommonProtocolFragmentNames(dbLayer, ConfigurationType.FT_FRAGMENT_JUMP, configPath, f);
+        checkName(dbLayer, ConfigurationType.FT_FRAGMENT_HTTP_PROXY, f.getHttpProxyFragmentName());
+        checkName(dbLayer, ConfigurationType.FT_FRAGMENT_SOCKS_PROXY, f.getSocksProxyFragmentName());
     }
 
     public static void validateSftpFragment(String configPath, IConfigurationObject config, InventoryDBLayer dbLayer) throws Exception {
         SftpFragment f = (SftpFragment) config;
 
-        // 1) Fragment references
-        checkCommonProtocolFragmentNames(dbLayer, f);
-        checkName(dbLayer, ConfigurationType.FT_FRAGMENT_JUMP, PROPERTY_NAME_FRAGMENT_JUMP, f.getJumpFragmentName());
-        checkName(dbLayer, ConfigurationType.FT_FRAGMENT_HTTP_PROXY, PROPERTY_NAME_FRAGMENT_HTTP_PROXY, f.getHttpProxyFragmentName());
-        checkName(dbLayer, ConfigurationType.FT_FRAGMENT_HTTP_PROXY, PROPERTY_NAME_FRAGMENT_SOCKS_PROXY, f.getSocksProxyFragmentName());
-
-        // 2) Alternative name
-        checkAlternativeName(dbLayer, ConfigurationType.FT_FRAGMENT_SFTP, PROPERTY_NAME_ALTERNATIVE, configPath, f.getAlternativeSftpFragmentName());
+        checkCommonProtocolFragmentNames(dbLayer, ConfigurationType.FT_FRAGMENT_SFTP, configPath, f);
+        checkName(dbLayer, ConfigurationType.FT_FRAGMENT_JUMP, f.getJumpFragmentName());
+        checkName(dbLayer, ConfigurationType.FT_FRAGMENT_HTTP_PROXY, f.getHttpProxyFragmentName());
+        checkName(dbLayer, ConfigurationType.FT_FRAGMENT_SOCKS_PROXY, f.getSocksProxyFragmentName());
     }
 
     public static void validateSmbFragment(String configPath, IConfigurationObject config, InventoryDBLayer dbLayer) throws Exception {
         SmbFragment f = (SmbFragment) config;
 
-        // 1) Fragment references
-        checkCommonProtocolFragmentNames(dbLayer, f);
-
-        // 2) Alternative name
-        checkAlternativeName(dbLayer, ConfigurationType.FT_FRAGMENT_SMB, PROPERTY_NAME_ALTERNATIVE, configPath, f.getAlternativeSmbFragmentName());
+        checkCommonProtocolFragmentNames(dbLayer, ConfigurationType.FT_FRAGMENT_SMB, configPath, f);
     }
 
     public static void validateWebdavFragment(String configPath, IConfigurationObject config, InventoryDBLayer dbLayer) throws Exception {
         WebdavFragment f = (WebdavFragment) config;
 
-        // 1) Fragment references
-        checkCommonProtocolFragmentNames(dbLayer, f);
-        checkName(dbLayer, ConfigurationType.FT_FRAGMENT_JUMP, PROPERTY_NAME_FRAGMENT_JUMP, f.getJumpFragmentName());
-        checkName(dbLayer, ConfigurationType.FT_FRAGMENT_HTTP_PROXY, PROPERTY_NAME_FRAGMENT_HTTP_PROXY, f.getHttpProxyFragmentName());
-
-        // 2) Alternative name
-        checkAlternativeName(dbLayer, ConfigurationType.FT_FRAGMENT_WEBDAV, PROPERTY_NAME_ALTERNATIVE, configPath, f
-                .getAlternativeWebdavFragmentName());
+        checkCommonProtocolFragmentNames(dbLayer, ConfigurationType.FT_FRAGMENT_WEBDAV, configPath, f);
+        checkName(dbLayer, ConfigurationType.FT_FRAGMENT_JUMP, f.getJumpFragmentName());
+        checkName(dbLayer, ConfigurationType.FT_FRAGMENT_HTTP_PROXY, f.getHttpProxyFragmentName());
     }
 
     public static void validateJobResource(String configPath, IConfigurationObject config, InventoryDBLayer dbLayer)
@@ -177,7 +133,7 @@ public class FileTransferValidator {
         }
 
         // 1) Alternative profile name
-        checkAlternativeName(dbLayer, ConfigurationType.FT_PROFILE_JOBRESOURCE, PROPERTY_NAME_ALTERNATIVE, configPath, p.getAlternativeProfileName());
+        checkAlternativeName(dbLayer, ConfigurationType.FT_PROFILE_JOBRESOURCE, configPath, p.getAlternativeProfileName());
 
         // 2) Source
         if (p.getSource() == null) {  // Redundant to schema validation, but kept as a safety net.
@@ -193,16 +149,13 @@ public class FileTransferValidator {
         // 4) Notification triggers
         if (p.getNotificationTriggers() != null) {
             if (p.getNotificationTriggers().getOnError() != null) {
-                checkName(dbLayer, ConfigurationType.FT_FRAGMENT_MAIL, PROPERTY_NAME_FRAGMENT_MAIL, p.getNotificationTriggers().getOnError()
-                        .getMailFragmentName());
+                checkName(dbLayer, ConfigurationType.FT_FRAGMENT_MAIL, p.getNotificationTriggers().getOnError().getMailFragmentName());
             }
             if (p.getNotificationTriggers().getOnSuccess() != null) {
-                checkName(dbLayer, ConfigurationType.FT_FRAGMENT_MAIL, PROPERTY_NAME_FRAGMENT_MAIL, p.getNotificationTriggers().getOnSuccess()
-                        .getMailFragmentName());
+                checkName(dbLayer, ConfigurationType.FT_FRAGMENT_MAIL, p.getNotificationTriggers().getOnSuccess().getMailFragmentName());
             }
             if (p.getNotificationTriggers().getOnEmptyFiles() != null) {
-                checkName(dbLayer, ConfigurationType.FT_FRAGMENT_MAIL, PROPERTY_NAME_FRAGMENT_MAIL, p.getNotificationTriggers().getOnEmptyFiles()
-                        .getMailFragmentName());
+                checkName(dbLayer, ConfigurationType.FT_FRAGMENT_MAIL, p.getNotificationTriggers().getOnEmptyFiles().getMailFragmentName());
             }
         }
     }
@@ -213,31 +166,32 @@ public class FileTransferValidator {
         }
         // Referenced protocol fragments
         else if (FileTransferHelper.isSftp(f)) {
-            checkName(dbLayer, ConfigurationType.FT_FRAGMENT_SFTP, sourceOrTarget + " " + PROPERTY_NAME_FRAGMENT_SFTP, f.getSftp().getName());
+            checkName(dbLayer, ConfigurationType.FT_FRAGMENT_SFTP, sourceOrTarget, f.getSftp().getName());
         } else if (FileTransferHelper.isSmb(f)) {
-            checkName(dbLayer, ConfigurationType.FT_FRAGMENT_SMB, sourceOrTarget + " " + PROPERTY_NAME_FRAGMENT_SMB, f.getSmb().getName());
+            checkName(dbLayer, ConfigurationType.FT_FRAGMENT_SMB, sourceOrTarget, f.getSmb().getName());
         } else if (FileTransferHelper.isFtp(f)) {
-            checkName(dbLayer, ConfigurationType.FT_FRAGMENT_FTP, sourceOrTarget + " " + PROPERTY_NAME_FRAGMENT_FTP, f.getFtp().getName());
+            checkName(dbLayer, ConfigurationType.FT_FRAGMENT_FTP, sourceOrTarget, f.getFtp().getName());
         } else if (FileTransferHelper.isWebdav(f)) {
-            checkName(dbLayer, ConfigurationType.FT_FRAGMENT_WEBDAV, sourceOrTarget + " " + PROPERTY_NAME_FRAGMENT_WEBDAV, f.getWebdav().getName());
+            checkName(dbLayer, ConfigurationType.FT_FRAGMENT_WEBDAV, sourceOrTarget, f.getWebdav().getName());
         } else if (FileTransferHelper.isHttp(f)) {
-            checkName(dbLayer, ConfigurationType.FT_FRAGMENT_HTTP, sourceOrTarget + " " + PROPERTY_NAME_FRAGMENT_HTTP, f.getHttp().getName());
+            checkName(dbLayer, ConfigurationType.FT_FRAGMENT_HTTP, sourceOrTarget, f.getHttp().getName());
         } else if (FileTransferHelper.isAzureBlobStorage(f)) {
-            checkName(dbLayer, ConfigurationType.FT_FRAGMENT_AZURE_BLOB_STORAGE, sourceOrTarget + " " + PROPERTY_NAME_FRAGMENT_AZURE_BLOB_STORAGE, f
-                    .getAzureBlobStorage().getName());
+            checkName(dbLayer, ConfigurationType.FT_FRAGMENT_AZURE_BLOB_STORAGE, sourceOrTarget, f.getAzureBlobStorage().getName());
         } else {
             throw new JocConfigurationException("Not supported " + sourceOrTarget + ".fragment: " + SOSString.toString(f));
         }
     }
 
-    private static void checkCommonProtocolFragmentNames(InventoryDBLayer dbLayer, AProtocolFragment f) throws JocConfigurationException {
-        checkName(dbLayer, ConfigurationType.FT_FRAGMENT_CREDENTIAL_STORE, PROPERTY_NAME_FRAGMENT_CREDENTIAL_STORE, f
-                .getCredentialStoreFragmentName());
-        checkName(dbLayer, ConfigurationType.FT_FRAGMENT_DECRYPTION, PROPERTY_NAME_FRAGMENT_DECRYPTION, f.getDecryptionFragmentName());
+    private static void checkCommonProtocolFragmentNames(InventoryDBLayer dbLayer, ConfigurationType type, String configPath, AProtocolFragment f)
+            throws JocConfigurationException {
+        checkName(dbLayer, ConfigurationType.FT_FRAGMENT_CREDENTIAL_STORE, f.getCredentialStoreFragmentName());
+        checkName(dbLayer, ConfigurationType.FT_FRAGMENT_DECRYPTION, f.getDecryptionFragmentName());
+
+        checkAlternativeName(dbLayer, type, configPath, f.getAlternativeFragmentName());
     }
 
-    private static void checkAlternativeName(InventoryDBLayer dbLayer, ConfigurationType type, String propertyName, String configPath,
-            String alternativeName) throws JocConfigurationException {
+    private static void checkAlternativeName(InventoryDBLayer dbLayer, ConfigurationType type, String configPath, String alternativeName)
+            throws JocConfigurationException {
         if (SOSString.isEmpty(alternativeName) || alternativeName.startsWith("${")) {
             // Empty or variable reference: skip lookup.
             return;
@@ -261,11 +215,15 @@ public class FileTransferValidator {
         }
 
         if (SOSCollection.isEmpty(dbLayer.getConfigurationByName(alternativeName, type.intValue()))) {
-            throw new JocConfigurationException("The assigned " + propertyName + " name  does not exist: " + alternativeName);
+            throw new JocConfigurationException("The assigned alternative name does not exist: " + alternativeName);
         }
     }
 
-    private static void checkName(InventoryDBLayer dbLayer, ConfigurationType type, String propertyName, String name)
+    private static void checkName(InventoryDBLayer dbLayer, ConfigurationType type, String name) throws JocConfigurationException {
+        checkName(dbLayer, type, "", name);
+    }
+
+    private static void checkName(InventoryDBLayer dbLayer, ConfigurationType type, String propertyPrefix, String name)
             throws JocConfigurationException {
         if (SOSString.isEmpty(name) || name.startsWith("${")) {
             // Empty or variable reference: skip lookup.
@@ -273,7 +231,8 @@ public class FileTransferValidator {
         }
 
         if (SOSCollection.isEmpty(dbLayer.getConfigurationByName(name, type.intValue()))) {
-            throw new JocConfigurationException("The assigned " + propertyName + " name  does not exist: " + name);
+            throw new JocConfigurationException("The assigned " + FileTransferHelper.getFragmentLabel(propertyPrefix, type)
+                    + " name  does not exist: " + name);
         }
     }
 }

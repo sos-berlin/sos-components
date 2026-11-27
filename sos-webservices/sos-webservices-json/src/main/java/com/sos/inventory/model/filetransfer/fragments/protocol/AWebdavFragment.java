@@ -22,7 +22,6 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "jumpFragmentName",
     "httpProxyFragmentName",
-    "alternativeWebdavFragmentName",
     "connection",
     "authentication",
     "httpHeaders"
@@ -47,14 +46,6 @@ public class AWebdavFragment
      */
     @JsonProperty("httpProxyFragmentName")
     private String httpProxyFragmentName;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("alternativeWebdavFragmentName")
-    private String alternativeWebdavFragmentName;
     /**
      * 
      * (Required)
@@ -83,17 +74,15 @@ public class AWebdavFragment
     /**
      * 
      * @param jumpFragmentName
-     * @param alternativeWebdavFragmentName
      * @param httpProxyFragmentName
      * @param connection
      * @param httpHeaders
      * @param authentication
      */
-    public AWebdavFragment(String jumpFragmentName, String httpProxyFragmentName, String alternativeWebdavFragmentName, UrlConnection connection, BasicAuthentication authentication, HttpHeaders httpHeaders) {
+    public AWebdavFragment(String jumpFragmentName, String httpProxyFragmentName, UrlConnection connection, BasicAuthentication authentication, HttpHeaders httpHeaders) {
         super();
         this.jumpFragmentName = jumpFragmentName;
         this.httpProxyFragmentName = httpProxyFragmentName;
-        this.alternativeWebdavFragmentName = alternativeWebdavFragmentName;
         this.connection = connection;
         this.authentication = authentication;
         this.httpHeaders = httpHeaders;
@@ -141,28 +130,6 @@ public class AWebdavFragment
     @JsonProperty("httpProxyFragmentName")
     public void setHttpProxyFragmentName(String httpProxyFragmentName) {
         this.httpProxyFragmentName = httpProxyFragmentName;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("alternativeWebdavFragmentName")
-    public String getAlternativeWebdavFragmentName() {
-        return alternativeWebdavFragmentName;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("alternativeWebdavFragmentName")
-    public void setAlternativeWebdavFragmentName(String alternativeWebdavFragmentName) {
-        this.alternativeWebdavFragmentName = alternativeWebdavFragmentName;
     }
 
     /**
@@ -219,12 +186,12 @@ public class AWebdavFragment
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("jumpFragmentName", jumpFragmentName).append("httpProxyFragmentName", httpProxyFragmentName).append("alternativeWebdavFragmentName", alternativeWebdavFragmentName).append("connection", connection).append("authentication", authentication).append("httpHeaders", httpHeaders).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("jumpFragmentName", jumpFragmentName).append("httpProxyFragmentName", httpProxyFragmentName).append("connection", connection).append("authentication", authentication).append("httpHeaders", httpHeaders).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(jumpFragmentName).append(alternativeWebdavFragmentName).append(httpProxyFragmentName).append(connection).append(httpHeaders).append(authentication).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(jumpFragmentName).append(httpProxyFragmentName).append(connection).append(httpHeaders).append(authentication).toHashCode();
     }
 
     @Override
@@ -236,7 +203,7 @@ public class AWebdavFragment
             return false;
         }
         AWebdavFragment rhs = ((AWebdavFragment) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(jumpFragmentName, rhs.jumpFragmentName).append(alternativeWebdavFragmentName, rhs.alternativeWebdavFragmentName).append(httpProxyFragmentName, rhs.httpProxyFragmentName).append(connection, rhs.connection).append(httpHeaders, rhs.httpHeaders).append(authentication, rhs.authentication).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(jumpFragmentName, rhs.jumpFragmentName).append(httpProxyFragmentName, rhs.httpProxyFragmentName).append(connection, rhs.connection).append(httpHeaders, rhs.httpHeaders).append(authentication, rhs.authentication).isEquals();
     }
 
 }
